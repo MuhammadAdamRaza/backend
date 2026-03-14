@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Build Your Website with AI | Free Website Templates</title>
+  <link rel="shortcut icon" type="image/png" href="src/assets/images/logos/favicon.svg" />
+  <link rel="stylesheet" href="src/assets/libs/owl.carousel/dist/assets/owl.carousel.min.css">
+  <link rel="stylesheet" href="src/assets/libs/aos-master/dist/aos.css">
+  <link rel="stylesheet" href="src/assets/css/styles.css" />
+  <link rel="stylesheet" href="src/assets/css/premium.css" />
+  <style>
+    .ai-form-container {
+      max-width: 900px;
+      margin: 100px auto;
+      padding: 60px;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(20px) saturate(180%);
+      border-radius: 40px;
+      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .form-label {
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+      letter-spacing: -0.01em;
+    }
+
+    .form-control, .form-select {
+      border-radius: 16px;
+      padding: 16px 20px;
+      border: 1px solid rgba(0,0,0,0.08);
+      background: rgba(255,255,255,0.8);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 1rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: #6e8efb;
+      background: #fff;
+      box-shadow: 0 0 0 5px rgba(110, 142, 251, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .btn-generate {
+      background: linear-gradient(135deg, #6e8efb, #a777e3, #6e8efb);
+      background-size: 200% auto;
+      border: none;
+      color: white;
+      font-weight: 800;
+      padding: 20px;
+      border-radius: 20px;
+      width: 100%;
+      margin-top: 30px;
+      transition: all 0.5s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-generate:hover {
+      background-position: right center;
+      transform: translateY(-3px) scale(1.01);
+      box-shadow: 0 20px 40px rgba(110, 142, 251, 0.4);
+    }
+
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .spinner {
+      width: 80px;
+      height: 80px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #6e8efb;
+      border-radius: 50%;
+      animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      max-width: 500px;
+      height: 6px;
+      background: #f0f0f0;
+      border-radius: 10px;
+      margin-top: 40px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .progress-bar-inner {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #6e8efb, #a777e3, #6e8efb);
+      background-size: 200% auto;
+      animation: gradient 2s linear infinite;
+      transition: width 0.5s ease;
+    }
+
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+
+    #loadingText {
+      font-weight: 800;
+      font-size: 2rem;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #1a1a1a, #666);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="header position-fixed start-0 top-0 w-100" style="z-index: 100;">
+    <div class="container">
+      <nav class="navbar navbar-expand-xl p-4">
+        <div class="d-flex align-items-center justify-content-between w-100">
+          <a href="index.html" class="logo">
+            <img src="src/assets/images/logos/logo-dark.svg" class="img-fluid logo-img" alt="Logo" style="height: 40px;" />
+          </a>
+          <a href="index.html" class="btn btn-outline-dark px-4 py-2 rounded-pill fw-bold">Back to Home</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="ai-form-container" data-aos="fade-up">
+      <h2 class="text-center mb-3 display-5 fw-bold"><span style="color: #6e8efb;">AI</span> Web Architect</h2>
+      <p class="text-center text-muted mb-5 fs-5">Crafting bespoke digital experiences through deep analysis and premium design systems.</p>
+      
+      <form id="ai-website-form">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label for="businessName" class="form-label">Business Name</label>
+            <input type="text" class="form-control" id="businessName" placeholder="e.g. Skyline Plumbing" required>
+          </div>
+          <div class="col-md-6">
+            <label for="businessType" class="form-label">Industry Sector</label>
+            <select class="form-select" id="businessType" required>
+              <option value="" selected disabled>Select Type</option>
+              <option value="plumber">Plumbing & HVAC</option>
+              <option value="electrician">Electrical Services</option>
+              <option value="restaurant">Fine Dining & Cafe</option>
+              <option value="law">Legal & Advocacy</option>
+              <option value="consulting">Business Consulting</option>
+              <option value="fitness">Fitness & Wellness</option>
+              <option value="realestate">Real Estate & Property</option>
+              <option value="portfolio">Personal Portfolio</option>
+              <option value="agency">Agency / Creative Studio</option>
+              <option value="other">Other Professional Service</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label for="services" class="form-label">Bespoke Services & Value Proposition</label>
+            <textarea class="form-control" id="services" rows="4" placeholder="List your key services and what makes you unique..." required></textarea>
+          </div>
+          <div class="col-md-6">
+            <label for="location" class="form-label">Target Location / Market</label>
+            <input type="text" class="form-control" id="location" placeholder="e.g. Mayfair, London" required>
+          </div>
+          <div class="col-md-6">
+            <label for="style" class="form-label">Design Identity</label>
+            <select class="form-select" id="style">
+              <option value="modern" selected>Modern (Futuristic & Bold)</option>
+              <option value="professional">Professional (Corporate & Trust)</option>
+              <option value="creative">Creative (Asymmetric & Vibrant)</option>
+              <option value="minimalist">Minimalist (Pure & Simple)</option>
+            </select>
+          </div>
+        </div>
+        
+        <button type="submit" class="btn-generate">Generate Bespoke Preview</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner mb-5"></div>
+    <h3 id="loadingText">Architecting Your Site...</h3>
+    <p class="text-muted fs-5" id="loadingSubtext">Our AI is drafting production-ready code.</p>
+    <div class="progress-bar-container">
+      <div class="progress-bar-inner"></div>
+    </div>
+  </div>
+
+  <footer class="footer py-4 border-top">
+    <div class="container">
+      <p class="mb-0 text-center">©2025 FreeWebsiteTemplates. All Rights Reserved</p>
+    </div>
+  </footer>
+
+  <script src="src/assets/libs/jquery/dist/jquery.min.js"></script>
+  <script src="src/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="src/assets/libs/aos-master/dist/aos.js"></script>
+  <script>
+    AOS.init();
+    
+    const loadingMessages = [
+      { main: "Initializing AI Architect...", sub: "Securing dedicated GPU cycles for your bespoke design." },
+      { main: "Analyzing Market Logic...", sub: "Deep-diving into your localized competitive landscape." },
+      { main: "Drafting Narrative Copy...", sub: "Crafting conversion-optimized headlines for your brand." },
+      { main: "Calculating Design Tokens...", sub: "Synthesizing glassmorphism, depth, and fluid grids." },
+      { main: "Generating Custom Code...", sub: "Compiling semantic HTML5 and cutting-edge CSS3." },
+      { main: "Polishing Micro-Interactions...", sub: "Implementing smooth transitions and scroll-entry masks." },
+      { main: "Finalizing Build...", sub: "Encrypting and preparing your master preview for launch." }
+    ];
+    
+    // Pre-select category from URL if present
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const type = urlParams.get('type');
+      if (type) {
+        const select = document.getElementById('businessType');
+        // Map common slugs to our options
+        const mapping = {
+          'business': 'consulting',
+          'agency': 'consulting',
+          'portfolio': 'other',
+          'e-commerce': 'other',
+          'services': 'consulting',
+          'plumber': 'plumber',
+          'electrician': 'electrician',
+          'restaurant': 'restaurant',
+          'law': 'law'
+        };
+        if (mapping[type]) select.value = mapping[type];
+      }
+    });
+
+    document.getElementById('ai-website-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = {
+        businessName: document.getElementById('businessName').value,
+        businessType: document.getElementById('businessType').value,
+        services: document.getElementById('services').value,
+        location: document.getElementById('location').value,
+        style: document.getElementById('style').value
+      };
+      
+      const overlay = document.getElementById('loadingOverlay');
+      const mainText = document.getElementById('loadingText');
+      const subText = document.getElementById('loadingSubtext');
+      const progressBar = document.querySelector('.progress-bar-inner');
+      
+      overlay.style.display = 'flex';
+      const API_BASE = window.location.protocol === 'file:' ? 'https://awake-murex.vercel.app' : '';
+      
+      try {
+        const response = await fetch(`${API_BASE}/api/generate-site`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        
+        const initialData = await response.json();
+        
+        if (initialData.success) {
+          // SYNC REDIRECT (Vercel Fix)
+          if (initialData.previewUrl) {
+            progressBar.style.width = '100%';
+            mainText.innerText = "Website Created!";
+            subText.innerText = "Taking you to your professional preview...";
+            setTimeout(() => {
+              window.location.href = initialData.previewUrl;
+            }, 1000);
+            return;
+          }
+
+          // ASYNC POLLING (Local/Standard Server)
+          const slug = initialData.slug;
+          let progress = 10;
+          progressBar.style.width = '10%';
+
+          // Polling loop
+          const pollInterval = setInterval(async () => {
+            try {
+              const statusRes = await fetch(`${API_BASE}/api/status/${slug}`);
+              const statusData = await statusRes.json();
+
+              if (statusData.status === "COMPLETED") {
+                clearInterval(pollInterval);
+                progressBar.style.width = '100%';
+                mainText.innerText = "Website Ready!";
+                subText.innerText = "Redirecting to your preview...";
+                setTimeout(() => {
+                  window.location.href = statusData.previewUrl;
+                }, 1000);
+              } else if (statusData.status === "FAILED") {
+                clearInterval(pollInterval);
+                alert('Generation Failed: ' + statusData.message);
+                overlay.style.display = 'none';
+              } else {
+                // Update text from server if available
+                if (statusData.message) mainText.innerText = statusData.message;
+                
+                // Slow fake progress during AI processing
+                if (progress < 95) {
+                  progress += Math.random() * 2;
+                  progressBar.style.width = progress + '%';
+                }
+              }
+            } catch (err) {
+              console.error("Polling error:", err);
+            }
+          }, 3000);
+        } else {
+          alert('Error: ' + initialData.message);
+          overlay.style.display = 'none';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please check your internet connection and try again.');
+        overlay.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+
+</html>

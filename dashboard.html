@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Websites | WebGlow Hosting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8f9fa; margin: 0; padding: 0; }
+        .hero { background: #1a1a1a; color: #fff; padding: 60px 0; text-align: center; }
+        .container { max-width: 1200px; margin: -40px auto 100px; padding: 0 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 30px; }
+        .site-card { background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: all 0.3s; border: 1px solid #eee; }
+        .site-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
+        .site-header { padding: 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f0f0f0; }
+        .site-info h3 { margin: 0; font-size: 20px; }
+        .site-info span { font-size: 13px; color: #666; }
+        .status-badge { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+        .status-preview { background: #fff8e1; color: #f57c00; }
+        .status-live { background: #e8f5e9; color: #2e7d32; }
+        .site-actions { padding: 20px 24px; background: #fafafa; display: flex; gap: 12px; }
+        .btn { padding: 10px 16px; border-radius: 12px; text-decoration: none; font-size: 14px; font-weight: 600; flex: 1; text-align: center; }
+        .btn-view { background: #1a1a1a; color: #fff; }
+        .btn-launch { background: #6e8efb; color: #fff; }
+        .btn-download { background: #f0f0f0; color: #333; }
+        .empty-state { text-align: center; padding: 100px 0; background: #fff; border-radius: 30px; }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>My Websites</h1>
+        <p>Manage and launch your AI-generated websites.</p>
+    </div>
+
+    <div class="container">
+        <div id="sitesList" class="grid">
+            <!-- Sites injected by JS -->
+        </div>
+    </div>
+
+    <script>
+        async function fetchSites() {
+            const res = await fetch('/api/sites');
+            const sites = await res.json();
+            const list = document.getElementById('sitesList');
+            
+            if (sites.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <h2 style="margin-bottom: 20px;">No websites yet.</h2>
+                        <a href="/build-with-ai" class="btn btn-launch" style="display: initial; padding: 15px 40px;">Build a Website with AI</a>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = sites.map(site => `
+                <div class="site-card">
+                    <div class="site-header">
+                        <div class="site-info">
+                            <h3>${site.name}</h3>
+                            <span>${site.slug}</span>
+                        </div>
+                        <div class="status-badge ${site.status === 'live' ? 'status-live' : 'status-preview'}">
+                            ${site.status}
+                        </div>
+                    </div>
+                    <div class="site-actions">
+                        <a href="/generated-sites/${site.slug}/index.html" class="btn btn-view" target="_blank">View Site</a>
+                        ${site.status === 'preview' ? `<a href="/hosting/setup/${site.slug}" class="btn btn-launch">🚀 Launch</a>` : ''}
+                        <a href="/download/${site.slug}" class="btn btn-download">Download ZIP</a>
+                    </div>
+                </div>
+            `).join('');
+        }
+        fetchSites();
+    </script>
+</body>
+</html>
