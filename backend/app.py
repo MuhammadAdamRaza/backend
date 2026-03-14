@@ -1451,6 +1451,7 @@ CRITICAL RULES:
 - Use unexpected spacing, asymmetric layouts, creative visual hierarchies
 - Each element should feel considered and custom-designed
 - No lorem ipsum — write real, compelling copy specific to {business_type} in {location}
+- CRITICAL: Use REAL industry-specific images. AVOID generic placeholders or cats.
 - NO markdown code blocks in output
 - Return ONLY the raw HTML code starting with <!DOCTYPE html>
 - Minimum 2000 characters of code (this is a full website, not a snippet)
@@ -1561,32 +1562,65 @@ def generate_unique_site(data):
     icons = ['fa-star', 'fa-gem', 'fa-bolt', 'fa-heart', 'fa-rocket', 'fa-shield-alt', 'fa-trophy', 'fa-crown']
     random.shuffle(icons)
     
-    # Industry-specific image keywords
-    img_keywords = {
-        'plumber': 'plumbing,tools,pipes',
-        'electrician': 'electrician,wiring,electricity',
-        'restaurant': 'restaurant,food,dining',
-        'law': 'law,office,legal',
-        'consulting': 'business,meeting,office',
-        'fitness': 'gym,fitness,workout',
-        'realestate': 'house,architecture,realestate',
-        'portfolio': 'creative,workspace,design',
-        'agency': 'agency,office,team',
-        'other': 'business,professional'
+    # Industry-specific content mappings
+    category_data = {
+        'plumber': {
+            'keywords': 'plumbing,pipes',
+            'desc': 'Professional reliable plumbing services for your home and business.'
+        },
+        'electrician': {
+            'keywords': 'electrician,wiring',
+            'desc': 'Certified electrical solutions including repairs, installs and safety checks.'
+        },
+        'restaurant': {
+            'keywords': 'restaurant,food',
+            'desc': 'Exquisite dining experiences with fresh ingredients and master chefs.'
+        },
+        'law': {
+            'keywords': 'law,legal',
+            'desc': 'Expert legal advocacy and consulting for complex cases.'
+        },
+        'consulting': {
+            'keywords': 'business,meeting',
+            'desc': 'Strategic business growth and efficiency consulting.'
+        },
+        'fitness': {
+            'keywords': 'gym,fitness',
+            'desc': 'Personalized training and wellness programs for all levels.'
+        },
+        'realestate': {
+            'keywords': 'house,modern',
+            'desc': 'Premium property listings and expert real estate guidance.'
+        },
+        'portfolio': {
+            'keywords': 'creative,design',
+            'desc': 'Showcasing high-impact creative work and digital experiences.'
+        },
+        'agency': {
+            'keywords': 'office,digital',
+            'desc': 'Full-service digital agency focused on brand growth.'
+        },
+        'other': {
+            'keywords': 'business,work',
+            'desc': 'High-quality professional services for every industry.'
+        }
     }
-    main_kw = img_keywords.get(business_type, 'business')
+    
+    cat_info = category_data.get(business_type, category_data['other'])
+    main_kw = cat_info['keywords']
     
     for i, svc in enumerate(services_list):
         delay = i * 0.1
         icon = icons[i % len(icons)]
-        # Unique image for each service card
-        svc_img = f"https://loremflickr.com/600/400/{main_kw},{svc.replace(' ', '').lower()}"
+        # Use simpler, more targeted keywords for the service cards to avoid "cat" defaults
+        svc_kw = svc.split(' ')[0].lower()
+        svc_img = f"https://loremflickr.com/600/400/{main_kw},{svc_kw}"
         service_cards += f'''
         <div class="service-card" style="animation-delay: {delay}s">
             <div class="service-image" style="height: 200px; background: url('{svc_img}') center/cover; border-radius: 12px; margin-bottom: 1.5rem; background-color: #333;"></div>
             <div class="service-icon"><i class="fas {icon}"></i></div>
             <h3>{svc}</h3>
-            <p>Expert {svc.lower()} services in {location}. We deliver professional results with attention to detail and customer satisfaction.</p>
+            <p>{cat_info['desc']} We specialize in {svc.lower()} with guaranteed results.</p>
         </div>'''
     
     # Unique CSS based on selected style
