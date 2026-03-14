@@ -268,7 +268,7 @@
       const progressBar = document.querySelector('.progress-bar-inner');
       
       overlay.style.display = 'flex';
-      const API_BASE = window.location.origin.includes('vercel.app') ? '' : (window.location.protocol === 'file:' ? 'https://awake-murex.vercel.app' : '');
+      const API_BASE = (window.location.protocol === 'file:') ? 'http://127.0.0.1:5000' : '';
       
       try {
         const response = await fetch(`${API_BASE}/api/generate-site`, {

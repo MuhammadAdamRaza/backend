@@ -501,8 +501,7 @@ def debug_fetch():
 
 @app.route('/build-with-ai')
 def build_with_ai_page():
-    ensure_file('build-with-ai.html')
-    return send_from_directory(PROJECT_ROOT, 'build-with-ai.html')
+    return render_template_string(BUILD_WITH_AI_HTML)
 
 @app.route('/dashboard')
 def dashboard():
