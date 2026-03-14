@@ -1,31 +1,13 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "backend/app.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "backend/app.py"
-    },
-    {
-      "src": "/health",
-      "dest": "backend/app.py"
-    },
-    {
-      "src": "/debug-(.*)",
-      "dest": "backend/app.py"
-    },
-    {
-      "src": "/generated-sites/(.*)",
-      "dest": "backend/app.py"
-    },
-    {
-        "src": "/(.*)",
-        "dest": "backend/app.py"
-    }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.py" },
+    { "source": "/health", "destination": "/api/index.py" },
+    { "source": "/debug-(.*)", "destination": "/api/index.py" },
+    { "source": "/generated-sites/(.*)", "destination": "/api/index.py" },
+    { "source": "/build-with-ai", "destination": "/api/index.py" },
+    { "source": "/dashboard", "destination": "/api/index.py" },
+    { "source": "/download/(.*)", "destination": "/api/index.py" },
+    { "source": "/api/status/(.*)", "destination": "/api/index.py" }
   ]
 }
