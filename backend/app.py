@@ -1101,7 +1101,7 @@ def generate_unique_site(data):
     </section>
 
     <footer>
-        <p>&copy; 2024 {business_name}. All rights reserved. | {business_type.title()} Services in {location}</p>
+        <p>&copy; {datetime.datetime.now().year} {business_name}. All rights reserved. | {business_type.title()} Services in {location}</p>
     </footer>
 
     <script>
