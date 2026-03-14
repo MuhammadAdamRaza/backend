@@ -917,9 +917,210 @@ CRITICAL RULES:
     return None
 
 
+def generate_unique_site(data):
+    """Generate a unique, modern website programmatically when AI is unavailable.
+    
+    This creates a completely custom site with randomized design elements.
+    """
+    import random
+    
+    business_name = data.get('businessName', 'My Business')
+    business_type = data.get('businessType', 'business')
+    location = data.get('location', 'Your Area')
+    services = data.get('services', 'Expert Services')
+    style = data.get('style', 'modern')
+    
+    services_list = [s.strip() for s in services.split(',') if s.strip()][:4]
+    if len(services_list) < 2:
+        services_list = ['Professional Service', 'Expert Solutions', 'Quality Care']
+    
+    # Random design variations for uniqueness
+    hues = [220, 260, 280, 320, 340, 200, 240, 300]  # Different color hues
+    hue1 = random.choice(hues)
+    hue2 = (hue1 + random.randint(30, 60)) % 360
+    
+    # Random layout patterns
+    hero_patterns = ['split', 'centered', 'asymmetric']
+    card_patterns = ['grid', 'masonry', 'horizontal']
+    
+    selected_hero = random.choice(hero_patterns)
+    selected_cards = random.choice(card_patterns)
+    
+    # Generate unique service cards
+    service_cards = ""
+    icons = ['fa-star', 'fa-gem', 'fa-bolt', 'fa-heart', 'fa-rocket', 'fa-shield-alt', 'fa-trophy', 'fa-crown']
+    random.shuffle(icons)
+    
+    for i, svc in enumerate(services_list):
+        delay = i * 0.1
+        icon = icons[i % len(icons)]
+        service_cards += f'''
+        <div class="service-card" style="animation-delay: {delay}s">
+            <div class="service-icon"><i class="fas {icon}"></i></div>
+            <h3>{svc}</h3>
+            <p>Expert {svc.lower()} services in {location}. We deliver professional results with attention to detail and customer satisfaction.</p>
+        </div>'''
+    
+    # Unique CSS based on selected style
+    if style == 'modern':
+        bg_color = '#0a0a0a'
+        text_color = '#fafafa'
+        accent_gradient = f'linear-gradient(135deg, hsl({hue1}, 80%, 60%) 0%, hsl({hue2}, 80%, 60%) 100%)'
+    elif style == 'professional':
+        bg_color = '#fafafa'
+        text_color = '#1a1a1a'
+        accent_gradient = f'linear-gradient(135deg, hsl({hue1}, 60%, 40%) 0%, hsl({hue2}, 60%, 35%) 100%)'
+    elif style == 'creative':
+        bg_color = f'hsl({hue1}, 20%, 8%)'
+        text_color = '#ffffff'
+        accent_gradient = f'linear-gradient(135deg, hsl({hue1}, 90%, 60%) 0%, hsl({hue2}, 90%, 60%) 50%, hsl({(hue1+120)%360}, 90%, 60%) 100%)'
+    else:  # minimal
+        bg_color = '#ffffff'
+        text_color = '#1a1a1a'
+        accent_gradient = f'linear-gradient(135deg, hsl({hue1}, 70%, 50%) 0%, hsl({hue1}, 70%, 40%) 100%)'
+    
+    html = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{business_name} | {business_type.title()} in {location}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {{
+            --bg: {bg_color};
+            --text: {text_color};
+            --accent: {accent_gradient};
+            --surface: rgba(128,128,128,0.1);
+        }}
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }}
+        nav {{ position: fixed; top: 0; left: 0; right: 0; padding: 1.5rem 5%; display: flex; justify-content: space-between; align-items: center; z-index: 1000; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); }}
+        .logo {{ font-size: 1.5rem; font-weight: 800; background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }}
+        .nav-links {{ display: flex; gap: 2rem; list-style: none; }}
+        .nav-links a {{ color: var(--text); opacity: 0.7; text-decoration: none; font-weight: 500; transition: opacity 0.3s; }}
+        .nav-links a:hover {{ opacity: 1; }}
+        .nav-cta {{ padding: 0.75rem 1.5rem; background: var(--accent); color: white; text-decoration: none; border-radius: 50px; font-weight: 600; }}
+        
+        .hero {{ min-height: 100vh; display: flex; align-items: center; padding: 8rem 5% 4rem; }}
+        .hero-content {{ max-width: 600px; }}
+        .hero h1 {{ font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; }}
+        .hero h1 span {{ background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }}
+        .hero p {{ font-size: 1.25rem; opacity: 0.8; margin-bottom: 2rem; }}
+        .hero-cta {{ display: flex; gap: 1rem; flex-wrap: wrap; }}
+        .btn-primary {{ padding: 1rem 2rem; background: var(--accent); color: white; text-decoration: none; border-radius: 50px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; }}
+        .btn-secondary {{ padding: 1rem 2rem; background: transparent; color: var(--text); text-decoration: none; border-radius: 50px; font-weight: 600; border: 1px solid rgba(128,128,128,0.3); }}
+        
+        .services {{ padding: 6rem 5%; }}
+        .section-header {{ text-align: center; max-width: 600px; margin: 0 auto 4rem; }}
+        .section-header h2 {{ font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; margin-bottom: 1rem; }}
+        .services-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto; }}
+        .service-card {{ background: var(--surface); border-radius: 20px; padding: 2.5rem; border: 1px solid rgba(128,128,128,0.1); transition: transform 0.3s, box-shadow 0.3s; opacity: 0; animation: fadeUp 0.6s forwards; }}
+        .service-card:hover {{ transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }}
+        @keyframes fadeUp {{ to {{ opacity: 1; transform: translateY(0); }} from {{ opacity: 0; transform: translateY(30px); }} }}
+        .service-icon {{ width: 60px; height: 60px; background: var(--accent); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; margin-bottom: 1.5rem; }}
+        .service-card h3 {{ font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; }}
+        .service-card p {{ opacity: 0.7; font-size: 0.95rem; }}
+        
+        .about {{ padding: 6rem 5%; background: var(--surface); }}
+        .about-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; max-width: 1200px; margin: 0 auto; }}
+        .about-content h2 {{ font-size: clamp(2rem, 4vw, 2.5rem); font-weight: 700; margin-bottom: 1.5rem; }}
+        .about-content p {{ opacity: 0.8; margin-bottom: 1.5rem; font-size: 1.1rem; line-height: 1.8; }}
+        .features {{ display: flex; flex-direction: column; gap: 1rem; }}
+        .feature {{ display: flex; align-items: center; gap: 1rem; }}
+        
+        .contact {{ padding: 6rem 5%; text-align: center; }}
+        .contact-box {{ max-width: 600px; margin: 0 auto; background: var(--surface); border-radius: 24px; padding: 3rem; }}
+        .contact h2 {{ font-size: clamp(2rem, 4vw, 2.5rem); margin-bottom: 1rem; }}
+        .contact p {{ opacity: 0.8; margin-bottom: 2rem; }}
+        .contact-info {{ display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem; }}
+        
+        footer {{ padding: 2rem 5%; text-align: center; opacity: 0.6; border-top: 1px solid rgba(128,128,128,0.1); }}
+        
+        @media (max-width: 968px) {{
+            .hero-grid, .about-grid {{ grid-template-columns: 1fr; text-align: center; }}
+            .nav-links {{ display: none; }}
+        }}
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">{business_name}</div>
+        <ul class="nav-links">
+            <li><a href="#services">Services</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+        <a href="#contact" class="nav-cta">Get Started</a>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Premium {business_type.title()} <span>in {location}</span></h1>
+            <p>Experience exceptional {services_list[0]} and more with {business_name}. Professional services tailored to your needs.</p>
+            <div class="hero-cta">
+                <a href="#contact" class="btn-primary">Get Free Quote <i class="fas fa-arrow-right"></i></a>
+                <a href="#services" class="btn-secondary">Our Services</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="services" id="services">
+        <div class="section-header">
+            <h2>Our Services</h2>
+            <p>Comprehensive {business_type} solutions for {location}</p>
+        </div>
+        <div class="services-grid">
+            {service_cards}
+        </div>
+    </section>
+
+    <section class="about" id="about">
+        <div class="about-grid">
+            <div class="about-content">
+                <h2>Why Choose {business_name}?</h2>
+                <p>Based in {location}, we deliver excellence in {services_list[0].lower()}. Our team combines expertise with dedication.</p>
+                <div class="features">
+                    <div class="feature"><i class="fas fa-check-circle" style="color: hsl({hue1}, 80%, 60%);"></i><span>Licensed & Insured Professionals</span></div>
+                    <div class="feature"><i class="fas fa-check-circle" style="color: hsl({hue1}, 80%, 60%);"></i><span>Transparent Pricing</span></div>
+                    <div class="feature"><i class="fas fa-check-circle" style="color: hsl({hue1}, 80%, 60%);"></i><span>Fast & Reliable Service</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="contact" id="contact">
+        <div class="contact-box">
+            <h2>Ready to Get Started?</h2>
+            <p>Contact {business_name} today for a free consultation in {location}.</p>
+            <a href="mailto:contact@{business_name.lower().replace(' ', '')}.com" class="btn-primary">
+                <i class="fas fa-envelope"></i> Contact Us
+            </a>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 {business_name}. All rights reserved. | {business_type.title()} Services in {location}</p>
+    </footer>
+
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {{
+            anchor.addEventListener('click', function (e) {{
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({{ behavior: 'smooth' }});
+            }});
+        }});
+    </script>
+</body>
+</html>'''
+    
+    return html
+
+
 # Remove the old fallback template system entirely
 def generate_fallback_site(data, demo_dir):
-    """DEPRECATED: No longer used. AI generation is now the only method."""
+    """DEPRECATED: No longer used."""
     return False
 
 @app.route('/api/generate-site', methods=['POST'])
@@ -949,6 +1150,11 @@ def generate_site():
             demo_dir = os.path.join(site_path, "demo")
             os.makedirs(demo_dir, exist_ok=True)
 
+            if not custom_html:
+                # AI failed - use unique programmatic fallback
+                PROGRESS_STORE[site_slug]["message"] = "Using smart fallback generator..."
+                custom_html = generate_unique_site(data)
+                
             if not custom_html:
                 PROGRESS_STORE[site_slug] = {"status": "FAILED", "message": "Failed to generate website."}
                 return
