@@ -299,7 +299,7 @@
           // Polling loop
           const pollInterval = setInterval(async () => {
             try {
-              const statusRes = await fetch(`${API_BASE}/api/status/${slug}`);
+              const statusRes = await fetch(`${API_BASE}/api/status/${slug}?v=${Date.now()}`);
               const statusData = await statusRes.json();
 
               if (statusData.status === "COMPLETED") {

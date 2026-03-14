@@ -1156,7 +1156,7 @@ def generate_site():
                 custom_html = generate_unique_site(data)
                 
             if not custom_html:
-                PROGRESS_STORE[site_slug] = {"status": "FAILED", "message": "Failed to generate website."}
+                PROGRESS_STORE[site_slug] = {"status": "FAILED", "message": "Failed to generate website (v2)."}
                 return
             
             # 4. Save the AI-generated Code
