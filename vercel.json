@@ -9,11 +9,23 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/backend/app.py"
+      "dest": "backend/app.py"
     },
     {
-      "src": "/(.*)",
-      "dest": "/backend/app.py"
+      "src": "/health",
+      "dest": "backend/app.py"
+    },
+    {
+      "src": "/debug-(.*)",
+      "dest": "backend/app.py"
+    },
+    {
+      "src": "/generated-sites/(.*)",
+      "dest": "backend/app.py"
+    },
+    {
+        "src": "/(.*)",
+        "dest": "backend/app.py"
     }
   ]
 }
