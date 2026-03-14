@@ -30,16 +30,18 @@
       letter-spacing: -0.01em;
     }
 
-    .form-control, .form-select {
+    .form-control,
+    .form-select {
       border-radius: 16px;
       padding: 16px 20px;
-      border: 1px solid rgba(0,0,0,0.08);
-      background: rgba(255,255,255,0.8);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: rgba(255, 255, 255, 0.8);
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       font-size: 1rem;
     }
 
-    .form-control:focus, .form-select:focus {
+    .form-control:focus,
+    .form-select:focus {
       border-color: #6e8efb;
       background: #fff;
       box-shadow: 0 0 0 5px rgba(110, 142, 251, 0.15);
@@ -91,8 +93,13 @@
     }
 
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
 
     .progress-bar-container {
@@ -103,7 +110,7 @@
       border-radius: 10px;
       margin-top: 40px;
       overflow: hidden;
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
     }
 
     .progress-bar-inner {
@@ -116,8 +123,13 @@
     }
 
     @keyframes gradient {
-      0% { background-position: 0% 50%; }
-      100% { background-position: 100% 50%; }
+      0% {
+        background-position: 0% 50%;
+      }
+
+      100% {
+        background-position: 100% 50%;
+      }
     }
 
     #loadingText {
@@ -139,7 +151,8 @@
       <nav class="navbar navbar-expand-xl p-4">
         <div class="d-flex align-items-center justify-content-between w-100">
           <a href="index.html" class="logo">
-            <img src="src/assets/images/logos/logo-dark.svg" class="img-fluid logo-img" alt="Logo" style="height: 40px;" />
+            <img src="src/assets/images/logos/logo-dark.svg" class="img-fluid logo-img" alt="Logo"
+              style="height: 40px;" />
           </a>
           <a href="index.html" class="btn btn-outline-dark px-4 py-2 rounded-pill fw-bold">Back to Home</a>
         </div>
@@ -150,8 +163,9 @@
   <div class="container">
     <div class="ai-form-container" data-aos="fade-up">
       <h2 class="text-center mb-3 display-5 fw-bold"><span style="color: #6e8efb;">AI</span> Web Architect</h2>
-      <p class="text-center text-muted mb-5 fs-5">Crafting bespoke digital experiences through deep analysis and premium design systems.</p>
-      
+      <p class="text-center text-muted mb-5 fs-5">Crafting bespoke digital experiences through deep analysis and premium
+        design systems.</p>
+
       <form id="ai-website-form">
         <div class="row g-4">
           <div class="col-md-6">
@@ -176,7 +190,8 @@
           </div>
           <div class="col-12">
             <label for="services" class="form-label">Bespoke Services & Value Proposition</label>
-            <textarea class="form-control" id="services" rows="4" placeholder="List your key services and what makes you unique..." required></textarea>
+            <textarea class="form-control" id="services" rows="4"
+              placeholder="List your key services and what makes you unique..." required></textarea>
           </div>
           <div class="col-md-6">
             <label for="location" class="form-label">Target Location / Market</label>
@@ -192,7 +207,7 @@
             </select>
           </div>
         </div>
-        
+
         <button type="submit" class="btn-generate">Generate Bespoke Preview</button>
       </form>
     </div>
@@ -218,7 +233,7 @@
   <script src="src/assets/libs/aos-master/dist/aos.js"></script>
   <script>
     AOS.init();
-    
+
     const loadingMessages = [
       { main: "Initializing AI Architect...", sub: "Securing dedicated GPU cycles for your bespoke design." },
       { main: "Analyzing Market Logic...", sub: "Deep-diving into your localized competitive landscape." },
@@ -228,7 +243,7 @@
       { main: "Polishing Micro-Interactions...", sub: "Implementing smooth transitions and scroll-entry masks." },
       { main: "Finalizing Build...", sub: "Encrypting and preparing your master preview for launch." }
     ];
-    
+
     // Pre-select category from URL if present
     document.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -251,9 +266,9 @@
       }
     });
 
-    document.getElementById('ai-website-form').addEventListener('submit', async function(e) {
+    document.getElementById('ai-website-form').addEventListener('submit', async function (e) {
       e.preventDefault();
-      
+
       const formData = {
         businessName: document.getElementById('businessName').value,
         businessType: document.getElementById('businessType').value,
@@ -261,24 +276,24 @@
         location: document.getElementById('location').value,
         style: document.getElementById('style').value
       };
-      
+
       const overlay = document.getElementById('loadingOverlay');
       const mainText = document.getElementById('loadingText');
       const subText = document.getElementById('loadingSubtext');
       const progressBar = document.querySelector('.progress-bar-inner');
-      
+
       overlay.style.display = 'flex';
-      const API_BASE = (window.location.protocol === 'file:') ? 'http://127.0.0.1:5000' : '';
-      
+      const API_BASE = 'https://awake-murex.vercel.app';
+
       try {
         const response = await fetch(`${API_BASE}/api/generate-site`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
         });
-        
+
         const initialData = await response.json();
-        
+
         if (initialData.success) {
           // SYNC REDIRECT (Vercel Fix)
           if (initialData.previewUrl) {
@@ -317,7 +332,7 @@
               } else {
                 // Update text from server if available
                 if (statusData.message) mainText.innerText = statusData.message;
-                
+
                 // Slow fake progress during AI processing
                 if (progress < 95) {
                   progress += Math.random() * 2;
