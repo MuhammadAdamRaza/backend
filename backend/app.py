@@ -86,323 +86,931 @@ AI_ONLY_MODE = True
 INDEX_HTML = """
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Free Website Templates</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
-  <style>
-    :root { --primary: #6e8efb; --secondary: #a777e3; --dark: #1a1a1a; }
-    body { font-family: 'Inter', sans-serif; background: #f8f9fa; color: var(--dark); }
-    .hero { padding: 100px 0; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); }
-    .btn-ai { background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; color: #fff; padding: 15px 40px; border-radius: 50px; font-weight: 700; transition: transform 0.3s; }
-    .btn-ai:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(110, 142, 251, 0.3); color: #fff; }
-  </style>
+  <link rel="shortcut icon" type="image/png" href="src/assets/images/logos/favicon.svg" />
+  <link rel="stylesheet" href="src/assets/libs/owl.carousel/dist/assets/owl.carousel.min.css">
+  <link rel="stylesheet" href="src/assets/libs/aos-master/dist/aos.css">
+  <link rel="stylesheet" href="src/assets/css/styles.css" />
+  <link rel="stylesheet" href="src/assets/css/premium.css" />
 </head>
-<body>
-  <nav class="navbar navbar-expand-lg py-4">
-    <div class="container">
-      <a class="navbar-brand fw-bold fs-4" href="/">WebGlow AI</a>
-      <div class="d-flex"><a href="/contact" class="btn btn-outline-dark rounded-pill px-4">Contact</a></div>
-    </div>
-  </nav>
 
-  <header class="hero text-center">
-    <div class="container" data-aos="fade-up">
-      <h1 class="display-3 fw-bold mb-4">Build Your <span style="color: var(--primary);">AI Website</span> In Seconds</h1>
-      <p class="lead mb-5 opacity-75">No coding. No design skills. Just enter your business name and watch the magic happen.</p>
-      <a href="/build-with-ai" class="btn btn-ai btn-lg">Start Building with AI ✨</a>
+<body>
+
+  <!-- Header -->
+  <header class="header position-fixed start-0 top-0 w-100">
+    <div class="container">
+      <nav class="navbar navbar-expand-xl rounded-pill p-7">
+        <div class="d-flex align-items-center justify-content-between w-100">
+          <a href="index.html" class="logo">
+            <img src="src/assets/images/logos/logo-dark.svg" class="img-fluid logo-img" alt="Logo" />
+          </a>
+          <button class="navbar-toggler border-0 p-0 shadow-none" type="button" data-bs-toggle="offcanvas"
+            data-bs-target="#offcanvasHeader" aria-controls="offcanvasHeader">
+            <iconify-icon icon="solar:hamburger-menu-bold" class="fs-8 text-dark"></iconify-icon>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mx-auto gap-2 p-1 bg-light rounded-pill">
+              <li class="nav-item">
+                <a class="nav-link scroll-link py-2 px-3 rounded-pill fw-medium" href="index.html#aboutus">About Us</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link scroll-link py-2 px-3 rounded-pill fw-medium" href="index.html#services">Services</a>
+              </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle py-2 px-3 rounded-pill fw-medium" href="index.html#work" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  Templates
+                </a>
+                <ul class="dropdown-menu border-0 shadow-sm dropdown-menu-custom">
+                  <li><a class="dropdown-item" href="index.html#work">All Templates</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="templates/business/index.html">Business</a></li>
+                  <li><a class="dropdown-item" href="templates/agency/index.html">Agency</a></li>
+                  <li><a class="dropdown-item" href="templates/portfolio/index.html">Portfolio</a></li>
+                  <li><a class="dropdown-item" href="templates/e-commerce/index.html">E-commerce</a></li>
+                  <li><a class="dropdown-item" href="templates/services/index.html">Services</a></li>
+                </ul>
+              </li>
+
+
+            </ul>
+            <div class="d-flex align-items-center">
+              <a href="contact.html" class="btn btn-dark px-4 py-2">Contact</a>
+            </div>
+          </div>
+        </div>
+      </nav>
     </div>
   </header>
 
-  <section class="py-5 text-center">
-    <div class="container">
-        <div class="row g-4 justify-content-center">
-            <div class="col-md-4">
-                <div class="p-4 bg-white rounded-4 shadow-sm h-100">
-                    <h4 class="fw-bold">Industry Specific</h4>
-                    <p class="opacity-75">Tailored content for plumbers, lawyers, restaurants, and more.</p>
-                </div>
-            </div>
-             <div class="col-md-4">
-                <div class="p-4 bg-white rounded-4 shadow-sm h-100">
-                    <h4 class="fw-bold">Instant Preview</h4>
-                    <p class="opacity-75">See your website live on Vercel immediately after generation.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-  </section>
+  <!--  Page Wrapper -->
+  <div class="page-wrapper overflow-hidden">
 
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-  <script>AOS.init();</script>
+    <!--  Banner Section -->
+    <section class="banner-section bg-gradient-shaph position-relative pt-14 pt-md-15 pb-11 pb-lg-12 pb-xl-13">
+      <div class="container position-relative z-3">
+        <div class="d-flex flex-column gap-10">
+          <h1 class="text-center mb-0" data-aos="fade-up" data-aos-delay="100" data-aos-duration="1000">
+            Download Free <em class="font-instrument fw-normal"> Website Templates</em>
+          </h1>
+          <div class="row justify-content-center" data-aos="fade-up" data-aos-delay="200" data-aos-duration="1000">
+            <div class="col-xl-6">
+              <p class="text-center mb-0">Get a professional website” no coding, no hassle, no cost.<br><br>
+                Just choose a template, download it, and start building. It’s that simple.<br><br>
+
+                Whether it’s for a business, portfolio, blog, or online store, our templates are ready to go
+                immediately after download..</p>
+            </div>
+          </div>
+          <div class="d-flex flex-column align-items-center justify-content-center gap-3" data-aos="fade-up"
+            data-aos-delay="300" data-aos-duration="1000">
+            <div class="d-md-flex align-items-center justify-content-center gap-10">
+              <a href="#work" class="btn btn-primary py-md-8 pe-md-14 mx-auto mx-md-0 d-block d-md-flex">
+                <span class="btn-text">View Templates</span>
+                <iconify-icon icon="solar:arrow-right-up-linear"
+                  class="btn-icon bg-white text-dark round-32 rounded-circle hstack justify-content-center fs-6"></iconify-icon>
+              </a>
+            </div>
+            <a href="/build-with-ai?type=business" class="btn btn-primary py-md-8 pe-md-14 mx-auto mx-md-0 d-block d-md-flex">
+              <span class="btn-text">Build With Ai</span>
+              <iconify-icon icon="solar:magic-stick-3-linear"
+                class="btn-icon bg-white text-dark round-32 rounded-circle hstack justify-content-center fs-6"></iconify-icon>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!--  Logo Ipsum Section -->
+    <section class="logo-ipsum py-10 py-lg-12 py-xl-13">
+      <div class="container position-relative z-3">
+        <div class="d-flex flex-column gap-9">
+          <div class="row position-relative hstack justify-content-center">
+            <div class="col-lg-6">
+              <div class="d-flex align-items-center justify-content-between gap-3">
+                <hr class="border-2 w-20 d-block">
+                <p class="mb-0 text-center flex-sm-shrink-0">Loved by 1000+ big and
+                  small
+                  brands around the worlds</p>
+                <hr class="border-2 w-20 d-block">
+              </div>
+            </div>
+          </div>
+
+          <div class="marquee w-100 d-flex align-items-center overflow-hidden">
+            <div class="marquee-content d-flex align-items-center justify-content-between gap-13">
+              <div class="marquee-tag hstack justify-content-center">
+                <img src="src/assets/images/brands/logo-ipsum-1.svg" alt="logo-ipsum" class="img-fluid">
+              </div>
+              <div class="marquee-tag hstack justify-content-center">
+                <img src="src/assets/images/brands/logo-ipsum-2.svg" alt="logo-ipsum" class="img-fluid">
+              </div>
+              <div class="marquee-tag hstack justify-content-center">
+                <img src="src/assets/images/brands/logo-ipsum-3.svg" alt="logo-ipsum" class="img-fluid">
+              </div>
+              <div class="marquee-tag hstack justify-content-center">
+                <img src="src/assets/images/brands/logo-ipsum-4.svg" alt="logo-ipsum" class="img-fluid">
+              </div>
+              <div class="marquee-tag hstack justify-content-center">
+                <img src="src/assets/images/brands/logo-ipsum-5.svg" alt="logo-ipsum" class="img-fluid">
+              </div>
+              <div class="marquee-tag hstack justify-content-center">
+                <img src="src/assets/images/brands/logo-ipsum-1.svg" alt="logo-ipsum" class="img-fluid">
+              </div>
+              <div class="marquee-tag hstack justify-content-center">
+                <img src="src/assets/images/brands/logo-ipsum-2.svg" alt="logo-ipsum" class="img-fluid">
+              </div>
+              <div class="marquee-tag hstack justify-content-center">
+                <img src="src/assets/images/brands/logo-ipsum-3.svg" alt="logo-ipsum" class="img-fluid">
+              </div>
+              <div class="marquee-tag hstack justify-content-center">
+                <img src="src/assets/images/brands/logo-ipsum-4.svg" alt="logo-ipsum" class="img-fluid">
+              </div>
+              <div class="marquee-tag hstack justify-content-center">
+                <img src="src/assets/images/brands/logo-ipsum-5.svg" alt="logo-ipsum" class="img-fluid">
+              </div>
+              <div class="marquee-tag hstack justify-content-center">
+                <img src="src/assets/images/brands/logo-ipsum-1.svg" alt="logo-ipsum" class="img-fluid">
+              </div>
+              <div class="marquee-tag hstack justify-content-center">
+                <img src="src/assets/images/brands/logo-ipsum-2.svg" alt="logo-ipsum" class="img-fluid">
+              </div>
+              <div class="marquee-tag hstack justify-content-center">
+                <img src="src/assets/images/brands/logo-ipsum-3.svg" alt="logo-ipsum" class="img-fluid">
+              </div>
+              <div class="marquee-tag hstack justify-content-center">
+                <img src="src/assets/images/brands/logo-ipsum-4.svg" alt="logo-ipsum" class="img-fluid">
+              </div>
+              <div class="marquee-tag hstack justify-content-center">
+                <img src="src/assets/images/brands/logo-ipsum-5.svg" alt="logo-ipsum" class="img-fluid">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>-->
+
+    <!--  Count Section -->
+    <section class="py-10 py-lg-12 py-xl-13" id="aboutus">
+      <div class="container position-relative z-3">
+        <div class="d-flex flex-column gap-10 gap-lg-12">
+          <div class="d-flex flex-column gap-3">
+            <h2 class="mb-0 text-center" data-aos="fade-up" data-aos-delay="100" data-aos-duration="1000">Clean HTML &
+              CSS, easy to edit</h2>
+            <p class="mb-0 text-center" data-aos="fade-up" data-aos-delay="100" data-aos-duration="1000">Just download
+              the template you like and start building. No catch, no waiting, no design headaches.</p>
+            <p class="mb-0 text-center" data-aos="fade-up" data-aos-delay="100" data-aos-duration="1000"> Every template
+              is fully responsive, SEO-friendly, and easy to customise â€” so your site looks perfect on any device.</p>
+            <br>
+            <h2 class="mb-0 text-center" data-aos="fade-up" data-aos-delay="100" data-aos-duration="1000"><em
+                class="font-instrument">Designs</em> Made With</h2>
+
+            <div class="d-flex flex-wrap align-items-center justify-content-center gap-3" data-aos="fade-up"
+              data-aos-delay="200" data-aos-duration="1000">
+              <div class="rounded-pill py-1 px-8 hstack gap-7 bg-secondary-subtle">
+                <iconify-icon icon="solar:magic-stick-3-linear" class="fs-9 text-secondary"></iconify-icon>
+                <h2 class="mb-0 text-secondary font-instrument"><em>Creativity</em></h2>
+              </div>
+              <div class="rounded-pill py-1 px-8 hstack gap-7 bg-info-subtle">
+                <iconify-icon icon="solar:lightbulb-bolt-linear" class="fs-9 text-info"></iconify-icon>
+                <h2 class="mb-0 text-info font-instrument"><em>Innovation</em></h2>
+              </div>
+              <div class="rounded-pill py-1 px-8 hstack gap-7 bg-light-orange">
+                <iconify-icon icon="solar:command-linear" class="fs-9 text-orange"></iconify-icon>
+                <h2 class="mb-0 text-orange font-instrument"><em>Strategy</em></h2>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!--  Innovation Meets Section -->
+    <section class="innovation-meets py-10 py-lg-12 py-xl-13" id="services">
+      <div class="container">
+        <div class="d-flex flex-column gap-10 gap-lg-12">
+          <div class="row justify-content-center">
+            <div class="col-lg-6 col-xl-4">
+              <h2 class="mb-0 text-center" data-aos="fade-up" data-aos-delay="100" data-aos-duration="1000">Where
+                innovation meets <em class="font-instrument">aesthetics</em></h2>
+            </div>
+          </div>
+          <div class="d-flex flex-column gap-4">
+            <div class="row">
+              <div class="col-sm-6 col-md-4 col-lg">
+                <div class="card bg-secondary-subtle" data-aos="fade-up" data-aos-delay="100" data-aos-duration="1000">
+                  <div class="card-body d-flex flex-column gap-11">
+                    <iconify-icon icon="solar:palette-round-linear" class="fs-9 text-secondary"></iconify-icon>
+                    <h4 class="text-secondary mb-0">Brand<br> Strategy</h4>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-md-4 col-lg">
+                <div class="card bg-info-subtle" data-aos="fade-up" data-aos-delay="200" data-aos-duration="1000">
+                  <div class="card-body d-flex flex-column gap-11">
+                    <iconify-icon icon="solar:gallery-wide-linear" class="fs-9 text-info"></iconify-icon>
+                    <h4 class="text-info mb-0">Digital<br>
+                      Marketing</h4>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-md-4 col-lg">
+                <div class="card bg-light-orange" data-aos="fade-up" data-aos-delay="300" data-aos-duration="1000">
+                  <div class="card-body d-flex flex-column gap-11">
+                    <iconify-icon icon="solar:magic-stick-3-linear" class="fs-9 text-orange"></iconify-icon>
+                    <h4 class="text-orange mb-0">UI/UX<br>
+                      Design</h4>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-md-4 col-lg">
+                <div class="card bg-success-subtle" data-aos="fade-up" data-aos-delay="400" data-aos-duration="1000">
+                  <div class="card-body d-flex flex-column gap-11">
+                    <iconify-icon icon="solar:chart-linear" class="fs-9 text-success"></iconify-icon>
+                    <h4 class="text-success mb-0">Analytics &<br>
+                      Reporting</h4>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-md-4 col-lg">
+                <div class="card bg-danger-subtle" data-aos="fade-up" data-aos-delay="500" data-aos-duration="1000">
+                  <div class="card-body d-flex flex-column gap-11">
+                    <iconify-icon icon="solar:window-frame-linear" class="fs-9 text-danger"></iconify-icon>
+                    <h4 class="text-danger mb-0">Web<br>
+                      Development</h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-dark mb-0">
+              <div class="card-body px-lg-5">
+                <div class="row align-items-center justify-content-between gap-4 gap-lg-0">
+                  <div class="col-lg-4">
+                    <h3 class="mb-0 text-white text-center text-lg-start">See Our Work in Action.
+                      Start Your Creative Journey with Us!</h3>
+                  </div>
+                  <div class="col-lg-8">
+                    <div
+                      class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-end gap-7">
+                      <a href="https://www.webglow.co.uk" target="_blank" class="btn btn-white">
+                        <span class="btn-text">Lets Collaborate</span>
+                        <iconify-icon icon="solar:arrow-right-up-linear"
+                          class="btn-icon bg-dark text-white round-32 rounded-circle hstack justify-content-center fs-6"></iconify-icon>
+                      </a>
+                      <a href="#" class="btn btn-outline-light">
+                        <span class="btn-text">View Portfolio</span>
+                        <iconify-icon icon="solar:arrow-right-up-linear"
+                          class="btn-icon bg-white text-dark round-32 rounded-circle hstack justify-content-center fs-6"></iconify-icon>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!--  Work Section -->
+    <section class="py-10 py-lg-12 py-xl-13" id="work">
+      <div class="container">
+        <div class="d-flex flex-column gap-10 gap-lg-12">
+          <div class="row justify-content-center">
+            <div class="col-lg-8 col-xl-6 text-center">
+              <h2 class="mb-0" data-aos="fade-up" data-aos-delay="100" data-aos-duration="1000">View Our Template <em
+                  class="font-instrument">Selection</em></h2>
+              <p class="mb-0 mt-4" data-aos="fade-up" data-aos-delay="150" data-aos-duration="1000">Your next website is
+                just a click away. Browse our templates and download the perfect design for your project today.</p>
+            </div>
+          </div>
+
+          <!-- Category Filters -->
+          <div class="row justify-content-center mb-4" data-aos="fade-up" data-aos-delay="200" data-aos-duration="1000">
+            <div class="col-12 d-flex flex-wrap justify-content-center gap-3">
+              <button class="btn filter-btn-custom filter-btn-active filter-btn" data-filter="All">All</button>
+              <button class="btn filter-btn-custom filter-btn-dark filter-btn" data-filter="Business">Business</button>
+              <button class="btn filter-btn-custom filter-btn-dark filter-btn" data-filter="Agency">Agency</button>
+              <button class="btn filter-btn-custom filter-btn-dark filter-btn"
+                data-filter="Portfolio">Portfolio</button>
+              <button class="btn filter-btn-custom filter-btn-dark filter-btn"
+                data-filter="E-commerce">E-commerce</button>
+              <button class="btn filter-btn-custom filter-btn-dark filter-btn" data-filter="Services">Services</button>
+            </div>
+          </div>
+          <div class="row">
+            <!-- Templates Grid -->
+            <div class="row" id="templates-container">
+              <!-- Populated dynamically by templates.js -->
+            </div>
+
+            <!-- Bottom Call-to-Action -->
+            <div class="row g-4">
+              <div class="col-md-6">
+                <div class="card bg-primary text-white border-0 shadow-lg template-card"
+                  style="animation-delay: 100ms;">
+                  <div class="card-body text-center py-5 px-6">
+                    <h4 class="text-white mb-3">Looking for a Custom Design?</h4>
+                    <p class="mb-4">Get a professional, tailored website built by the experts at WebGlow.</p>
+                    <a href="https://www.webglow.co.uk" target="_blank"
+                      class="btn btn-light rounded-pill fw-bold text-primary px-5">Hire WebGlow</a>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card bg-dark text-white border-0 shadow-lg template-card" style="animation-delay: 200ms;">
+                  <div class="card-body text-center py-5 px-6">
+                    <iconify-icon icon="solar:rocket-linear" class="fs-1 text-warning mb-3 d-block"></iconify-icon>
+                    <h5 class="text-white mb-3">Sponsored by WebGlow</h5>
+                    <p class="mb-4 small">Premium Web Development, Marketing, &amp; SEO Services to skyrocket your
+                      business.</p>
+                    <a href="https://www.webglow.co.uk" target="_blank"
+                      class="btn btn-outline-light rounded-pill btn-sm px-5">Learn More</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+    </section>
+
+    <!--  Pricing Section -->
+
+    <!--  FAQ Section -->
+
+    <section class="py-10 py-lg-12 py-xl-13">
+      <div class="container">
+        <div class="d-flex flex-column gap-10 gap-lg-12">
+          <div class="row justify-content-center">
+            <div class="col-lg-6 col-xl-4">
+              <h2 class="mb-0 text-center" data-aos="fade-up" data-aos-delay="100" data-aos-duration="1000">Got
+                questions? We have got <em class="font-instrument">answers</em>
+              </h2>
+            </div>
+          </div>
+          <div class="accordion accordion-flush d-flex flex-column gap-3" id="accordionExample">
+            <div class="accordion-item border rounded-1 position-relative overflow-hidden" data-aos="fade-up"
+              data-aos-delay="100" data-aos-duration="1000">
+              <h2 class="accordion-header">
+                <button class="accordion-button fs-7 fw-medium" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#flush-collapseOne" aria-expanded="true" aria-controls="flush-collapseOne">
+                  Are your website templates really free?
+                </button>
+              </h2>
+              <div id="flush-collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
+                <div class="accordion-body pt-0">
+                  Yes! All our templates are completely free to download. There are no hidden fees or subscriptions.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item border rounded-1 position-relative overflow-hidden" data-aos="fade-up"
+              data-aos-delay="200" data-aos-duration="1000">
+              <h2 class="accordion-header">
+                <button class="accordion-button fs-7 fw-medium collapsed" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
+                  Do I need to sign up or create an account to download a template?
+                </button>
+              </h2>
+              <div id="flush-collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                <div class="accordion-body pt-0">
+                  No sign-ups required. Simply click Download and the template is yours instantly.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item border rounded-1 position-relative overflow-hidden" data-aos="fade-up"
+              data-aos-delay="300" data-aos-duration="1000">
+              <h2 class="accordion-header">
+                <button class="accordion-button fs-7 fw-medium collapsed" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#flush-collapseThree" aria-expanded="false" aria-controls="flush-collapseThree">
+                  Can I use these templates for commercial projects?
+                </button>
+              </h2>
+              <div id="flush-collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                <div class="accordion-body pt-0">
+                  Yes! Most of our templates are free for personal and commercial use. Be sure to check each
+                  templates license for specific details.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item border rounded-1 position-relative overflow-hidden" data-aos="fade-up"
+              data-aos-delay="400" data-aos-duration="1000">
+              <h2 class="accordion-header">
+                <button class="accordion-button fs-7 fw-medium collapsed" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#flush-collapseFour" aria-expanded="false" aria-controls="flush-collapseFour">
+                  Do I need coding experience to use these templates?
+                </button>
+              </h2>
+              <div id="flush-collapseFour" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                <div class="accordion-body pt-0">
+                  Not at all! Our templates are easy to edit. You can modify text, images, and styles using basic
+                  HTML/CSS or with a website builder.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item border rounded-1 position-relative overflow-hidden" data-aos="fade-up"
+              data-aos-delay="500" data-aos-duration="1000">
+              <h2 class="accordion-header">
+                <button class="accordion-button fs-7 fw-medium collapsed" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#flush-collapseFive" aria-expanded="false" aria-controls="flush-collapseFive">
+                  Are the templates mobile-friendly?
+                </button>
+              </h2>
+              <div id="flush-collapseFive" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                <div class="accordion-body pt-0">
+                  Absolutely. Every template is fully responsive, so your site will look great on phones, tablets, and
+                  desktops.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item border rounded-1 position-relative overflow-hidden" data-aos="fade-up"
+              data-aos-delay="600" data-aos-duration="1000">
+              <h2 class="accordion-header">
+                <button class="accordion-button fs-7 fw-medium collapsed" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#flush-collapseSix" aria-expanded="false" aria-controls="flush-collapseSix">
+                  How do I get my website online after downloading a template?
+                </button>
+              </h2>
+              <div id="flush-collapseSix" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                <div class="accordion-body pt-0">
+                  After downloading, upload the files to your hosting provider or use a website builder that accepts
+                  HTML templates. Your site will be live instantly!
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+
+    <!--  Accolades Achievements Section -->
+    <section class="py-10 py-lg-12 py-xl-13">
+      <div class="container">
+        <div class="premium-cta-card px-4 py-11 py-lg-13 py-xl-14">
+          <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-8">
+              <div class="d-flex flex-column gap-3">
+                <div class="d-flex flex-column gap-7 mb-4">
+                  <h1 class="display-5 mb-0 text-center fw-bold text-dark">Instant Access. <em
+                      class="font-instrument fw-normal text-primary">Zero Waiting.</em>
+                  </h1>
+                  <p class="mb-0 text-center opacity-75">Every template is fully designed and ready to use.</p>
+
+                  <div class="d-flex flex-column gap-2 mt-4">
+                    <p class="mb-0 text-center">Just: Browse our collection</p>
+                    <p class="mb-0 text-center">Click Download</p>
+                    <p class="mb-0 text-center">Open the files and customise your content</p>
+                    <p class="mb-0 text-center text-danger hstack justify-content-center gap-1">
+                      <span class="round-4 bg-danger d-inline-block"></span>
+                      Upload to your hosting and launch
+                    </p>
+                  </div>
+                </div>
+
+                <a href="#work" class="btn btn-dark mx-auto d-flex align-items-center gap-3">
+                  <span class="btn-text">View Templates</span>
+                  <iconify-icon icon="solar:arrow-right-up-linear"
+                    class="bg-white text-dark round-32 rounded-circle hstack justify-content-center fs-6"></iconify-icon>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!--  Footer -->
+  <footer class="footer pt-md-11 pt-lg-12 pt-xl-13">
+    <div class="container">
+      <div class="py-11 py-5 py-lg-12 pb-0 pb-lg-12">
+        <div class="row">
+          <div class="col-12 col-lg-5 mb-11 mb-lg-0">
+            <div class="d-flex flex-column gap-4 me-xl-5">
+              <a href="index.html" class="d-block">
+                <img src="src/assets/images/logos/logo-dark.svg" alt="logo" class="img-fluid logo-img">
+              </a>
+              <p class="mb-0">We built FreeWebsiteTemplates.co.uk to offer genuinely useful designs” clean, modern
+                layouts that reflect today web standards.
+              </p>
+
+            </div>
+          </div>
+
+
+
+        </div>
+      </div>
+      <div class="py-4 border-top">
+        <p class="mb-0 text-center">A ©2025 FreeWebsiteTemplates. All Rights Reserved</p>
+      </div>
+    </div>
+  </footer>
+
+  <!--  Get Template -->
+  <div class="get-template hstack gap-2">
+    <a class="bg-primary px-3 py-2 rounded fs-3 fw-semibold text-white" target="_blank"
+      href="https://www.webglow.co.uk">Try WebGlow</a>
+    <button class="btn bg-primary p-2 round-40 rounded hstack justify-content-center flex-shrink-0" id="scrollToTopBtn">
+      <iconify-icon icon="solar:alt-arrow-up-linear" class="fs-7 text-white"></iconify-icon>
+    </button>
+  </div>
+
+  <!--  Offcanvas -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHeader" aria-labelledby="offcanvasHeaderLabel">
+    <div class="offcanvas-header">
+      <a href="index.html" class="logo">
+        <img src="src/assets/images/logos/logo-dark.svg" class="img-fluid logo-img" alt="Logo" />
+      </a>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <div class="d-flex flex-column gap-4">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link text-dark fw-medium px-2" href="#aboutus">About Us</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-dark fw-medium px-2" href="#services">Services</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-dark fw-medium px-2" href="index.html#work">All Templates</a>
+          </li>
+        </ul>
+        <div class="d-flex flex-column">
+          <a href="contact.html" class="btn btn-dark px-4 py-2 w-100 justify-content-center">Contact</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="src/assets/libs/jquery/dist/jquery.min.js"></script>
+  <script src="src/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="src/assets/libs/owl.carousel/dist/owl.carousel.min.js"></script>
+  <script src="src/assets/libs/aos-master/dist/aos.js"></script>
+  <script src="src/assets/js/custom.js"></script>
+  <script src="src/assets/js/templates.js"></script>
+  <!-- solar icons -->
+  <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 </body>
+
 </html>
 """
 
 BUILD_WITH_AI_HTML = """
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Build Your AI Website | WebGlow</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Build Your Website with AI | Free Website Templates</title>
+  <link rel="shortcut icon" type="image/png" href="src/assets/images/logos/favicon.svg" />
+  <link rel="stylesheet" href="src/assets/libs/owl.carousel/dist/assets/owl.carousel.min.css">
+  <link rel="stylesheet" href="src/assets/libs/aos-master/dist/aos.css">
+  <link rel="stylesheet" href="src/assets/css/styles.css" />
+  <link rel="stylesheet" href="src/assets/css/premium.css" />
   <style>
-    * { font-family: 'Inter', -apple-system, sans-serif; }
-    body { 
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-      min-height: 100vh; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
+    .ai-form-container {
+      max-width: 900px;
+      margin: 100px auto;
+      padding: 60px;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(20px) saturate(180%);
+      border-radius: 40px;
+      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .form-label {
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+      letter-spacing: -0.01em;
+    }
+
+    .form-control, .form-select {
+      border-radius: 16px;
+      padding: 16px 20px;
+      border: 1px solid rgba(0,0,0,0.08);
+      background: rgba(255,255,255,0.8);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 1rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: #6e8efb;
+      background: #fff;
+      box-shadow: 0 0 0 5px rgba(110, 142, 251, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .btn-generate {
+      background: linear-gradient(135deg, #6e8efb, #a777e3, #6e8efb);
+      background-size: 200% auto;
+      border: none;
+      color: white;
+      font-weight: 800;
       padding: 20px;
+      border-radius: 20px;
+      width: 100%;
+      margin-top: 30px;
+      transition: all 0.5s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
-    .form-box { 
-      background: rgba(255, 255, 255, 0.95); 
-      padding: 48px; 
-      border-radius: 24px; 
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); 
-      width: 100%; 
-      max-width: 560px; 
-      backdrop-filter: blur(10px);
+
+    .btn-generate:hover {
+      background-position: right center;
+      transform: translateY(-3px) scale(1.01);
+      box-shadow: 0 20px 40px rgba(110, 142, 251, 0.4);
     }
-    .form-box h2 {
+
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .spinner {
+      width: 80px;
+      height: 80px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #6e8efb;
+      border-radius: 50%;
+      animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      max-width: 500px;
+      height: 6px;
+      background: #f0f0f0;
+      border-radius: 10px;
+      margin-top: 40px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .progress-bar-inner {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #6e8efb, #a777e3, #6e8efb);
+      background-size: 200% auto;
+      animation: gradient 2s linear infinite;
+      transition: width 0.5s ease;
+    }
+
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+
+    #loadingText {
       font-weight: 800;
       font-size: 2rem;
-      margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #1a1a1a, #666);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    .form-box .subtitle {
-      color: #6b7280;
-      margin-bottom: 2rem;
-      font-size: 1rem;
-    }
-    .form-label { 
-      font-weight: 600; 
-      color: #374151;
-      font-size: 0.875rem;
-      margin-bottom: 0.5rem;
-    }
-    .form-control, .form-select {
-      border: 2px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 14px 16px;
-      font-size: 1rem;
-      transition: all 0.2s;
-    }
-    .form-control:focus, .form-select:focus {
-      border-color: #667eea;
-      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-    }
-    .btn-generate {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border: none;
-      color: white;
-      padding: 16px 32px;
-      border-radius: 12px;
-      font-weight: 700;
-      font-size: 1.1rem;
-      width: 100%;
-      transition: all 0.3s ease;
-      margin-top: 1rem;
-    }
-    .btn-generate:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-    }
-    .feature-pills {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 1.5rem;
-    }
-    .feature-pill {
-      background: #f3f4f6;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      color: #6b7280;
-      font-weight: 500;
-    }
-    .loader { 
-      display: none; 
-      position: fixed; 
-      top: 0; 
-      left: 0; 
-      width: 100%; 
-      height: 100%; 
-      background: rgba(255,255,255,0.98); 
-      z-index: 1000; 
-      flex-direction: column; 
-      align-items: center; 
-      justify-content: center; 
-    }
-    .spinner {
-      width: 60px;
-      height: 60px;
-      border: 4px solid #f3f4f6;
-      border-top-color: #667eea;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loader h4 {
-      margin-top: 1.5rem;
-      color: #374151;
-      font-weight: 600;
-    }
-    .loader p {
-      color: #6b7280;
-      font-size: 0.875rem;
-    }
   </style>
 </head>
+
 <body>
-  <div class="form-box">
-    <div class="text-center">
-      <h2>Build Your AI Website</h2>
-      <p class="subtitle">Get a stunning, unique website in seconds</p>
-      <div class="feature-pills justify-content-center">
-        <span class="feature-pill">✨ AI-Powered</span>
-        <span class="feature-pill">🎨 Unique Design</span>
-        <span class="feature-pill">⚡ Instant Preview</span>
-      </div>
+  <!-- Header -->
+  <header class="header position-fixed start-0 top-0 w-100" style="z-index: 100;">
+    <div class="container">
+      <nav class="navbar navbar-expand-xl p-4">
+        <div class="d-flex align-items-center justify-content-between w-100">
+          <a href="index.html" class="logo">
+            <img src="src/assets/images/logos/logo-dark.svg" class="img-fluid logo-img" alt="Logo" style="height: 40px;" />
+          </a>
+          <a href="index.html" class="btn btn-outline-dark px-4 py-2 rounded-pill fw-bold">Back to Home</a>
+        </div>
+      </nav>
     </div>
-    
-    <form id="ai-form">
-      <div class="mb-3">
-        <label class="form-label">Business Name</label>
-        <input type="text" id="businessName" class="form-control" placeholder="e.g. Smith's Plumbing" required>
-      </div>
+  </header>
+
+  <div class="container">
+    <div class="ai-form-container" data-aos="fade-up">
+      <h2 class="text-center mb-3 display-5 fw-bold"><span style="color: #6e8efb;">AI</span> Web Architect</h2>
+      <p class="text-center text-muted mb-5 fs-5">Crafting bespoke digital experiences through deep analysis and premium design systems.</p>
       
-      <div class="mb-3">
-        <label class="form-label">Industry</label>
-        <select id="businessType" class="form-select" required>
-          <option value="">Select your industry...</option>
-          <option value="business">Business / Consulting</option>
-          <option value="agency">Creative Agency</option>
-          <option value="portfolio">Personal Portfolio</option>
-          <option value="ecommerce">E-commerce / Retail</option>
-          <option value="plumber">Plumbing / HVAC</option>
-          <option value="lawyer">Legal Services</option>
-          <option value="restaurant">Restaurant / Cafe</option>
-          <option value="fitness">Fitness / Gym</option>
-          <option value="realestate">Real Estate</option>
-        </select>
-      </div>
-      
-      <div class="mb-3">
-        <label class="form-label">Services You Offer</label>
-        <textarea id="services" class="form-control" rows="3" required placeholder="e.g. Emergency Repairs, Installation, Maintenance, Consultation..."></textarea>
-      </div>
-      
-      <div class="mb-3">
-        <label class="form-label">Design Style</label>
-        <select id="designStyle" class="form-select" required>
-          <option value="modern">Modern - Sleek & Futuristic</option>
-          <option value="professional">Professional - Corporate & Trustworthy</option>
-          <option value="creative">Creative - Bold & Vibrant</option>
-          <option value="minimal">Minimal - Elegant & Simple</option>
-        </select>
-      </div>
-      
-      <div class="mb-4">
-        <label class="form-label">Location</label>
-        <input type="text" id="location" class="form-control" placeholder="e.g. London, UK" required>
-      </div>
-      
-      <button type="submit" class="btn btn-generate">Generate My Website ✨</button>
-    </form>
+      <form id="ai-website-form">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label for="businessName" class="form-label">Business Name</label>
+            <input type="text" class="form-control" id="businessName" placeholder="e.g. Skyline Plumbing" required>
+          </div>
+          <div class="col-md-6">
+            <label for="businessType" class="form-label">Industry Sector</label>
+            <select class="form-select" id="businessType" required>
+              <option value="" selected disabled>Select Type</option>
+              <option value="plumber">Plumbing & HVAC</option>
+              <option value="electrician">Electrical Services</option>
+              <option value="restaurant">Fine Dining & Cafe</option>
+              <option value="law">Legal & Advocacy</option>
+              <option value="consulting">Business Consulting</option>
+              <option value="fitness">Fitness & Wellness</option>
+              <option value="realestate">Real Estate & Property</option>
+              <option value="portfolio">Personal Portfolio</option>
+              <option value="agency">Agency / Creative Studio</option>
+              <option value="other">Other Professional Service</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label for="services" class="form-label">Bespoke Services & Value Proposition</label>
+            <textarea class="form-control" id="services" rows="4" placeholder="List your key services and what makes you unique..." required></textarea>
+          </div>
+          <div class="col-md-6">
+            <label for="location" class="form-label">Target Location / Market</label>
+            <input type="text" class="form-control" id="location" placeholder="e.g. Mayfair, London" required>
+          </div>
+          <div class="col-md-6">
+            <label for="style" class="form-label">Design Identity</label>
+            <select class="form-select" id="style">
+              <option value="modern" selected>Modern (Futuristic & Bold)</option>
+              <option value="professional">Professional (Corporate & Trust)</option>
+              <option value="creative">Creative (Asymmetric & Vibrant)</option>
+              <option value="minimalist">Minimalist (Pure & Simple)</option>
+            </select>
+          </div>
+        </div>
+        
+        <button type="submit" class="btn-generate">Generate Bespoke Preview</button>
+      </form>
+    </div>
   </div>
 
-  <div class="loader" id="loader">
-    <div class="spinner"></div>
-    <h4 id="statusText">Designing your website...</h4>
-    <p>Our AI is crafting a unique design just for you</p>
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner mb-5"></div>
+    <h3 id="loadingText">Architecting Your Site...</h3>
+    <p class="text-muted fs-5" id="loadingSubtext">Our AI is drafting production-ready code.</p>
+    <div class="progress-bar-container">
+      <div class="progress-bar-inner"></div>
+    </div>
   </div>
 
+  <footer class="footer py-4 border-top">
+    <div class="container">
+      <p class="mb-0 text-center">©2025 FreeWebsiteTemplates. All Rights Reserved</p>
+    </div>
+  </footer>
+
+  <script src="src/assets/libs/jquery/dist/jquery.min.js"></script>
+  <script src="src/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="src/assets/libs/aos-master/dist/aos.js"></script>
   <script>
-    const statusMessages = [
-      "Designing your website...",
-      "Creating unique layout...",
-      "Writing compelling content...",
-      "Adding stunning visuals...",
-      "Finalizing your preview..."
-    ];
-    let messageIndex = 0;
+    AOS.init();
     
-    document.getElementById('ai-form').addEventListener('submit', async (e) => {
+    const loadingMessages = [
+      { main: "Initializing AI Architect...", sub: "Securing dedicated GPU cycles for your bespoke design." },
+      { main: "Analyzing Market Logic...", sub: "Deep-diving into your localized competitive landscape." },
+      { main: "Drafting Narrative Copy...", sub: "Crafting conversion-optimized headlines for your brand." },
+      { main: "Calculating Design Tokens...", sub: "Synthesizing glassmorphism, depth, and fluid grids." },
+      { main: "Generating Custom Code...", sub: "Compiling semantic HTML5 and cutting-edge CSS3." },
+      { main: "Polishing Micro-Interactions...", sub: "Implementing smooth transitions and scroll-entry masks." },
+      { main: "Finalizing Build...", sub: "Encrypting and preparing your master preview for launch." }
+    ];
+    
+    // Pre-select category from URL if present
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const type = urlParams.get('type');
+      if (type) {
+        const select = document.getElementById('businessType');
+        // Map common slugs to our options
+        const mapping = {
+          'business': 'consulting',
+          'agency': 'consulting',
+          'portfolio': 'other',
+          'e-commerce': 'other',
+          'services': 'consulting',
+          'plumber': 'plumber',
+          'electrician': 'electrician',
+          'restaurant': 'restaurant',
+          'law': 'law'
+        };
+        if (mapping[type]) select.value = mapping[type];
+      }
+    });
+
+    document.getElementById('ai-website-form').addEventListener('submit', async function(e) {
       e.preventDefault();
-      document.getElementById('loader').style.display = 'flex';
       
-      // Rotate status messages
-      const statusInterval = setInterval(() => {
-        messageIndex = (messageIndex + 1) % statusMessages.length;
-        document.getElementById('statusText').textContent = statusMessages[messageIndex];
-      }, 3000);
-      
-      const payload = {
+      const formData = {
         businessName: document.getElementById('businessName').value,
         businessType: document.getElementById('businessType').value,
         services: document.getElementById('services').value,
         location: document.getElementById('location').value,
-        style: document.getElementById('designStyle').value
+        style: document.getElementById('style').value
       };
-
+      
+      const overlay = document.getElementById('loadingOverlay');
+      const mainText = document.getElementById('loadingText');
+      const subText = document.getElementById('loadingSubtext');
+      const progressBar = document.querySelector('.progress-bar-inner');
+      
+      overlay.style.display = 'flex';
+      const API_BASE = (window.location.protocol === 'file:') ? 'http://127.0.0.1:5000' : '';
+      
       try {
-        const res = await fetch('/api/generate-site', {
+        const response = await fetch(`${API_BASE}/api/generate-site`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(formData)
         });
-        const data = await res.json();
-        clearInterval(statusInterval);
         
-        if(data.success) {
-          if(data.previewUrl) {
-            window.location.href = data.previewUrl;
-          } else {
-            // Poll for status
-            checkStatus(data.slug);
+        const initialData = await response.json();
+        
+        if (initialData.success) {
+          // SYNC REDIRECT (Vercel Fix)
+          if (initialData.previewUrl) {
+            progressBar.style.width = '100%';
+            mainText.innerText = "Website Created!";
+            subText.innerText = "Taking you to your professional preview...";
+            setTimeout(() => {
+              window.location.href = initialData.previewUrl;
+            }, 1000);
+            return;
           }
+
+          // ASYNC POLLING (Local/Standard Server)
+          const slug = initialData.slug;
+          let progress = 10;
+          progressBar.style.width = '10%';
+
+          // Polling loop
+          const pollInterval = setInterval(async () => {
+            try {
+              const statusRes = await fetch(`${API_BASE}/api/status/${slug}?v=${Date.now()}`);
+              const statusData = await statusRes.json();
+
+              if (statusData.status === "COMPLETED") {
+                clearInterval(pollInterval);
+                progressBar.style.width = '100%';
+                mainText.innerText = "Website Ready!";
+                subText.innerText = "Redirecting to your preview...";
+                setTimeout(() => {
+                  window.location.href = statusData.previewUrl;
+                }, 1000);
+              } else if (statusData.status === "FAILED") {
+                clearInterval(pollInterval);
+                alert('Generation Failed: ' + statusData.message);
+                overlay.style.display = 'none';
+              } else {
+                // Update text from server if available
+                if (statusData.message) mainText.innerText = statusData.message;
+                
+                // Slow fake progress during AI processing
+                if (progress < 95) {
+                  progress += Math.random() * 2;
+                  progressBar.style.width = progress + '%';
+                }
+              }
+            } catch (err) {
+              console.error("Polling error:", err);
+            }
+          }, 3000);
         } else {
-          alert("Error: " + data.message);
-          document.getElementById('loader').style.display = 'none';
+          alert('Error: ' + initialData.message);
+          overlay.style.display = 'none';
         }
-      } catch (err) {
-        clearInterval(statusInterval);
-        alert("Failed to connect to server.");
-        document.getElementById('loader').style.display = 'none';
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please check your internet connection and try again.');
+        overlay.style.display = 'none';
       }
     });
-    
-    async function checkStatus(slug) {
-      try {
-        const res = await fetch('/api/status/' + slug);
-        const data = await res.json();
-        document.getElementById('statusText').textContent = data.message;
-        
-        if(data.status === 'COMPLETED' && data.previewUrl) {
-          window.location.href = data.previewUrl;
-        } else if(data.status === 'FAILED') {
-          alert('Generation failed: ' + data.message);
-          document.getElementById('loader').style.display = 'none';
-        } else {
-          setTimeout(() => checkStatus(slug), 2000);
-        }
-      } catch(e) {
-        setTimeout(() => checkStatus(slug), 2000);
-      }
-    }
   </script>
 </body>
+
 </html>
+
 """
 
 HOSTING_SETUP_HTML = """
