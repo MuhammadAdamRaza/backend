@@ -1412,7 +1412,7 @@ REQUIRED SECTIONS:
    - Showcase these services: {', '.join(services_list)}
    - Each service needs: icon (FontAwesome), title, 2-sentence description
    - IMAGE: Include a relevant service-specific image for each card:
-     URL PATTERN: https://loremflickr.com/600/400/{business_type},{svc.replace(' ', ',')}
+     URL PATTERN: https://loremflickr.com/600/400/{business_type},{{service_keyword}}
    - Make it visually distinct from typical template layouts
 
 3. ABOUT/VALUE SECTION: 
