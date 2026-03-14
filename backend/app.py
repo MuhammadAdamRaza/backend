@@ -1405,11 +1405,15 @@ REQUIRED SECTIONS:
    - Unique, benefit-driven headline (NOT generic "Welcome to")
    - Compelling subheadline about their specific services in {location}
    - Strong CTA button
-   - Background: gradient, subtle pattern, or carefully selected image placeholder
+   - BACKGROUND IMAGE: Use a high-quality, high-resolution Unsplash image related to {business_type} in {location}. 
+     Example: https://source.unsplash.com/featured/1920x1080?{business_type.replace(' ', ',')}
 
 2. SERVICES SECTION: Use this layout pattern: {selected_layout}
    - Showcase these services: {', '.join(services_list)}
    - Each service needs: icon (FontAwesome), title, 2-sentence description
+   - IMAGE: Include a relevant service-specific image for each card using Unsplash:
+     https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&w=600&q=80
+     (Or use keyword-based: https://source.unsplash.com/featured/600x400?{business_type},service)
    - Make it visually distinct from typical template layouts
 
 3. ABOUT/VALUE SECTION: 
@@ -1558,11 +1562,29 @@ def generate_unique_site(data):
     icons = ['fa-star', 'fa-gem', 'fa-bolt', 'fa-heart', 'fa-rocket', 'fa-shield-alt', 'fa-trophy', 'fa-crown']
     random.shuffle(icons)
     
+    # Industry-specific image keywords
+    img_keywords = {
+        'plumber': 'plumbing,tools,pipes',
+        'electrician': 'electrician,wiring,electricity',
+        'restaurant': 'restaurant,food,dining',
+        'law': 'law,office,legal',
+        'consulting': 'business,meeting,office',
+        'fitness': 'gym,fitness,workout',
+        'realestate': 'house,architecture,realestate',
+        'portfolio': 'creative,workspace,design',
+        'agency': 'agency,office,team',
+        'other': 'business,professional'
+    }
+    main_kw = img_keywords.get(business_type, 'business')
+    
     for i, svc in enumerate(services_list):
         delay = i * 0.1
         icon = icons[i % len(icons)]
+        # Unique image for each service card
+        svc_img = f"https://source.unsplash.com/featured/600x400?{main_kw},{svc.replace(' ', ',')}"
         service_cards += f'''
         <div class="service-card" style="animation-delay: {delay}s">
+            <div class="service-image" style="height: 200px; background: url('{svc_img}') center/cover; border-radius: 12px; margin-bottom: 1.5rem;"></div>
             <div class="service-icon"><i class="fas {icon}"></i></div>
             <h3>{svc}</h3>
             <p>Expert {svc.lower()} services in {location}. We deliver professional results with attention to detail and customer satisfaction.</p>
@@ -1662,7 +1684,7 @@ def generate_unique_site(data):
         <a href="#contact" class="nav-cta">Get Started</a>
     </nav>
 
-    <section class="hero">
+    <section class="hero" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://source.unsplash.com/featured/1920x1080?{main_kw}') center/cover; background-attachment: fixed;">
         <div class="hero-content">
             <h1>Premium {business_type.title()} <span>in {location}</span></h1>
             <p>Experience exceptional {services_list[0]} and more with {business_name}. Professional services tailored to your needs.</p>
