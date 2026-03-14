@@ -1,20 +1,19 @@
 {
   "version": 2,
-  "functions": {
-    "backend/app.py": {
-      "runtime": "@vercel/python",
-      "includeFiles": "backend/.env",
-      "maxDuration": 60
-    }
-  },
-  "rewrites": [
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "/backend/app.py"
+      "src": "backend/app.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/backend/app.py"
     },
     {
-      "source": "/(.*)",
-      "destination": "/backend/app.py"
+      "src": "/(.*)",
+      "dest": "/backend/app.py"
     }
   ]
 }
