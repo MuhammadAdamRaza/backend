@@ -105,13 +105,13 @@ def handle_exception(e):
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if os.getenv("VERCEL"):
     # On Vercel, /var/task is read-only code, /tmp is writable
-    PROJECT_ROOT = os.path.dirname(BASE_DIR)
+    PROJECT_ROOT = BASE_DIR # Point to backend/
     WRITABLE_ROOT = "/tmp"
-    GITHUB_RAW_BASE = "https://raw.githubusercontent.com/MuhammadAdamRaza/awake/main"
+    GITHUB_RAW_BASE = "https://raw.githubusercontent.com/MuhammadAdamRaza/backend/main/backend"
 else:
-    PROJECT_ROOT = os.path.dirname(BASE_DIR)
+    PROJECT_ROOT = BASE_DIR
     WRITABLE_ROOT = PROJECT_ROOT
-    GITHUB_RAW_BASE = "https://raw.githubusercontent.com/MuhammadAdamRaza/awake/main"
+    GITHUB_RAW_BASE = "https://raw.githubusercontent.com/MuhammadAdamRaza/backend/main/backend"
 
 # Path helpers
 SYSTEM_TEMPLATES_DIR = PROJECT_ROOT
@@ -986,7 +986,7 @@ def select_design():
         print(f"Selection error: {traceback.format_exc()}")
         return jsonify({"success": False, "message": f"Selection failed: {str(e)}"}), 500
 
-@app.route('/api/status/<slug>')
+@app.route('/api/status/<path:slug>')
 def get_site_status(slug):
     try:
         conn = get_db_connection()
@@ -1016,7 +1016,7 @@ def get_site_status(slug):
     except Exception as e:
         return jsonify({"status": "ERROR", "message": str(e)}), 500
 
-@app.route('/s/<slug>')
+@app.route('/s/<path:slug>')
 def view_final_site(slug):
     """Serve the finalized high-quality site from DB."""
     try:
