@@ -97,9 +97,18 @@ else:
 
 @app.errorhandler(Exception)
 def handle_exception(e):
+    from werkzeug.exceptions import HTTPException
     import traceback
     traceback.print_exc()
-    return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
+    
+    if isinstance(e, HTTPException):
+        code = e.code
+        message = e.description
+    else:
+        code = 500
+        message = str(e)
+        
+    return jsonify({"success": False, "message": f"Server error: {message}", "code": code}), code
 
 # Base directories
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -185,7 +194,9 @@ def serve_generated_sites(filename):
 @app.route('/')
 def home():
     try:
-        template_path = os.path.join(SYSTEM_TEMPLATES_DIR, 'index.html')
+        template_path = ensure_file('index.html')
+        if not template_path:
+             return "<h1>Welcome</h1><p>System error: Core templates missing.</p>", 500
         with open(template_path, 'r', encoding='utf-8') as f:
             template_content = f.read()
         return render_template_string(template_content)
@@ -794,12 +805,10 @@ def generate_unique_site(data):
         accent_gradient = 'linear-gradient(135deg, #6e8efb 0%, #a777e3 100%)'
 
     try:
-        template_file = os.path.join(SYSTEM_TEMPLATES_DIR, 'fallback_site.html')
-        if not os.path.exists(template_file):
-             # Try root if SYSTEM_TEMPLATES_DIR is weird
-             template_file = os.path.join(PROJECT_ROOT, 'fallback_site.html')
-
-        with open(template_file, 'r', encoding='utf-8') as f:
+        template_path = ensure_file('fallback_site.html')
+        if not template_path:
+             raise FileNotFoundError("fallback_site.html not found")
+        with open(template_path, 'r', encoding='utf-8') as f:
             template_content = f.read()
             
         return render_template_string(
@@ -946,10 +955,9 @@ def select_design():
         view_source_url = f"{base_url}/view-design/{slug}/{design_index}"
         
         try:
-            template_path = os.path.join(SYSTEM_TEMPLATES_DIR, 'preview_wrapper.html')
-            # If not in root, try downloading or local fallback
-            if not os.path.exists(template_path):
-                 ensure_file('preview_wrapper.html')
+            template_path = ensure_file('preview_wrapper.html')
+            if not template_path:
+                 raise FileNotFoundError("preview_wrapper.html not found")
                  
             with open(template_path, 'r', encoding='utf-8') as f:
                 template_content = f.read()
