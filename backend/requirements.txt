@@ -5,3 +5,4 @@ openai
 python-dotenv
 jinja2
 requests
+psycopg2-binary
