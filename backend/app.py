@@ -596,8 +596,8 @@ REQUIRED SECTIONS:
    - Compelling subheadline about their specific services in {location}
    - Strong CTA button
     - BACKGROUND IMAGE: Use a high-quality, high-resolution (HD) professional image related to {business_type} in {location}. 
-      URL PATTERN (MANDATORY: Use Unsplash source for high resolution): https://images.unsplash.com/photo-1?auto=format&fit=crop&q=80&w=1920&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&{business_type.replace(' ', '%20')}
-      (Or use loremflickr with more specific tags if needed: https://loremflickr.com/1920/1080/{business_type.replace(' ', ',')},professional,hd)
+      URL PATTERN (MANDATORY: Use ONLY this format for HD images): https://loremflickr.com/1920/1080/{business_type.replace(' ', ',')},professional,hd,high-res
+      (Alternative for variety: https://source.unsplash.com/featured/1920x1080?{business_type.replace(' ', ',')},highres)
     - CTAs: Visible and contrasting
 
 2. SERVICES SECTION: Use this layout pattern: {selected_layout}
@@ -640,10 +640,12 @@ MUST-HAVE CSS FEATURES:
 CRITICAL RULES:
 ---
 - The design MUST look NOTHING like a template — unique layout, unique proportions
+- VARIATION DESIGN: This is Design Variation #{variation_index + 1} of 3. Ensure it is visually distinct from others.
+- Use the selected Layout pattern: {selected_layout}
 - Use unexpected spacing, asymmetric layouts, creative visual hierarchies
 - Each element should feel considered and custom-designed
 - No lorem ipsum — write real, compelling copy specific to {business_type} in {location}
-- CRITICAL: Use REAL industry-specific images. AVOID generic placeholders or cats.
+- CRITICAL: Use REAL industry-specific images. ONLY use HD professional source URLs like https://loremflickr.com/1920/1080/{business_type.replace(' ', ',')},professional,hd
 - NO markdown code blocks in output
 - Return ONLY the raw HTML code starting with <!DOCTYPE html>
 - Minimum 2000 characters of code (this is a full website, not a snippet)
