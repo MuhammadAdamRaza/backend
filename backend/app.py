@@ -274,7 +274,7 @@ def debug_ai_direct():
             "openai_key_exists": bool(os.getenv("OPENAI_API_KEY")),
             "gemini_model": gemini_model_name
         }
-                if not model and not client:
+        if not model and not client:
             return jsonify({
                 "success": False, 
                 "message": "No AI model available. Check your API keys.", 
