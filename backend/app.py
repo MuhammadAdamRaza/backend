@@ -398,66 +398,81 @@ def build_prompt(data, variation_index):
 # ════════════════════════════════════════════════════════════════
 
 def generate_html(data, variation_index):
-    """Generate HTML website using Gemini AI with retry logic"""
+    """Generate HTML website using Gemini AI with robust error handling"""
     global LAST_AI_ERROR, ACTIVE_MODEL
 
     if not gemini_client:
         LAST_AI_ERROR = "GEMINI_API_KEY not set in environment variables"
+        print(f"[DESIGN {variation_index}] ERROR: Gemini not initialized")
         return None
 
     prompt = build_prompt(data, variation_index)
-    models_to_try = [ACTIVE_MODEL] + [m for m in GEMINI_MODELS if m != ACTIVE_MODEL]
+    
+    # Priority model list
+    models_to_try = [
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-001",
+        "gemini-flash-latest"
+    ]
 
-    for attempt in range(1, 4):  # 3 retry attempts per model
+    for attempt in range(1, 3):  # 2 attempts
         for model_name in models_to_try:
             try:
-                print(f"[DESIGN {variation_index}] Attempt {attempt}: Trying {model_name}...")
+                print(f"\n[DESIGN {variation_index}] Attempt {attempt}/2 with {model_name}")
                 
                 response = gemini_client.models.generate_content(
                     model=model_name,
                     contents=prompt,
                     config={
-                        "temperature": 1,
-                        "max_output_tokens": 16000,
+                        "temperature": 0.9,
+                        "max_output_tokens": 18000,
+                        "top_p": 0.95,
                     },
                 )
                 
-                if not response or not response.text:
-                    print(f"[DESIGN {variation_index}] Empty response from {model_name}")
+                if not response:
+                    print(f"[DESIGN {variation_index}] ERROR: Null response")
+                    LAST_AI_ERROR = f"Null response from {model_name}"
+                    continue
+                
+                if not response.text:
+                    print(f"[DESIGN {variation_index}] ERROR: Empty response.text")
+                    LAST_AI_ERROR = f"Empty response from {model_name}"
                     continue
                 
                 html = response.text.strip()
                 
-                # Validate HTML structure
-                if not html:
-                    print(f"[DESIGN {variation_index}] Empty HTML from {model_name}")
+                # Validate
+                if len(html) < 1000:
+                    print(f"[DESIGN {variation_index}] ERROR: HTML too short ({len(html)} chars)")
+                    LAST_AI_ERROR = f"Short HTML from {model_name}"
                     continue
-                    
-                # Check for complete HTML structure
-                has_doctype = "<!DOCTYPE" in html.upper()
-                has_html_tags = "<html" in html.lower() and "</html>" in html.lower()
+                
+                has_doctype = "<!DOCTYPE" in html.upper() or "<!doctype" in html.lower()
+                has_html = "<html" in html.lower() and "</html>" in html.lower()
                 has_body = "<body" in html.lower() and "</body>" in html.lower()
+                has_images = ("unsplash.com" in html) or ("w=2560" in html) or ("w=1200" in html)
                 
-                if not (has_html_tags and has_body):
-                    print(f"[DESIGN {variation_index}] Invalid HTML structure from {model_name}")
+                print(f"[DESIGN {variation_index}] Validation: DOCTYPE={has_doctype}, HTML={has_html}, BODY={has_body}, IMAGES={has_images}, SIZE={len(html)}")
+                
+                if not (has_html and has_body):
+                    print(f"[DESIGN {variation_index}] ERROR: Invalid structure")
+                    LAST_AI_ERROR = f"Invalid HTML structure"
                     continue
                 
-                # Clean up and return
-                if has_doctype:
-                    LAST_AI_ERROR = ""
-                    print(f"[DESIGN {variation_index}] SUCCESS with {model_name}")
-                    return html
-                else:
-                    LAST_AI_ERROR = ""
-                    print(f"[DESIGN {variation_index}] SUCCESS with {model_name} (added DOCTYPE)")
-                    return "<!DOCTYPE html>\n" + html
+                if not has_doctype:
+                    html = "<!DOCTYPE html>\n" + html
+                
+                print(f"[DESIGN {variation_index}] ✓ SUCCESS!")
+                LAST_AI_ERROR = ""
+                return html
                     
             except Exception as e:
-                print(f"[DESIGN {variation_index}] Model {model_name} error: {str(e)[:100]}")
-                LAST_AI_ERROR = f"Attempt {attempt}: {str(e)[:200]}"
+                error = str(e)[:150]
+                print(f"[DESIGN {variation_index}] EXCEPTION {model_name}: {error}")
+                LAST_AI_ERROR = error
                 continue
-        
-        # Small delay between retry attempts
         if attempt < 3:
             import time
             time.sleep(2)
@@ -740,3 +755,6 @@ def download(slug):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+
+
