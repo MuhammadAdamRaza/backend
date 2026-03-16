@@ -88,7 +88,7 @@ gemini_key = os.getenv("GEMINI_API_KEY")
 gemini_model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash") # Use stable flash model
 if gemini_key:
     try:
-        genai.configure(api_key=gemini_key)
+        genai.configure(api_key=gemini_key, transport='rest')
         model = genai.GenerativeModel(gemini_model_name)
     except Exception as e:
         print(f"Gemini init error: {e}")
@@ -273,8 +273,16 @@ def debug_ai_direct():
             "openai_available": bool(client),
             "gemini_key_exists": bool(os.getenv("GEMINI_API_KEY")),
             "openai_key_exists": bool(os.getenv("OPENAI_API_KEY")),
-            "gemini_model": gemini_model_name
+            "gemini_model": gemini_model_name,
+            "available_models": []
         }
+        
+        try:
+            if gemini_key:
+                models = genai.list_models()
+                status["available_models"] = [m.name for m in models if 'generateContent' in m.supported_generation_methods]
+        except Exception as e:
+            status["model_list_error"] = str(e)
         if not model and not client:
             return jsonify({
                 "success": False, 
