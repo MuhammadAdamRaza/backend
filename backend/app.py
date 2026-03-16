@@ -490,6 +490,8 @@ def generate_custom_site_html(data, variation_index=0):
     """
     global LAST_AI_ERROR
     if not model and not client:
+        print("No AI model available")
+        return None
     
     business_name = data.get('businessName', 'My Business')
     business_type = data.get('businessType', 'business')
