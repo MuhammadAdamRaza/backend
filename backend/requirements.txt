@@ -7,3 +7,4 @@ python-dotenv
 flask-cors
 jinja2
 requests
+google-genai
