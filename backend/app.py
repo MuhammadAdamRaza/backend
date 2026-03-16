@@ -72,30 +72,30 @@ def init_db():
     try:
         conn = get_db()
         cur  = conn.cursor()
-        cur.execute(\"\"\"
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS sites (
                 slug TEXT PRIMARY KEY, business_name TEXT, business_type TEXT,
                 location TEXT, services TEXT, style TEXT, colors TEXT[],
                 status TEXT, message TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
-        \"\"\" )
-        cur.execute(\"\"\"
+        """)
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS variations (
                 id SERIAL PRIMARY KEY,
                 site_slug TEXT REFERENCES sites(slug) ON DELETE CASCADE,
                 variation_index INT, html_content TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
-        \"\"\" )
-        cur.execute(\"\"\"
+        """)
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS final_sites (
                 site_slug TEXT PRIMARY KEY REFERENCES sites(slug) ON DELETE CASCADE,
                 html_content TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
-        \"\"\" )
+        """)
         # Add unique constraint safely
-        cur.execute(\"\"\"
+        cur.execute("""
             DO $$ BEGIN
                 IF NOT EXISTS (
                     SELECT 1 FROM pg_constraint
@@ -105,7 +105,7 @@ def init_db():
                     ADD CONSTRAINT variations_slug_idx_key UNIQUE (site_slug, variation_index);
                 END IF;
             END$$;
-        \"\"\" )
+        """)
         conn.commit()
         cur.close()
         conn.close()
@@ -127,15 +127,15 @@ GEMINI_KEY = (
 )
 
 GEMINI_MODELS = [
+    "gemini-2.5-flash",
     "gemini-2.0-flash",
     "gemini-2.0-flash-001",
     "gemini-2.0-flash-lite",
-    "gemini-1.5-flash",
     "gemini-flash-latest",
 ]
 
 gemini_client = None
-ACTIVE_MODEL  = "gemini-2.0-flash"
+ACTIVE_MODEL  = "gemini-2.5-flash"
 LAST_AI_ERROR = ""
 
 if GEMINI_KEY:
@@ -174,80 +174,80 @@ def build_prompt(data, variation_index):
 
     hero_url, card_url, _, _ = get_images(btype)
     p, s = colors[0], colors[1]
-    svc_lines = \"\\n\".join(f\"  - {sv}\" for sv in svc_list)
+    svc_lines = "\n".join(f"  - {sv}" for sv in svc_list)
 
     DESIGNS = [
         {
-            \"name\": \"Dark Bold Hero\",
-            \"font\": \"Montserrat\",
-            \"nav\":  f\"position fixed, background rgba(0,0,0,0.96), white logo '{name}', white nav links\",
-            \"hero\": f\"100vh height, background-image url('{hero_url}') cover with dark overlay rgba(0,0,0,0.6), centered white text, h1 font-size 4.5rem font-weight 900 Montserrat, subheading 1.2rem, CTA button background {p} color white border-radius 50px padding 18px 48px\",
-            \"services_bg\": \"#ffffff\",
-            \"card\": f\"white bg, box-shadow 0 4px 24px rgba(0,0,0,0.09), border-radius 12px, padding 32px, Font Awesome icon color {p} font-size 2rem, h3 font-weight 800, hover translateY(-6px)\",
-            \"why\":  f\"background {p}, white text, 4 tiles with stats (500+ Clients, 10 Yrs Experience, 4.9 Star Rating, 24/7 Support)\",
-            \"cta\":  f\"background linear-gradient(135deg, {p}, {s}), white text, white button\",
-            \"footer\": \"background #0a0a0a, white text\",
+            "name": "Dark Bold Hero",
+            "font": "Montserrat",
+            "nav":  f"position fixed, background rgba(0,0,0,0.96), white logo '{name}', white nav links",
+            "hero": f"100vh height, background-image url('{hero_url}') cover with dark overlay rgba(0,0,0,0.6), centered white text, h1 font-size 4.5rem font-weight 900 Montserrat, subheading 1.2rem, CTA button background {p} color white border-radius 50px padding 18px 48px",
+            "services_bg": "#ffffff",
+            "card": f"white bg, box-shadow 0 4px 24px rgba(0,0,0,0.09), border-radius 12px, padding 32px, Font Awesome icon color {p} font-size 2rem, h3 font-weight 800, hover translateY(-6px)",
+            "why":  f"background {p}, white text, 4 tiles with stats (500+ Clients, 10 Yrs Experience, 4.9 Star Rating, 24/7 Support)",
+            "cta":  f"background linear-gradient(135deg, {p}, {s}), white text, white button",
+            "footer": "background #0a0a0a, white text",
         },
         {
-            \"name\": \"Clean Corporate Split\",
-            \"font\": \"Inter\",
-            \"nav\":  f\"position fixed, background white, border-bottom 2px solid #f1f5f9, logo '{name}' color {p} font-weight 800\",
-            \"hero\": f\"CSS grid 2 columns, NO top padding, full height: LEFT column background {p} padding 80px 60px white text h1 3.5rem font-weight 800 subtext CTA button white color {p} border-radius 8px; RIGHT column background-image url('{hero_url}') cover center min-height 100vh\",
-            \"services_bg\": \"#f8fafc\",
-            \"card\": f\"white bg, border 1px solid #e2e8f0, border-radius 10px, padding 28px, icon color {p}, h3 font-weight 700 color {p}, hover box-shadow increase\",
-            \"why\":  \"background #1e293b (dark navy), white text, 4 stat tiles\",
-            \"cta\":  \"background #111827, white text, gradient button\",
-            \"footer\": \"background #1f2937, white text\",
+            "name": "Clean Corporate Split",
+            "font": "Inter",
+            "nav":  f"position fixed, background white, border-bottom 2px solid #f1f5f9, logo '{name}' color {p} font-weight 800",
+            "hero": f"CSS grid 2 columns, NO top padding, full height: LEFT column background {p} padding 80px 60px white text h1 3.5rem font-weight 800 subtext CTA button white color {p} border-radius 8px; RIGHT column background-image url('{hero_url}') cover center min-height 100vh",
+            "services_bg": "#f8fafc",
+            "card": f"white bg, border 1px solid #e2e8f0, border-radius 10px, padding 28px, icon color {p}, h3 font-weight 700 color {p}, hover box-shadow increase",
+            "why":  "background #1e293b (dark navy), white text, 4 stat tiles",
+            "cta":  "background #111827, white text, gradient button",
+            "footer": "background #1f2937, white text",
         },
         {
-            \"name\": \"Vibrant Gradient Creative\",
-            \"font\": \"Poppins\",
-            \"nav\":  f\"position fixed, background linear-gradient(135deg, {p}, {s}), white logo '{name}' font-weight 900, white links\",
-            \"hero\": f\"background linear-gradient(135deg, {p} 0%, {s} 100%), min-height 92vh, flex center, h1 white font-size 5rem font-weight 900 letter-spacing -3px line-height 1.0, TWO buttons: (1) solid white color {p} border-radius 50px padding 18px 44px, (2) outline white transparent\",
-            \"services_bg\": \"#ffffff\",
-            \"card\": f\"white bg, border-top 4px solid {p}, border-radius 16px, padding 32px, icon inside circle background {p} color white, h3 font-weight 700, hover translateY(-6px) box-shadow increase\",
-            \"why\":  f\"background linear-gradient(135deg, {p}20, {s}20) light tint, colored text, 4 stat tiles white bg\",
-            \"cta\":  f\"background linear-gradient(135deg, {p}, {s}), white text, white button color {p}\",
-            \"footer\": \"background #0f172a, white text\",
+            "name": "Vibrant Gradient Creative",
+            "font": "Poppins",
+            "nav":  f"position fixed, background linear-gradient(135deg, {p}, {s}), white logo '{name}' font-weight 900, white links",
+            "hero": f"background linear-gradient(135deg, {p} 0%, {s} 100%), min-height 92vh, flex center, h1 white font-size 5rem font-weight 900 letter-spacing -3px line-height 1.0, TWO buttons: (1) solid white color {p} border-radius 50px padding 18px 44px, (2) outline white transparent",
+            "services_bg": "#ffffff",
+            "card": f"white bg, border-top 4px solid {p}, border-radius 16px, padding 32px, icon inside circle background {p} color white, h3 font-weight 700, hover translateY(-6px) box-shadow increase",
+            "why":  f"background linear-gradient(135deg, {p}20, {s}20) light tint, colored text, 4 stat tiles white bg",
+            "cta":  f"background linear-gradient(135deg, {p}, {s}), white text, white button color {p}",
+            "footer": "background #0f172a, white text",
         },
     ]
 
     d = DESIGNS[variation_index % 3]
 
     return (
-        \"Output ONLY a complete HTML file. Start with <!DOCTYPE html>. End with </html>.\\n\"
-        \"Zero markdown. Zero backticks. Zero explanation.\\n\"
-        \"All CSS inside one <style> tag in <head>.\\n\"
-        \"Only Google Fonts and Font Awesome 6.5 from cdnjs CDN. No other external resources.\\n\"
-        \"No Bootstrap, No Tailwind. Mobile responsive with @media(max-width:768px).\\n\\n\"
-        f\"BUSINESS: {name}\\n\"
-        f\"INDUSTRY: {btype}\\n\"
-        f\"LOCATION: {location}\\n\"
-        f\"PRIMARY COLOR: {p}\\n\"
-        f\"SECONDARY COLOR: {s}\\n\"
-        f\"HERO IMAGE URL: {hero_url}\\n\"
-        f\"ABOUT IMAGE URL: {card_url}\\n\\n\"
-        f\"SERVICES (create ONE card for EACH, use the EXACT service name as the card title):\\n{svc_lines}\\n\\n\"
-        f\"DESIGN STYLE: {d['name']}\\n\"
-        f\"FONT: Load '{d['font']}' from Google Fonts\\n\"
-        f\"NAV: {d['nav']}\\n\"
-        f\"HERO: {d['hero']}\\n\"
-        f\"SERVICES SECTION BG: {d['services_bg']}\\n\"
-        f\"SERVICE CARDS: {d['card']}\\n\"
-        f\"WHY CHOOSE US: {d['why']}\\n\"
-        f\"CTA SECTION: {d['cta']}\\n\"
-        f\"FOOTER: {d['footer']}\\n\\n\"
-        \"BUILD THESE 8 SECTIONS IN ORDER:\\n\"
-        f\"1. Fixed navigation: logo={name}, links=Services/About/Reviews/Contact, CTA button 'Get Quote'\\n\"
-        \"2. Hero section exactly as described above\\n\"
-        \"3. Services section: grid of cards, one per service above with Font Awesome icon + exact service name + 2-sentence description\\n\"
-        f\"4. About Us: two-column layout, left image url('{card_url}'), right 2 paragraphs about {name} in {location}\\n\"
-        \"5. Why Choose Us: 4 stat tiles on coloured background\\n\"
-        \"6. Testimonials: 3 review cards each with 5 gold stars, quote text, customer name\\n\"
-        f\"7. Contact form: full name, email, phone, message textarea, submit button color {p}\\n\"
-        f\"8. Footer: copyright 2025 {name}, location {location}\\n\\n\"
-        f\"Write real persuasive marketing copy. Mention {name} and {location} naturally. NO lorem ipsum.\\n\\n\"
-        \"<!DOCTYPE html>\"
+        "Output ONLY a complete HTML file. Start with <!DOCTYPE html>. End with </html>.\n"
+        "Zero markdown. Zero backticks. Zero explanation.\n"
+        "All CSS inside one <style> tag in <head>.\n"
+        "Only Google Fonts and Font Awesome 6.5 from cdnjs CDN. No other external resources.\n"
+        "No Bootstrap, No Tailwind. Mobile responsive with @media(max-width:768px).\n\n"
+        f"BUSINESS: {name}\n"
+        f"INDUSTRY: {btype}\n"
+        f"LOCATION: {location}\n"
+        f"PRIMARY COLOR: {p}\n"
+        f"SECONDARY COLOR: {s}\n"
+        f"HERO IMAGE URL: {hero_url}\n"
+        f"ABOUT IMAGE URL: {card_url}\n\n"
+        f"SERVICES (create ONE card for EACH, use the EXACT service name as the card title):\n{svc_lines}\n\n"
+        f"DESIGN STYLE: {d['name']}\n"
+        f"FONT: Load '{d['font']}' from Google Fonts\n"
+        f"NAV: {d['nav']}\n"
+        f"HERO: {d['hero']}\n"
+        f"SERVICES SECTION BG: {d['services_bg']}\n"
+        f"SERVICE CARDS: {d['card']}\n"
+        f"WHY CHOOSE US: {d['why']}\n"
+        f"CTA SECTION: {d['cta']}\n"
+        f"FOOTER: {d['footer']}\n\n"
+        "BUILD THESE 8 SECTIONS IN ORDER:\n"
+        f"1. Fixed navigation: logo={name}, links=Services/About/Reviews/Contact, CTA button 'Get Quote'\n"
+        "2. Hero section exactly as described above\n"
+        "3. Services section: grid of cards, one per service above with Font Awesome icon + exact service name + 2-sentence description\n"
+        f"4. About Us: two-column layout, left image url('{card_url}'), right 2 paragraphs about {name} in {location}\n"
+        "5. Why Choose Us: 4 stat tiles on coloured background\n"
+        "6. Testimonials: 3 review cards each with 5 gold stars, quote text, customer name\n"
+        f"7. Contact form: full name, email, phone, message textarea, submit button color {p}\n"
+        f"8. Footer: copyright 2025 {name}, location {location}\n\n"
+        f"Write real persuasive marketing copy. Mention {name} and {location} naturally. NO lorem ipsum.\n\n"
+        "<!DOCTYPE html>"
     )
 
 # ────────────────────────────────────────────────
@@ -258,7 +258,7 @@ def generate_html(data, variation_index):
     global LAST_AI_ERROR, ACTIVE_MODEL
 
     if not gemini_client:
-        LAST_AI_ERROR = \"GEMINI_API_KEY not set in Vercel environment variables.\"
+        LAST_AI_ERROR = "GEMINI_API_KEY not set in Vercel environment variables."
         return None
 
     prompt = build_prompt(data, variation_index)
@@ -268,7 +268,7 @@ def generate_html(data, variation_index):
     for model_name in models_to_try:
         try:
             import time
-            print(f\"  [{variation_index}] Trying {model_name}...\")
+            print(f"  [{variation_index}] Trying {model_name}...")
             resp = gemini_client.models.generate_content(
                 model=model_name,
                 contents=prompt,
@@ -281,39 +281,39 @@ def generate_html(data, variation_index):
             raw = resp.text.strip()
             if raw:
                 ACTIVE_MODEL = model_name
-                print(f\"  [{variation_index}] OK with {model_name} ({len(raw):,} chars)\")
+                print(f"  [{variation_index}] OK with {model_name} ({len(raw):,} chars)")
 
                 # Clean markdown fences
-                if \"```html\" in raw:
-                    raw = raw.split(\"```html\", 1)[1].split(\"```\", 1)[0].strip()
-                elif \"```\" in raw:
-                    raw = raw.split(\"```\", 1)[1].split(\"```\", 1)[0].strip()
+                if "```html" in raw:
+                    raw = raw.split("```html", 1)[1].split("```", 1)[0].strip()
+                elif "```" in raw:
+                    raw = raw.split("```", 1)[1].split("```", 1)[0].strip()
 
-                if not raw.lower().startswith(\"<!doctype\"):
-                    raw = f\"<!DOCTYPE html>\\n{raw}\"
+                if not raw.lower().startswith("<!doctype"):
+                    raw = "<!DOCTYPE html>\n" + raw
 
                 if '<meta charset' not in raw.lower():
-                    raw = raw.replace('<head>', '<head>\\n<meta charset=\"UTF-8\">', 1)
+                    raw = raw.replace('<head>', '<head>\n<meta charset="UTF-8">', 1)
 
-                LAST_AI_ERROR = \"\"
+                LAST_AI_ERROR = ""
                 return raw
 
         except Exception as me:
             eu = str(me).upper()
             LAST_AI_ERROR = str(me)
-            if any(x in eu for x in [\"429\", \"RESOURCE_EXHAUSTED\", \"QUOTA\"]):
-                print(f\"  [{variation_index}] {model_name} quota — trying next\")
+            if any(x in eu for x in ["429", "RESOURCE_EXHAUSTED", "QUOTA"]):
+                print(f"  [{variation_index}] {model_name} quota — trying next")
                 continue
-            if any(x in eu for x in [\"404\", \"NOT_FOUND\"]):
-                print(f\"  [{variation_index}] {model_name} not found — trying next\")
+            if any(x in eu for x in ["404", "NOT_FOUND"]):
+                print(f"  [{variation_index}] {model_name} not found — trying next")
                 continue
-            if any(x in eu for x in [\"503\", \"OVERLOADED\"]):
+            if any(x in eu for x in ["503", "OVERLOADED"]):
                 time.sleep(2)
                 continue
-            print(f\"  [{variation_index}] {model_name} error: {me}\")
+            print(f"  [{variation_index}] {model_name} error: {me}")
             continue
 
-    LAST_AI_ERROR = f\"All Gemini models failed. Last error: {LAST_AI_ERROR}\"
+    LAST_AI_ERROR = f"All Gemini models failed. Last error: {LAST_AI_ERROR}"
     return None
 
 # ────────────────────────────────────────────────
@@ -324,59 +324,59 @@ def inject_banner(html, site, slug, base_url):
     name = site.get('business_name', 'Your Business')
     btype = site.get('business_type', 'business')
     _, _, emoji, accent = get_category_info(btype)
-    dl  = f\"{base_url}/download/{slug}\"
-    wa  = \"https://wa.me/447700000000?text=I+want+to+launch+my+AI+website\"
+    dl  = f"{base_url}/download/{slug}"
+    wa  = "https://wa.me/447700000000?text=I+want+to+launch+my+AI+website"
 
     banner = (
-        \"<style>\"
-        \"#_ab{position:fixed;bottom:0;left:0;right:0;z-index:999999;\"
-        \"background:linear-gradient(135deg,#0f172a,#1e293b);\"
-        \"color:#fff;padding:14px 24px;display:flex;align-items:center;\"
-        \"justify-content:space-between;gap:12px;flex-wrap:wrap;\"
-        \"box-shadow:0 -6px 32px rgba(0,0,0,.4);\"
-        \"font-family:'Segoe UI',system-ui,sans-serif;font-size:14px}\"
-        \"#_ab .l{display:flex;align-items:center;gap:10px}\"
-        f\"#_ab .bg{{background:{accent};color:#fff;padding:3px 10px;border-radius:20px;\"
-        \"font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase}\"
-        \"#_ab .t{line-height:1.4}\"
-        \"#_ab .t strong{font-size:15px;display:block}\"
-        \"#_ab .r{display:flex;gap:8px;flex-wrap:wrap;align-items:center}\"
-        \"#_ab a,#_ab button{padding:10px 18px;border-radius:30px;font-weight:700;\"
-        \"font-size:13px;cursor:pointer;border:none;text-decoration:none;\"
-        \"display:inline-flex;align-items:center;gap:5px;transition:.2s}\"
-        \"#_ab a:hover,#_ab button:hover{transform:translateY(-2px)}\"
-        \"#_ab .g{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}\"
-        \"#_ab .d{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)!important}\"
-        \"#_ab .x{background:transparent;color:rgba(255,255,255,.4);font-size:18px;padding:4px 8px}\"
-        \"body{padding-bottom:78px!important}\"
-        \"</style>\"
-        f'<div id=\"_ab\">'
-        f'<div class=\"l\"><span class=\"bg\">AI Preview</span>'
-        f'<div class=\"t\"><strong>{name} &mdash; Your website is ready!</strong>'
-        f'Our team will finalise &amp; launch it &mdash; <strong style=\"color:#4ade80;display:inline\">completely free</strong></div></div>'
-        f'<div class=\"r\">'
-        f'<a href=\"{wa}\" target=\"_blank\" class=\"g\">&#128640; Launch My Site Free</a>'
-        f'<a href=\"{dl}\" class=\"d\">&#11015; Download HTML</a>'
-        f'<button class=\"x\" onclick=\"document.getElementById(\\'_ab\\').remove();document.body.style.paddingBottom=0\">&#x2715;</button>'
+        "<style>"
+        "#_ab{position:fixed;bottom:0;left:0;right:0;z-index:999999;"
+        "background:linear-gradient(135deg,#0f172a,#1e293b);"
+        "color:#fff;padding:14px 24px;display:flex;align-items:center;"
+        "justify-content:space-between;gap:12px;flex-wrap:wrap;"
+        "box-shadow:0 -6px 32px rgba(0,0,0,.4);"
+        "font-family:'Segoe UI',system-ui,sans-serif;font-size:14px}"
+        "#_ab .l{display:flex;align-items:center;gap:10px}"
+        f"#_ab .bg{{background:{accent};color:#fff;padding:3px 10px;border-radius:20px;"
+        "font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase}"
+        "#_ab .t{line-height:1.4}"
+        "#_ab .t strong{font-size:15px;display:block}"
+        "#_ab .r{display:flex;gap:8px;flex-wrap:wrap;align-items:center}"
+        "#_ab a,#_ab button{padding:10px 18px;border-radius:30px;font-weight:700;"
+        "font-size:13px;cursor:pointer;border:none;text-decoration:none;"
+        "display:inline-flex;align-items:center;gap:5px;transition:.2s}"
+        "#_ab a:hover,#_ab button:hover{transform:translateY(-2px)}"
+        "#_ab .g{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}"
+        "#_ab .d{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)!important}"
+        "#_ab .x{background:transparent;color:rgba(255,255,255,.4);font-size:18px;padding:4px 8px}"
+        "body{padding-bottom:78px!important}"
+        "</style>"
+        f'<div id="_ab">'
+        f'<div class="l"><span class="bg">AI Preview</span>'
+        f'<div class="t"><strong>{name} &mdash; Your website is ready!</strong>'
+        f'Our team will finalise &amp; launch it &mdash; <strong style="color:#4ade80;display:inline">completely free</strong></div></div>'
+        f'<div class="r">'
+        f'<a href="{wa}" target="_blank" class="g">&#128640; Launch My Site Free</a>'
+        f'<a href="{dl}" class="d">&#11015; Download HTML</a>'
+        f'<button class="x" onclick="document.getElementById(\'_ab\').remove();document.body.style.paddingBottom=0">&#x2715;</button>'
         f'</div></div>'
     )
 
     if '<meta charset' not in html.lower():
-        html = html.replace('<head>', '<head>\\n<meta charset=\"UTF-8\">', 1)
+        html = html.replace('<head>', '<head>\n<meta charset="UTF-8">', 1)
 
-    return html.replace(\"</body>\", f\"{banner}\\n</body>\", 1) if \"</body>\" in html else f\"{html}{banner}\"
+    return html.replace("</body>", f"{banner}\n</body>", 1) if "</body>" in html else html + banner
 
 # ────────────────────────────────────────────────
 #  FORM PAGE  (served from backend — no file:// issues)
 # ────────────────────────────────────────────────
 
-FORM_HTML = \"\"\"<!DOCTYPE html>
-<html lang=\"en\">
+FORM_HTML = """<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset=\"UTF-8\">
-<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Build Your Website with AI | Free</title>
-<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap\" rel=\"stylesheet\">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#f0f4ff 0%,#faf5ff 100%);min-height:100vh;padding:40px 20px}
@@ -414,81 +414,81 @@ textarea{resize:vertical;min-height:100px}
 </style>
 </head>
 <body>
-<div class=\"wrap\">
-<div class=\"card\">
+<div class="wrap">
+<div class="card">
   <h1><span>AI</span> Web Architect</h1>
-  <p class=\"sub\">Create a completely custom professional website in minutes — free.</p>
-  <form id=\"aiform\">
-    <div class=\"row\">
-      <div><label>Business Name *</label><input id=\"bn\" placeholder=\"e.g. Elite Plumbing Solutions\" required></div>
+  <p class="sub">Create a completely custom professional website in minutes — free.</p>
+  <form id="aiform">
+    <div class="row">
+      <div><label>Business Name *</label><input id="bn" placeholder="e.g. Elite Plumbing Solutions" required></div>
       <div><label>Industry *</label>
-        <select id=\"bt\" required>
-          <option value=\"\" disabled selected>Select your industry</option>
-          <option value=\"plumber\">Plumbing &amp; Heating</option>
-          <option value=\"electrician\">Electrical Services</option>
-          <option value=\"restaurant\">Restaurant / Cafe</option>
-          <option value=\"law\">Law Firm / Legal</option>
-          <option value=\"consulting\">Business Consulting</option>
-          <option value=\"fitness\">Gym / Fitness</option>
-          <option value=\"realestate\">Real Estate</option>
-          <option value=\"agency\">Digital / Creative Agency</option>
-          <option value=\"shoes\">Shoes / Retail</option>
-          <option value=\"beauty\">Beauty / Spa</option>
-          <option value=\"medical\">Medical / Clinic</option>
-          <option value=\"cleaning\">Cleaning Services</option>
-          <option value=\"construction\">Construction</option>
-          <option value=\"photography\">Photography</option>
-          <option value=\"tech\">Technology</option>
-          <option value=\"education\">Education</option>
-          <option value=\"other\">Other</option>
+        <select id="bt" required>
+          <option value="" disabled selected>Select your industry</option>
+          <option value="plumber">Plumbing &amp; Heating</option>
+          <option value="electrician">Electrical Services</option>
+          <option value="restaurant">Restaurant / Cafe</option>
+          <option value="law">Law Firm / Legal</option>
+          <option value="consulting">Business Consulting</option>
+          <option value="fitness">Gym / Fitness</option>
+          <option value="realestate">Real Estate</option>
+          <option value="agency">Digital / Creative Agency</option>
+          <option value="shoes">Shoes / Retail</option>
+          <option value="beauty">Beauty / Spa</option>
+          <option value="medical">Medical / Clinic</option>
+          <option value="cleaning">Cleaning Services</option>
+          <option value="construction">Construction</option>
+          <option value="photography">Photography</option>
+          <option value="tech">Technology</option>
+          <option value="education">Education</option>
+          <option value="other">Other</option>
         </select>
       </div>
     </div>
-    <div style=\"margin-bottom:20px\">
+    <div style="margin-bottom:20px">
       <label>Services (comma separated) *</label>
-      <textarea id=\"sv\" placeholder=\"e.g. Emergency repairs, Boiler installation, Drainage, Gas checks\" required></textarea>
+      <textarea id="sv" placeholder="e.g. Emergency repairs, Boiler installation, Drainage, Gas checks" required></textarea>
     </div>
-    <div class=\"row\">
-      <div><label>City / Location *</label><input id=\"loc\" placeholder=\"e.g. Manchester, Lahore, Dubai\" required></div>
+    <div class="row">
+      <div><label>City / Location *</label><input id="loc" placeholder="e.g. Manchester, Lahore, Dubai" required></div>
       <div><label>Preferred Style</label>
-        <select id=\"sty\">
-          <option value=\"modern\">Modern / Bold</option>
-          <option value=\"professional\">Professional / Corporate</option>
-          <option value=\"creative\">Creative / Artistic</option>
-          <option value=\"minimal\">Minimal / Clean</option>
+        <select id="sty">
+          <option value="modern">Modern / Bold</option>
+          <option value="professional">Professional / Corporate</option>
+          <option value="creative">Creative / Artistic</option>
+          <option value="minimal">Minimal / Clean</option>
         </select>
       </div>
     </div>
     <label>Brand Colors</label>
-    <div class=\"color-row\">
-      <div class=\"color-item\"><input type=\"color\" id=\"c1\" value=\"#2563eb\"><span>Primary</span></div>
-      <div class=\"color-item\"><input type=\"color\" id=\"c2\" value=\"#7c3aed\"><span>Secondary</span></div>
-      <div class=\"color-item\"><input type=\"color\" id=\"c3\" value=\"#f8fafc\"><span>Background</span></div>
+    <div class="color-row">
+      <div class="color-item"><input type="color" id="c1" value="#2563eb"><span>Primary</span></div>
+      <div class="color-item"><input type="color" id="c2" value="#7c3aed"><span>Secondary</span></div>
+      <div class="color-item"><input type="color" id="c3" value="#f8fafc"><span>Background</span></div>
     </div>
-    <button type=\"submit\" class=\"btn\">Generate 3 Unique AI Designs &rarr;</button>
+    <button type="submit" class="btn">Generate 3 Unique AI Designs &rarr;</button>
   </form>
 </div>
 </div>
 
 <!-- Loading -->
-<div class=\"loading\" id=\"ld\">
-  <div class=\"spinner\"></div>
-  <div id=\"lt\">Analysing your business...</div>
-  <div style=\"color:#64748b;font-size:0.95rem\" id=\"ls\">Building 3 unique designs for you</div>
-  <div class=\"prog-wrap\"><div class=\"prog-fill\" id=\"pf\"></div></div>
+<div class="loading" id="ld">
+  <div class="spinner"></div>
+  <div id="lt">Analysing your business...</div>
+  <div style="color:#64748b;font-size:0.95rem" id="ls">Building 3 unique designs for you</div>
+  <div class="prog-wrap"><div class="prog-fill" id="pf"></div></div>
 </div>
 
 <!-- Selection -->
-<div class=\"sel-overlay\" id=\"so\">
-  <div style=\"text-align:center;margin-bottom:40px\">
-    <h2 style=\"font-size:2rem;font-weight:800;color:#0f172a;margin-bottom:8px\">Choose Your Design</h2>
-    <p style=\"color:#64748b\">3 unique AI layouts — pick the one you love</p>
+<div class="sel-overlay" id="so">
+  <div style="text-align:center;margin-bottom:40px">
+    <h2 style="font-size:2rem;font-weight:800;color:#0f172a;margin-bottom:8px">Choose Your Design</h2>
+    <p style="color:#64748b">3 unique AI layouts — pick the one you love</p>
   </div>
-  <div class=\"sel-grid\" id=\"sg\"></div>
+  <div class="sel-grid" id="sg"></div>
 </div>
 
 <script>
-const BASE = 'https://backend-ten-omega-72.vercel.app';
+const BASE = window.location.origin;
 const MSGS = ['Analysing your business...','Designing Layout 1 of 3...','Building your homepage...','Designing Layout 2 of 3...','Adding colours and fonts...','Designing Layout 3 of 3...','Almost ready...'];
 
 document.getElementById('aiform').addEventListener('submit', async e => {
@@ -569,11 +569,11 @@ function showDesigns(slug, vars){
     const c = document.createElement('div');
     c.className = 'd-card';
     c.innerHTML = `
-      <iframe src=\"${v.url}\" class=\"d-preview\" loading=\"lazy\"></iframe>
-      <div class=\"d-info\">
-        <div><strong style=\"font-size:0.95rem\">Design ${v.id+1}</strong><br><small style=\"color:#64748b\">AI Custom Layout</small></div>
-        <button class=\"btn-sel\" onclick=\"pick('${slug}',${v.id})\">Select This</button>
-      </div>\`;
+      <iframe src="${v.url}" class="d-preview" loading="lazy"></iframe>
+      <div class="d-info">
+        <div><strong style="font-size:0.95rem">Design ${v.id+1}</strong><br><small style="color:#64748b">AI Custom Layout</small></div>
+        <button class="btn-sel" onclick="pick('${slug}',${v.id})">Select This</button>
+      </div>`;
     grid.appendChild(c);
   });
   document.getElementById('so').style.display='block';
@@ -598,7 +598,7 @@ async function pick(slug, idx){
 }
 </script>
 </body>
-</html>\"\"\"
+</html>"""
 
 # ────────────────────────────────────────────────
 #  ROUTES
@@ -619,31 +619,31 @@ def build_page():
 @app.route('/health')
 def health():
     return jsonify({
-        \"status\": \"ok\",
-        \"gemini\": bool(gemini_client),
-        \"active_model\": ACTIVE_MODEL,
-        \"last_error\": LAST_AI_ERROR or \"none\",
-        \"db\": bool(DATABASE_URL),
+        "status": "ok",
+        "gemini": bool(gemini_client),
+        "active_model": ACTIVE_MODEL,
+        "last_error": LAST_AI_ERROR or "none",
+        "db": bool(DATABASE_URL),
     })
 
 @app.route('/api/debug')
 def debug():
     return jsonify({
-        \"GEMINI_KEY_set\": bool(GEMINI_KEY),
-        \"gemini_ready\":   bool(gemini_client),
-        \"active_model\":   ACTIVE_MODEL,
-        \"last_error\":     LAST_AI_ERROR or \"none\",
+        "GEMINI_KEY_set": bool(GEMINI_KEY),
+        "gemini_ready":   bool(gemini_client),
+        "active_model":   ACTIVE_MODEL,
+        "last_error":     LAST_AI_ERROR or "none",
     })
 
 @app.route('/api/list-models')
 def list_models():
     if not gemini_client:
-        return jsonify({\"error\": \"Gemini not initialised\"})
+        return jsonify({"error": "Gemini not initialised"})
     try:
         names = [str(m.name) for m in gemini_client.models.list()]
-        return jsonify({\"models\": names, \"active\": ACTIVE_MODEL})
+        return jsonify({"models": names, "active": ACTIVE_MODEL})
     except Exception as e:
-        return jsonify({\"error\": str(e)})
+        return jsonify({"error": str(e)})
 
 # ── Register job ──────────────────────────────────────────────────────────────
 @app.route('/api/generate-site', methods=['POST'])
@@ -651,24 +651,24 @@ def start_generation():
     try:
         data = request.get_json()
         if not data or not data.get('businessName'):
-            return jsonify({\"success\": False, \"message\": \"businessName is required\"}), 400
+            return jsonify({"success": False, "message": "businessName is required"}), 400
         slug = re.sub(r'[^a-z0-9]+', '-', data['businessName'].lower().strip())
-        slug = f\"{slug}-{random.randint(10000, 99999)}\"
+        slug = f"{slug}-{random.randint(10000, 99999)}"
         conn = get_db()
         cur  = conn.cursor()
-        cur.execute(\"\"\"
+        cur.execute("""
             INSERT INTO sites (slug,business_name,business_type,location,services,style,colors,status,message)
             VALUES (%s,%s,%s,%s,%s,%s,%s,'STARTING','Ready')
             ON CONFLICT (slug) DO NOTHING
-        \"\"\", (slug, data.get('businessName'), data.get('businessType','other'),
+        """, (slug, data.get('businessName'), data.get('businessType','other'),
               data.get('location',''), data.get('services',''),
               data.get('style','modern'), data.get('colors',[])))
         conn.commit()
         cur.close(); conn.close()
-        return jsonify({\"success\": True, \"slug\": slug})
+        return jsonify({"success": True, "slug": slug})
     except Exception as e:
         traceback.print_exc()
-        return jsonify({\"success\": False, \"message\": str(e)}), 500
+        return jsonify({"success": False, "message": str(e)}), 500
 
 # ── Generate ONE design (safe per Vercel 60s limit) ───────────────────────────
 @app.route('/api/generate-one/<slug>/<int:idx>')
@@ -676,38 +676,38 @@ def generate_one(slug, idx):
     try:
         conn = get_db()
         cur  = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute(\"SELECT * FROM sites WHERE slug=%s\", (slug,))
+        cur.execute("SELECT * FROM sites WHERE slug=%s", (slug,))
         site = cur.fetchone()
         conn.close()
         if not site:
-            return jsonify({\"success\": False, \"message\": \"Site not found\"}), 404
+            return jsonify({"success": False, "message": "Site not found"}), 404
         if idx not in (0, 1, 2):
-            return jsonify({\"success\": False, \"message\": \"idx must be 0, 1 or 2\"}), 400
+            return jsonify({"success": False, "message": "idx must be 0, 1 or 2"}), 400
 
         html = generate_html(dict(site), idx)
         if not html:
-            return jsonify({\"success\": False, \"message\": LAST_AI_ERROR or \"Generation failed\"})
+            return jsonify({"success": False, "message": LAST_AI_ERROR or "Generation failed"})
 
         conn2 = get_db()
         cur2  = conn2.cursor()
-        cur2.execute(\"DELETE FROM variations WHERE site_slug=%s AND variation_index=%s\", (slug, idx))
-        cur2.execute(\"INSERT INTO variations (site_slug,variation_index,html_content) VALUES (%s,%s,%s)\",
+        cur2.execute("DELETE FROM variations WHERE site_slug=%s AND variation_index=%s", (slug, idx))
+        cur2.execute("INSERT INTO variations (site_slug,variation_index,html_content) VALUES (%s,%s,%s)",
                      (slug, idx, html))
         status = 'AWAITING_SELECTION' if idx == 2 else f'DONE_{idx}'
-        cur2.execute(\"UPDATE sites SET status=%s WHERE slug=%s\", (status, slug))
+        cur2.execute("UPDATE sites SET status=%s WHERE slug=%s", (status, slug))
         conn2.commit()
         cur2.close(); conn2.close()
 
         base = request.host_url.rstrip('/')
         return jsonify({
-            \"success\":     True,
-            \"variation_id\": idx,
-            \"preview_url\":  f\"{base}/view-design/{slug}/{idx}\",
-            \"all_done\":     idx == 2,
+            "success":     True,
+            "variation_id": idx,
+            "preview_url":  f"{base}/view-design/{slug}/{idx}",
+            "all_done":     idx == 2,
         })
     except Exception as e:
         traceback.print_exc()
-        return jsonify({\"success\": False, \"message\": str(e)}), 500
+        return jsonify({"success": False, "message": str(e)}), 500
 
 # ── Select design ─────────────────────────────────────────────────────────────
 @app.route('/api/select-design', methods=['POST'])
@@ -716,30 +716,30 @@ def select_design():
     slug  = data.get('slug')
     index = data.get('designIndex')
     if not slug or index is None:
-        return jsonify({\"success\": False, \"message\": \"slug and designIndex required\"}), 400
+        return jsonify({"success": False, "message": "slug and designIndex required"}), 400
     try:
         conn = get_db()
         cur  = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute(\"SELECT html_content FROM variations WHERE site_slug=%s AND variation_index=%s\",
+        cur.execute("SELECT html_content FROM variations WHERE site_slug=%s AND variation_index=%s",
                     (slug, int(index)))
         row = cur.fetchone()
         if not row:
             conn.close()
-            return jsonify({\"success\": False, \"message\": \"Design not found\"}), 404
-        cur.execute(\"SELECT * FROM sites WHERE slug=%s\", (slug,))
+            return jsonify({"success": False, "message": "Design not found"}), 404
+        cur.execute("SELECT * FROM sites WHERE slug=%s", (slug,))
         site = cur.fetchone()
         base = request.host_url.rstrip('/')
         final = inject_banner(row['html_content'], dict(site), slug, base)
-        cur.execute(\"\"\"INSERT INTO final_sites (site_slug,html_content)
-            VALUES (%s,%s) ON CONFLICT (site_slug) DO UPDATE SET html_content=EXCLUDED.html_content\"\"\",
+        cur.execute("""INSERT INTO final_sites (site_slug,html_content)
+            VALUES (%s,%s) ON CONFLICT (site_slug) DO UPDATE SET html_content=EXCLUDED.html_content""",
             (slug, final))
-        cur.execute(\"UPDATE sites SET status='COMPLETED' WHERE slug=%s\", (slug,))
+        cur.execute("UPDATE sites SET status='COMPLETED' WHERE slug=%s", (slug,))
         conn.commit()
         cur.close(); conn.close()
-        return jsonify({\"success\":True,\"previewUrl\":f\"{base}/s/{slug}\",\"downloadUrl\":f\"{base}/download/{slug}\"})
+        return jsonify({"success":True,"previewUrl":f"{base}/s/{slug}","downloadUrl":f"{base}/download/{slug}"})
     except Exception as e:
         traceback.print_exc()
-        return jsonify({\"success\": False, \"message\": str(e)}), 500
+        return jsonify({"success": False, "message": str(e)}), 500
 
 # ── View variation ────────────────────────────────────────────────────────────
 @app.route('/view-design/<slug>/<int:idx>')
@@ -747,13 +747,13 @@ def view_variation(slug, idx):
     try:
         conn = get_db()
         cur  = conn.cursor()
-        cur.execute(\"SELECT html_content FROM variations WHERE site_slug=%s AND variation_index=%s\",(slug,idx))
+        cur.execute("SELECT html_content FROM variations WHERE site_slug=%s AND variation_index=%s",(slug,idx))
         row = cur.fetchone()
         conn.close()
         if row: return html_r(row[0])
-        return html_r(\"<h1>Not found</h1>\", 404)
+        return html_r("<h1>Not found</h1>", 404)
     except Exception as e:
-        return html_r(f\"<h1>Error: {e}</h1>\", 500)
+        return html_r(f"<h1>Error: {e}</h1>", 500)
 
 # ── Final site ────────────────────────────────────────────────────────────────
 @app.route('/s/<slug>')
@@ -761,13 +761,13 @@ def show_site(slug):
     try:
         conn = get_db()
         cur  = conn.cursor()
-        cur.execute(\"SELECT html_content FROM final_sites WHERE site_slug=%s\",(slug,))
+        cur.execute("SELECT html_content FROM final_sites WHERE site_slug=%s",(slug,))
         row = cur.fetchone()
         conn.close()
         if row: return html_r(row[0])
-        return html_r(\"<h1>Not found</h1>\", 404)
+        return html_r("<h1>Not found</h1>", 404)
     except Exception as e:
-        return html_r(f\"<h1>Error: {e}</h1>\", 500)
+        return html_r(f"<h1>Error: {e}</h1>", 500)
 
 # ── Download ZIP ──────────────────────────────────────────────────────────────
 @app.route('/download/<slug>')
@@ -775,18 +775,18 @@ def download(slug):
     try:
         conn = get_db()
         cur  = conn.cursor()
-        cur.execute(\"SELECT html_content FROM final_sites WHERE site_slug=%s\",(slug,))
+        cur.execute("SELECT html_content FROM final_sites WHERE site_slug=%s",(slug,))
         row = cur.fetchone()
         conn.close()
-        if not row: return html_r(\"<h1>Not found</h1>\", 404)
+        if not row: return html_r("<h1>Not found</h1>", 404)
         buf = BytesIO()
         with zipfile.ZipFile(buf,'w',zipfile.ZIP_DEFLATED) as zf:
-            zf.writestr(\"index.html\", row[0].encode('utf-8'))
+            zf.writestr("index.html", row[0].encode('utf-8'))
         buf.seek(0)
         return send_file(buf, mimetype='application/zip', as_attachment=True,
-                         download_name=f\"{slug}_website.zip\")
+                         download_name=f"{slug}_website.zip")
     except Exception as e:
-        return html_r(f\"<h1>Error: {e}</h1>\", 500)
+        return html_r(f"<h1>Error: {e}</h1>", 500)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
