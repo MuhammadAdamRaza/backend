@@ -690,8 +690,42 @@ CRITICAL RULES:
                     top_p=0.95,
                     top_k=40
                 )
-                response = model.generate_content(prompt, generation_config=generation_config)
-                html_code = response.text.strip()
+                try:
+                    # Try a few different model names in case of availability issues
+                    primary_model_name = os.getenv("GEMINI_MODEL")
+                    model_names = []
+                    if primary_model_name:
+                        model_names.append(primary_model_name)
+                    
+                    # Known working models
+                    model_names.extend(["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"])
+                    
+                    # Remove duplicates while preserving order
+                    model_names = list(dict.fromkeys(model_names))
+                    
+                    response = None
+                    last_err = ""
+                    
+                    for m_name in model_names:
+                        try:
+                            print(f"Attempting generation with model: {m_name}")
+                            temp_model = genai.GenerativeModel(m_name)
+                            response = temp_model.generate_content(prompt, generation_config=generation_config)
+                            if response and response.text:
+                                print(f"Success with model: {m_name}")
+                                break
+                        except Exception as e:
+                            last_err = str(e)
+                            print(f"Model {m_name} failed: {e}")
+                            continue
+                    
+                    if not response or not response.text:
+                        raise Exception(f"All AI models failed. Last error: {last_err}")
+                        
+                    html_code = response.text.strip()
+                except Exception as e:
+                    # Re-raise to be caught by the outer attempt loop
+                    raise e
             elif client:
                 response = client.chat.completions.create(
                     model="gpt-4o",
