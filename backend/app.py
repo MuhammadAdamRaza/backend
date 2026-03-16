@@ -708,8 +708,15 @@ CRITICAL RULES:
                         else:
                             model_names.append(primary_model_name)
                     
-                    # Known working models (standard fully qualified names)
-                    model_names.extend(["models/gemini-1.5-flash", "models/gemini-1.5-flash-latest", "models/gemini-pro", "models/gemini-pro-latest"])
+                    # Known working models (standard fully qualified names and aliases)
+                    model_names.extend([
+                        "models/gemini-1.5-flash", 
+                        "models/gemini-1.5-flash-latest", 
+                        "models/gemini-flash-latest",
+                        "models/gemini-2.0-flash-exp",
+                        "models/gemini-pro-latest",
+                        "models/gemini-pro"
+                    ])
                     
                     # Remove duplicates while preserving order
                     model_names = list(dict.fromkeys(model_names))
