@@ -217,47 +217,19 @@ def build_prompt(data, variation_index):
     card_img     = f"https://loremflickr.com/800/500/{img_kw}"
     layout       = LAYOUTS[variation_index % len(LAYOUTS)]
 
-    return f"""You are a senior front-end developer building a premium business website.
+    return f"""Output ONLY a single complete HTML file. No markdown. No explanation. Start with <!DOCTYPE html>.
 
-CRITICAL OUTPUT RULES — follow exactly:
-1. Return ONLY raw HTML. Start immediately with <!DOCTYPE html>
-2. Do NOT include any markdown, backticks, or explanation text
-3. All CSS inside one <style> tag in <head>
-4. All JS inside one <script> tag before </body>
-5. ONLY use Google Fonts and Font Awesome 6 from CDN — nothing else external
-6. NO Bootstrap, NO Tailwind, NO CSS frameworks
-7. Fully responsive, mobile-first
-8. Minimum 4000 characters of total HTML code
+Business: {name} | Type: {btype} | Location: {location} | Style: {style}
+Colors: primary={colors[0]} secondary={colors[1]} bg={colors[2]}
+Services: {', '.join(svc_list)}
+Hero image: {hero_img}
+Card image: {card_img}
+Layout variation {variation_index + 1}: {layout}
 
-BUSINESS DETAILS:
-- Name: {name}
-- Industry: {btype}
-- Location: {location}
-- Style preference: {style}
-- Primary colour: {colors[0]}
-- Secondary colour: {colors[1]}
-- Background colour: {colors[2]}
-- Services: {', '.join(svc_list)}
+Rules: CSS in <style>, JS in <script>, Google Fonts + FontAwesome CDN only, mobile responsive, real copy not lorem ipsum.
+Sections: sticky nav, hero with bg image, about, services grid (one card per service with FA icon), why-choose-us (4 tiles), testimonials (3 quotes), contact form, footer.
 
-LAYOUT STYLE (Variation {variation_index + 1} of 3):
-{layout}
-
-REQUIRED SECTIONS IN ORDER:
-1. Sticky nav bar — business name as logo, smooth-scroll links to each section
-2. Hero section — compelling headline + subheadline + CTA button — background image: {hero_img}
-3. About Us — 2 paragraphs of real copy specific to {name} in {location}
-4. Services — card for EVERY service listed above with Font Awesome icon + description — image: {card_img}
-5. Why Choose Us — 4 benefit tiles with icons
-6. Testimonials — 3 realistic customer quotes with names
-7. Contact/CTA section — phone field, email field, message field, submit button
-8. Footer with copyright {name}
-
-COPY RULES:
-- Write real, persuasive marketing copy for a {btype} business in {location}
-- Never write lorem ipsum
-- Headlines must be benefit-driven and compelling
-
-Output the complete single-file HTML page for Variation {variation_index + 1} now:"""
+HTML:"""
 
 
 # ────────────────────────────────────────────────
@@ -280,18 +252,18 @@ def generate_html(data, variation_index):
 
     try:
         raw = ""
+        all_errors = []
 
-        # Try every Gemini candidate model — skip on quota/404 errors
+        import time
+        from google.genai import types as genai_types
+
+        # ── Try Gemini models ──────────────────────────────────────────────
         if gemini_client:
-            import time
-            from google.genai import types as genai_types
             models_to_try = [ACTIVE_MODEL] + [m for m in GEMINI_CANDIDATES if m != ACTIVE_MODEL]
-            last_err  = ""
-            all_errors = []
 
             for model_name in models_to_try:
                 try:
-                    print(f"  Trying {model_name} for variation {variation_index}...")
+                    print(f"  Trying Gemini {model_name} for variation {variation_index}...")
                     response = gemini_client.models.generate_content(
                         model=model_name,
                         contents=prompt,
@@ -304,28 +276,28 @@ def generate_html(data, variation_index):
                     raw = response.text.strip()
                     if raw:
                         ACTIVE_MODEL = model_name
-                        print(f"  Success with {model_name}")
+                        print(f"  Gemini success: {model_name}")
                         break
                 except Exception as me:
-                    last_err  = str(me)
-                    err_up    = str(me).upper()
-                    all_errors.append(f"{model_name}: {str(me)[:120]}")
+                    err_str = str(me)
+                    err_up  = err_str.upper()
+                    all_errors.append(f"{model_name}: {err_str[:120]}")
                     if "429" in err_up or "RESOURCE_EXHAUSTED" in err_up or "QUOTA" in err_up:
-                        print(f"  {model_name} quota exhausted — trying next...")
+                        print(f"  {model_name} quota exhausted — next...")
                         continue
                     if "404" in err_up or "NOT_FOUND" in err_up:
-                        print(f"  {model_name} not found — trying next...")
+                        print(f"  {model_name} not found — next...")
                         continue
-                    if "503" in err_up or "OVERLOADED" in err_up or "UNAVAILABLE" in err_up:
-                        print(f"  {model_name} overloaded — waiting 3s...")
+                    if "503" in err_up or "OVERLOADED" in err_up:
                         time.sleep(3)
                         continue
-                    print(f"  {model_name} error: {me}")
+                    print(f"  {model_name}: {me}")
                     continue
 
-            # All Gemini models exhausted — try OpenAI as last resort
-            if not raw and openai_client:
-                print("  All Gemini models exhausted — trying OpenAI fallback...")
+        # ── OpenAI: used if Gemini failed OR no Gemini key ─────────────────
+        if not raw and openai_client:
+            try:
+                print(f"  Trying OpenAI gpt-4o-mini for variation {variation_index}...")
                 resp = openai_client.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=[{"role": "user", "content": prompt}],
@@ -333,28 +305,25 @@ def generate_html(data, variation_index):
                     max_tokens=8000,
                 )
                 raw = resp.choices[0].message.content.strip()
+                if raw:
+                    print(f"  OpenAI success")
+            except Exception as oe:
+                all_errors.append(f"openai/gpt-4o-mini: {str(oe)[:120]}")
+                print(f"  OpenAI failed: {oe}")
 
-            if not raw:
-                err_up = last_err.upper()
-                if "429" in err_up or "QUOTA" in err_up or "RESOURCE_EXHAUSTED" in err_up:
-                    LAST_AI_ERROR = (
-                        "QUOTA EXHAUSTED: Free tier limit hit. "
-                        "Use API key from your paid Google AI Studio account."
-                    )
-                else:
-                    LAST_AI_ERROR = f"All AI models failed. All errors: {all_errors}"
-                return None
-
-        # OpenAI only (no Gemini key configured)
-        elif openai_client:
-            print(f"  OpenAI generating variation {variation_index}...")
-            resp = openai_client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=temperature,
-                max_tokens=8000,
-            )
-            raw = resp.choices[0].message.content.strip()
+        # ── Nothing worked ─────────────────────────────────────────────────
+        if not raw:
+            errors_joined = str(all_errors)
+            if "429" in errors_joined or "RESOURCE_EXHAUSTED" in errors_joined or "QUOTA" in errors_joined:
+                LAST_AI_ERROR = (
+                    "Your Gemini free-tier quota is exhausted (20 req/day limit). "
+                    "Solutions: (1) Wait until tomorrow for quota reset, OR "
+                    "(2) Add OPENAI_API_KEY to your Vercel env vars as a backup engine, OR "
+                    "(3) Enable billing on your Google AI Studio project at aistudio.google.com."
+                )
+            else:
+                LAST_AI_ERROR = f"All AI models failed. All errors: {all_errors}"
+            return None
 
         # Clean markdown fences if model added them
         if "```html" in raw:
@@ -582,20 +551,30 @@ def check_status(slug):
 
         current_status = site['status']
 
-        STATUS_TO_NEXT = {
-            'STARTING':     0,
-            'GENERATING_0': 1,
-            'GENERATING_1': 2,
-        }
-        next_var = STATUS_TO_NEXT.get(current_status, -1)
+        # Generate all 3 variations in parallel on the first call
+        if current_status == 'STARTING':
+            import concurrent.futures
+            site_data = dict(site)
 
-        if next_var >= 0:
-            print(f"[{slug}] Generating variation {next_var}...")
-            html = generate_html(dict(site), next_var)
+            cur.execute(
+                "UPDATE sites SET status='GENERATING_ALL', message='AI is building your 3 designs in parallel...' WHERE slug=%s",
+                (slug,)
+            )
+            conn.commit()
 
-            if not html:
-                # Real failure — stop and report
-                err = LAST_AI_ERROR or "AI returned empty response"
+            def gen_variation(idx):
+                return idx, generate_html(site_data, idx)
+
+            results = {}
+            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                futures = {executor.submit(gen_variation, i): i for i in range(3)}
+                for future in concurrent.futures.as_completed(futures):
+                    idx, html = future.result()
+                    results[idx] = html
+
+            # Check if all failed
+            if all(v is None for v in results.values()):
+                err = LAST_AI_ERROR or "All 3 AI generations failed"
                 cur.execute(
                     "UPDATE sites SET status='FAILED', message=%s WHERE slug=%s",
                     (err, slug)
@@ -604,22 +583,27 @@ def check_status(slug):
                 conn.close()
                 return jsonify({"status": "FAILED", "message": err})
 
-            cur.execute("""
-                INSERT INTO variations (site_slug, variation_index, html_content)
-                VALUES (%s, %s, %s)
-                ON CONFLICT (site_slug, variation_index)
-                DO UPDATE SET html_content = EXCLUDED.html_content
-            """, (slug, next_var, html))
+            # Save whichever variations succeeded
+            for idx in sorted(results.keys()):
+                html = results[idx]
+                if html:
+                    cur.execute("""
+                        INSERT INTO variations (site_slug, variation_index, html_content)
+                        VALUES (%s, %s, %s)
+                        ON CONFLICT (site_slug, variation_index)
+                        DO UPDATE SET html_content = EXCLUDED.html_content
+                    """, (slug, idx, html))
 
-            new_status = f'GENERATING_{next_var}' if next_var < 2 else 'AWAITING_SELECTION'
-            new_msg    = (f"Design {next_var + 1} of 3 ready..."
-                          if next_var < 2 else "All 3 designs ready! Choose your favourite.")
             cur.execute(
-                "UPDATE sites SET status=%s, message=%s WHERE slug=%s",
-                (new_status, new_msg, slug)
+                "UPDATE sites SET status='AWAITING_SELECTION', message='All designs ready! Choose your favourite.' WHERE slug=%s",
+                (slug,)
             )
             conn.commit()
-            current_status = new_status   # return the UPDATED status
+            current_status = 'AWAITING_SELECTION'
+
+        elif current_status == 'GENERATING_ALL':
+            # Still running in another request — just return current state
+            pass
 
         # Fetch variation URLs
         base = request.host_url.rstrip('/')
