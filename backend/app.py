@@ -710,6 +710,7 @@ CRITICAL RULES:
                     
                     # Known working models (standard fully qualified names and aliases)
                     model_names.extend([
+                        "models/gemini-2.0-flash-lite",
                         "models/gemini-1.5-flash", 
                         "models/gemini-1.5-flash-latest", 
                         "models/gemini-flash-latest",
@@ -722,7 +723,7 @@ CRITICAL RULES:
                     model_names = list(dict.fromkeys(model_names))
                     
                     response = None
-                    last_err = ""
+                    err_logs = []
                     
                     for m_name in model_names:
                         try:
@@ -733,9 +734,15 @@ CRITICAL RULES:
                                 print(f"Success with model: {m_name}")
                                 break
                         except Exception as e:
-                            last_err = str(e)
+                            err_msg = f"{m_name}: {str(e)}"
+                            err_logs.append(err_msg)
                             print(f"Model {m_name} failed: {e}")
                             continue
+                    
+                    if not response or not response.text:
+                        global LAST_AI_ERROR
+                        LAST_AI_ERROR = " | ".join(err_logs)
+                        raise Exception(f"All AI models failed. Errors: {LAST_AI_ERROR}")
                     
                     if not response or not response.text:
                         raise Exception(f"All AI models failed. Last error: {last_err}")
