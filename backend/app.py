@@ -96,6 +96,9 @@ if gemini_key:
 else:
     model = None
 
+# Global state for debugging
+LAST_AI_ERROR = "No errors yet"
+
 @app.errorhandler(Exception)
 def handle_exception(e):
     from werkzeug.exceptions import HTTPException
@@ -271,38 +274,41 @@ def debug_ai_direct():
             "openai_key_exists": bool(os.getenv("OPENAI_API_KEY")),
             "gemini_model": gemini_model_name
         }
-        
-        if not model and not client:
-            return jsonify({"success": False, "message": "No AI model available. Check your API keys.", "status": status}), 500
+                if not model and not client:
+            return jsonify({
+                "success": False, 
+                "message": "No AI model available. Check your API keys.", 
+                "status": status,
+                "last_error": LAST_AI_ERROR
+            }), 500
             
         test_data = {
             "businessName": "Debug Test",
-            "businessType": "consulting",
+            "businessType": "agency",
             "location": "London",
-            "services": "test",
-            "style": "modern"
+            "services": "Testing",
+            "style": "modern",
+            "colors": ["#000000", "#ffffff", "#cccccc"]
         }
         
-        # Test generate_custom_site_html
         result = generate_custom_site_html(test_data)
-        
         if result:
             return jsonify({
-                "success": True,
+                "success": True, 
+                "message": "AI generation test successful!", 
                 "length": len(result),
-                "snippet": result[:500]
+                "status": status
             })
         else:
-            # Try fallback directly
-            fb_result = generate_fallback_site(test_data)
             return jsonify({
-                "success": False,
+                "success": False, 
                 "message": "generate_custom_site_html returned None",
-                "fallback_length": len(fb_result) if fb_result else 0,
-                "fallback_snippet": fb_result[:500] if fb_result else ""
-            })
+                "last_error": LAST_AI_ERROR,
+                "status": status
+            }), 500
     except Exception as e:
         import traceback
+        LAST_AI_ERROR = str(e) + "\n" + traceback.format_exc()
         return jsonify({
             "success": False,
             "error": str(e),
@@ -755,6 +761,8 @@ CRITICAL RULES:
             return html_code
             
         except Exception as e:
+            global LAST_AI_ERROR
+            LAST_AI_ERROR = f"Attempt {attempt + 1} error: {str(e)}"
             print(f"Attempt {attempt + 1} error: {e}")
             if attempt == max_retries - 1:
                 print("AI generation failed with exception")
