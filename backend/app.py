@@ -113,13 +113,14 @@ def handle_exception(e):
 
 # Base directories
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# PROJECT_ROOT should be the workspace root (one level up from backend/)
+PROJECT_ROOT = os.path.dirname(BASE_DIR)
+
 if os.getenv("VERCEL"):
-    # On Vercel, /var/task is read-only code, /tmp is writable
-    PROJECT_ROOT = BASE_DIR # Point to backend/
+    # On Vercel, /var/task is usually the root if deployed correctly
     WRITABLE_ROOT = "/tmp"
     GITHUB_RAW_BASE = "https://raw.githubusercontent.com/MuhammadAdamRaza/backend/main/backend"
 else:
-    PROJECT_ROOT = BASE_DIR
     WRITABLE_ROOT = PROJECT_ROOT
     GITHUB_RAW_BASE = "https://raw.githubusercontent.com/MuhammadAdamRaza/backend/main/backend"
 
