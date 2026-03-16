@@ -140,15 +140,14 @@ LAST_AI_ERROR = ""
 # ── New google-genai SDK ──────────────────────────
 # Model probe happens at first call, not at startup,
 # so a cold Vercel boot doesn't burn time/quota.
-# All known valid model IDs for google-genai SDK (new API)
+# Exact model IDs confirmed available on this account (from /api/list-models)
 GEMINI_CANDIDATES = [
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-lite",
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-latest",
-    "gemini-2.5-flash-preview-05-20",
-    "gemini-2.5-flash",
-    "gemini-2.0-pro-exp",
+    "gemini-2.5-flash",        # best quality - confirmed available
+    "gemini-2.0-flash",        # fast + reliable - confirmed available
+    "gemini-2.0-flash-001",    # stable version - confirmed available
+    "gemini-2.0-flash-lite",   # lightweight fallback - confirmed available
+    "gemini-flash-latest",     # alias - confirmed available
+    "gemini-pro-latest",       # pro alias - confirmed available
 ]
 
 if GEMINI_KEY:
@@ -156,7 +155,7 @@ if GEMINI_KEY:
         from google import genai as google_genai
         gemini_client = google_genai.Client(api_key=GEMINI_KEY)
         # Don't probe at startup — set default model and confirm at first use
-        ACTIVE_MODEL  = "gemini-2.0-flash"
+        ACTIVE_MODEL  = "gemini-2.5-flash"
         print(f"Gemini client ready (default model: {ACTIVE_MODEL})")
     except ImportError:
         print("ERROR: google-genai not installed — add 'google-genai' to requirements.txt")
