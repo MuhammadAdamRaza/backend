@@ -9,7 +9,6 @@ from io import BytesIO
 from flask import Flask, request, jsonify, send_file, Response
 from flask_cors import CORS
 from dotenv import load_dotenv
-
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
@@ -19,11 +18,9 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # ────────────────────────────────────────────────
-#  CATEGORY → IMAGE KEYWORD MAPPING
+#  CATEGORY IMAGES  (curated Unsplash IDs)
 # ────────────────────────────────────────────────
 
-# Curated Unsplash photo IDs — correct category images guaranteed
-# Format per key: (hero_photo_id, card_photo_id, emoji, accent_color)
 CATEGORY_IMAGES = {
     "plumber":      ("1504328345596-d9e5b6f2e9fc", "1558618666-fcd25c85cd64", "💧", "#0ea5e9"),
     "electrician":  ("1621905251189-08b45d6a269e", "1558618666-fcd25c85cd64", "⚡", "#f59e0b"),
@@ -45,7 +42,6 @@ CATEGORY_IMAGES = {
 }
 
 def get_category_info(business_type):
-    """Returns (hero_id, card_id, emoji, accent_color)."""
     bt = (business_type or "other").lower().strip()
     for key in CATEGORY_IMAGES:
         if key in bt:
@@ -53,72 +49,67 @@ def get_category_info(business_type):
     return CATEGORY_IMAGES["other"]
 
 def get_images(business_type):
-    """Returns (hero_url, card_url, emoji, accent_color)."""
     hero_id, card_id, emoji, accent = get_category_info(business_type)
     hero = f"https://images.unsplash.com/photo-{hero_id}?w=1920&q=80&fit=crop&auto=format"
     card = f"https://images.unsplash.com/photo-{card_id}?w=800&q=80&fit=crop&auto=format"
     return hero, card, emoji, accent
 
+# ────────────────────────────────────────────────
+#  DATABASE
+# ────────────────────────────────────────────────
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
 def get_db():
     if not DATABASE_URL:
-        raise ValueError("DATABASE_URL environment variable is not set")
+        raise ValueError("DATABASE_URL not set")
     return psycopg2.connect(DATABASE_URL, sslmode='require')
 
 def init_db():
     if not DATABASE_URL:
-        print("WARNING: DATABASE_URL missing — DB disabled")
+        print("WARNING: DATABASE_URL missing")
         return
     try:
         conn = get_db()
         cur  = conn.cursor()
         cur.execute("""
             CREATE TABLE IF NOT EXISTS sites (
-                slug          TEXT PRIMARY KEY,
-                business_name TEXT,
-                business_type TEXT,
-                location      TEXT,
-                services      TEXT,
-                style         TEXT,
-                colors        TEXT[],
-                status        TEXT,
-                message       TEXT,
-                created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                slug TEXT PRIMARY KEY, business_name TEXT, business_type TEXT,
+                location TEXT, services TEXT, style TEXT, colors TEXT[],
+                status TEXT, message TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
         cur.execute("""
             CREATE TABLE IF NOT EXISTS variations (
-                id              SERIAL PRIMARY KEY,
-                site_slug       TEXT REFERENCES sites(slug) ON DELETE CASCADE,
-                variation_index INT,
-                html_content    TEXT,
-                created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                id SERIAL PRIMARY KEY,
+                site_slug TEXT REFERENCES sites(slug) ON DELETE CASCADE,
+                variation_index INT, html_content TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
-        """)
-        # Add UNIQUE constraint if it doesn't already exist (safe to run repeatedly)
-        cur.execute("""
-            DO $$
-            BEGIN
-                IF NOT EXISTS (
-                    SELECT 1 FROM pg_constraint
-                    WHERE conname = 'variations_site_slug_variation_index_key'
-                ) THEN
-                    ALTER TABLE variations
-                    ADD CONSTRAINT variations_site_slug_variation_index_key
-                    UNIQUE (site_slug, variation_index);
-                END IF;
-            END$$;
         """)
         cur.execute("""
             CREATE TABLE IF NOT EXISTS final_sites (
-                site_slug    TEXT PRIMARY KEY REFERENCES sites(slug) ON DELETE CASCADE,
-                html_content TEXT,
-                created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                site_slug TEXT PRIMARY KEY REFERENCES sites(slug) ON DELETE CASCADE,
+                html_content TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+        """)
+        # Add unique constraint safely
+        cur.execute("""
+            DO $$ BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_constraint
+                    WHERE conname = 'variations_slug_idx_key'
+                ) THEN
+                    ALTER TABLE variations
+                    ADD CONSTRAINT variations_slug_idx_key UNIQUE (site_slug, variation_index);
+                END IF;
+            END$$;
         """)
         conn.commit()
         cur.close()
         conn.close()
-        print("DB tables ready")
+        print("DB ready")
     except Exception as e:
         print(f"DB init error: {e}")
 
@@ -126,79 +117,42 @@ with app.app_context():
     init_db()
 
 # ────────────────────────────────────────────────
-#  AI CLIENT  — NEW google-genai SDK
-#  Install:  pip install google-genai
+#  GEMINI AI  (only — no OpenAI)
 # ────────────────────────────────────────────────
 
-# Try multiple common env var names for Gemini key
 GEMINI_KEY = (
     os.getenv("GEMINI_API_KEY") or
     os.getenv("GOOGLE_API_KEY") or
-    os.getenv("GOOGLE_GEMINI_KEY") or
-    os.getenv("GCP_API_KEY") or
-    ""
+    os.getenv("GOOGLE_GEMINI_KEY") or ""
 )
 
-# Try multiple common env var names for OpenAI key
-OPENAI_KEY = (
-    os.getenv("OPENAI_API_KEY") or
-    os.getenv("OPENAI_KEY") or
-    ""
-)
-
-print(f"ENV CHECK — GEMINI_KEY set: {bool(GEMINI_KEY)} | OPENAI_KEY set: {bool(OPENAI_KEY)}")
-print(f"ALL ENV VARS: {[k for k in os.environ.keys()]}")
+GEMINI_MODELS = [
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-001",
+    "gemini-2.0-flash-lite",
+    "gemini-flash-latest",
+]
 
 gemini_client = None
-openai_client = None
-ACTIVE_MODEL  = None
+ACTIVE_MODEL  = "gemini-2.5-flash"
 LAST_AI_ERROR = ""
-
-# ── New google-genai SDK ──────────────────────────
-# Model probe happens at first call, not at startup,
-# so a cold Vercel boot doesn't burn time/quota.
-# Exact model IDs confirmed available on this account (from /api/list-models)
-GEMINI_CANDIDATES = [
-    "gemini-2.5-flash",        # best quality - confirmed available
-    "gemini-2.0-flash",        # fast + reliable - confirmed available
-    "gemini-2.0-flash-001",    # stable version - confirmed available
-    "gemini-2.0-flash-lite",   # lightweight fallback - confirmed available
-    "gemini-flash-latest",     # alias - confirmed available
-    "gemini-pro-latest",       # pro alias - confirmed available
-]
 
 if GEMINI_KEY:
     try:
         from google import genai as google_genai
+        from google.genai import types as genai_types
         gemini_client = google_genai.Client(api_key=GEMINI_KEY)
-        # Don't probe at startup — set default model and confirm at first use
-        ACTIVE_MODEL  = "gemini-2.5-flash"
-        print(f"Gemini client ready (default model: {ACTIVE_MODEL})")
+        print(f"Gemini ready — default model: {ACTIVE_MODEL}")
     except ImportError:
-        print("ERROR: google-genai not installed — add 'google-genai' to requirements.txt")
+        print("ERROR: run  pip install google-genai")
     except Exception as e:
-        print(f"Gemini client error: {e}")
-        gemini_client = None
+        print(f"Gemini error: {e}")
 else:
-    print("WARNING: No Gemini key found in environment variables")
-
-# ── OpenAI fallback ───────────────────────────────
-if OPENAI_KEY:
-    try:
-        from openai import OpenAI
-        openai_client = OpenAI(api_key=OPENAI_KEY)
-        if not ACTIVE_MODEL:
-            ACTIVE_MODEL = "gpt-4o-mini"
-        print(f"OpenAI client ready")
-    except ImportError:
-        print("ERROR: openai not installed — add 'openai' to requirements.txt")
-    except Exception as e:
-        print(f"OpenAI client error: {e}")
-
-
+    print("WARNING: GEMINI_API_KEY not set in environment variables")
 
 # ────────────────────────────────────────────────
-#  AI PROMPT BUILDER  — 3 distinct design briefs
+#  AI PROMPT  — 3 distinct design briefs
 # ────────────────────────────────────────────────
 
 def build_prompt(data, variation_index):
@@ -219,572 +173,477 @@ def build_prompt(data, variation_index):
         svc_list = ["Professional Services", "Expert Consultation", "Quality Results"]
 
     hero_url, card_url, _, _ = get_images(btype)
-    p, s, bg = colors[0], colors[1], colors[2]
-    svc_items = chr(10).join(f"- {sv}" for sv in svc_list)
+    p, s = colors[0], colors[1]
+    svc_lines = "\n".join(f"  - {sv}" for sv in svc_list)
 
     DESIGNS = [
         {
-            "style": "DARK BOLD HERO",
-            "font":  "Montserrat",
-            "nav":   "fixed, black background rgba(0,0,0,0.95), white logo and links",
-            "hero":  f"full viewport height, background-image url('{hero_url}') with dark overlay 0.6 opacity, centered white text, h1 font-size 4.5rem font-weight 900, one CTA button background {p} color white border-radius 50px padding 18px 48px",
-            "cards": f"white background, box-shadow 0 4px 24px rgba(0,0,0,0.08), border-radius 12px, icon color {p}, hover translateY(-6px)",
-            "why_bg": f"background {p} color white",
-            "footer": "background #0a0a0a color rgba(255,255,255,0.6)",
+            "name": "Dark Bold Hero",
+            "font": "Montserrat",
+            "nav":  f"position fixed, background rgba(0,0,0,0.96), white logo '{name}', white nav links",
+            "hero": f"100vh height, background-image url('{hero_url}') cover with dark overlay rgba(0,0,0,0.6), centered white text, h1 font-size 4.5rem font-weight 900 Montserrat, subheading 1.2rem, CTA button background {p} color white border-radius 50px padding 18px 48px",
+            "services_bg": "#ffffff",
+            "card": f"white bg, box-shadow 0 4px 24px rgba(0,0,0,0.09), border-radius 12px, padding 32px, Font Awesome icon color {p} font-size 2rem, h3 font-weight 800, hover translateY(-6px)",
+            "why":  f"background {p}, white text, 4 tiles with stats (500+ Clients, 10 Yrs Experience, 4.9 Star Rating, 24/7 Support)",
+            "cta":  f"background linear-gradient(135deg, {p}, {s}), white text, white button",
+            "footer": "background #0a0a0a, white text",
         },
         {
-            "style": "CLEAN CORPORATE SPLIT HERO",
-            "font":  "Inter",
-            "nav":   f"fixed, white background, border-bottom 1px solid #e5e7eb, logo color {p}",
-            "hero":  f"CSS grid 1fr 1fr no padding-top: LEFT column background {p} padding 80px flex column justify-center white h1 3.5rem font-weight 800 CTA button white color {p}; RIGHT column background-image url('{hero_url}') cover no-repeat min-height 100vh",
-            "cards": f"white background, border 1px solid #e5e7eb, border-radius 8px, icon color {p}, hover box-shadow increase",
-            "why_bg": "background #1e293b color white",
-            "footer": "background #1f2937 color rgba(255,255,255,0.6)",
+            "name": "Clean Corporate Split",
+            "font": "Inter",
+            "nav":  f"position fixed, background white, border-bottom 2px solid #f1f5f9, logo '{name}' color {p} font-weight 800",
+            "hero": f"CSS grid 2 columns, NO top padding, full height: LEFT column background {p} padding 80px 60px white text h1 3.5rem font-weight 800 subtext CTA button white color {p} border-radius 8px; RIGHT column background-image url('{hero_url}') cover center min-height 100vh",
+            "services_bg": "#f8fafc",
+            "card": f"white bg, border 1px solid #e2e8f0, border-radius 10px, padding 28px, icon color {p}, h3 font-weight 700 color {p}, hover box-shadow increase",
+            "why":  "background #1e293b (dark navy), white text, 4 stat tiles",
+            "cta":  "background #111827, white text, gradient button",
+            "footer": "background #1f2937, white text",
         },
         {
-            "style": "VIBRANT GRADIENT CREATIVE",
-            "font":  "Poppins",
-            "nav":   f"fixed, gradient background linear-gradient(135deg, {p}, {s}), white logo and links",
-            "hero":  f"gradient background linear-gradient(135deg, {p}, {s}) min-height 92vh flex center, h1 white font-size 5rem font-weight 900 letter-spacing -3px, TWO buttons: solid white color {p} + outline white transparent",
-            "cards": f"white background, border-top 4px solid {p}, border-radius 16px, icon inside filled circle {p}, hover translateY(-6px)",
-            "why_bg": f"background linear-gradient(135deg, {p}22, {s}22)",
-            "footer": "background #0f172a color rgba(255,255,255,0.6)",
+            "name": "Vibrant Gradient Creative",
+            "font": "Poppins",
+            "nav":  f"position fixed, background linear-gradient(135deg, {p}, {s}), white logo '{name}' font-weight 900, white links",
+            "hero": f"background linear-gradient(135deg, {p} 0%, {s} 100%), min-height 92vh, flex center, h1 white font-size 5rem font-weight 900 letter-spacing -3px line-height 1.0, TWO buttons: (1) solid white color {p} border-radius 50px padding 18px 44px, (2) outline white transparent",
+            "services_bg": "#ffffff",
+            "card": f"white bg, border-top 4px solid {p}, border-radius 16px, padding 32px, icon inside circle background {p} color white, h3 font-weight 700, hover translateY(-6px) box-shadow increase",
+            "why":  f"background linear-gradient(135deg, {p}20, {s}20) light tint, colored text, 4 stat tiles white bg",
+            "cta":  f"background linear-gradient(135deg, {p}, {s}), white text, white button color {p}",
+            "footer": "background #0f172a, white text",
         },
     ]
 
     d = DESIGNS[variation_index % 3]
 
-    prompt = (
-        "You are an expert front-end developer. Output ONLY raw HTML starting with <!DOCTYPE html>."
-        " No markdown, no backticks, no explanation text."
-        " All CSS in one <style> tag. Load ONLY Google Fonts + Font Awesome 6.5 from CDN."
-        " NO Bootstrap, NO Tailwind. Mobile responsive with media queries.\n\n"
-        f"BUSINESS: {name} | Industry: {btype} | Location: {location}\n"
-        f"Primary colour: {p} | Secondary: {s}\n"
-        f"Hero image: {hero_url}\n"
-        f"Card image: {card_url}\n"
-        f"\nSERVICES (one card each, exact names):\n{svc_items}\n"
-        f"\nDESIGN STYLE: {d['style']}\n"
-        f"Font: {d['font']} from Google Fonts\n"
-        f"Navigation: {d['nav']}\n"
-        f"Hero: {d['hero']}\n"
-        f"Service cards: {d['cards']}\n"
-        f"Why Choose Us: {d['why_bg']}, 4 tiles: 500+ Clients / 10 Yrs Experience / 4.9 Star Rating / 24/7 Support\n"
-        f"Footer: {d['footer']}\n"
-        "\nREQUIRED SECTIONS (all mandatory):\n"
-        f"1. Fixed nav: logo={name}, links=Services/About/Reviews/Contact, CTA button Get Quote\n"
-        "2. Hero section as described above\n"
-        "3. Services grid: one card per service with Font Awesome icon + exact service name + 2-line description\n"
-        f"4. About: image left + 2 paragraphs about {name} in {location} right\n"
-        "5. Why Choose Us: 4 stat tiles on coloured bg\n"
-        "6. Testimonials: 3 cards with 5 stars, quote, name\n"
-        "7. Contact form: name/email/phone/message + submit\n"
-        f"8. Footer: copyright {name}, {location}\n"
-        f"\nWrite real copy mentioning {name} and {location}. No lorem ipsum.\n"
-        "\n<!DOCTYPE html>"
+    return (
+        "Output ONLY a complete HTML file. Start with <!DOCTYPE html>. End with </html>.\n"
+        "Zero markdown. Zero backticks. Zero explanation.\n"
+        "All CSS inside one <style> tag in <head>.\n"
+        "Only Google Fonts and Font Awesome 6.5 from cdnjs CDN. No other external resources.\n"
+        "No Bootstrap, No Tailwind. Mobile responsive with @media(max-width:768px).\n\n"
+        f"BUSINESS: {name}\n"
+        f"INDUSTRY: {btype}\n"
+        f"LOCATION: {location}\n"
+        f"PRIMARY COLOR: {p}\n"
+        f"SECONDARY COLOR: {s}\n"
+        f"HERO IMAGE URL: {hero_url}\n"
+        f"ABOUT IMAGE URL: {card_url}\n\n"
+        f"SERVICES (create ONE card for EACH, use the EXACT service name as the card title):\n{svc_lines}\n\n"
+        f"DESIGN STYLE: {d['name']}\n"
+        f"FONT: Load '{d['font']}' from Google Fonts\n"
+        f"NAV: {d['nav']}\n"
+        f"HERO: {d['hero']}\n"
+        f"SERVICES SECTION BG: {d['services_bg']}\n"
+        f"SERVICE CARDS: {d['card']}\n"
+        f"WHY CHOOSE US: {d['why']}\n"
+        f"CTA SECTION: {d['cta']}\n"
+        f"FOOTER: {d['footer']}\n\n"
+        "BUILD THESE 8 SECTIONS IN ORDER:\n"
+        f"1. Fixed navigation: logo={name}, links=Services/About/Reviews/Contact, CTA button 'Get Quote'\n"
+        "2. Hero section exactly as described above\n"
+        "3. Services section: grid of cards, one per service above with Font Awesome icon + exact service name + 2-sentence description\n"
+        f"4. About Us: two-column layout, left image url('{card_url}'), right 2 paragraphs about {name} in {location}\n"
+        "5. Why Choose Us: 4 stat tiles on coloured background\n"
+        "6. Testimonials: 3 review cards each with 5 gold stars, quote text, customer name\n"
+        f"7. Contact form: full name, email, phone, message textarea, submit button color {p}\n"
+        f"8. Footer: copyright 2025 {name}, location {location}\n\n"
+        f"Write real persuasive marketing copy. Mention {name} and {location} naturally. NO lorem ipsum.\n\n"
+        "<!DOCTYPE html>"
     )
-    return prompt
-
 
 # ────────────────────────────────────────────────
-#  AI HTML GENERATION
+#  GENERATE HTML via Gemini
 # ────────────────────────────────────────────────
 
 def generate_html(data, variation_index):
     global LAST_AI_ERROR, ACTIVE_MODEL
 
-    if not gemini_client and not openai_client:
-        LAST_AI_ERROR = "No AI key set. Add GEMINI_API_KEY or OPENAI_API_KEY in Vercel env vars."
+    if not gemini_client:
+        LAST_AI_ERROR = "GEMINI_API_KEY not set in Vercel environment variables."
         return None
 
     prompt = build_prompt(data, variation_index)
 
-    try:
-        raw        = ""
-        all_errors = []
+    models_to_try = [ACTIVE_MODEL] + [m for m in GEMINI_MODELS if m != ACTIVE_MODEL]
 
-        if gemini_client:
+    for model_name in models_to_try:
+        try:
             import time
-            from google.genai import types as genai_types
-            models_to_try = [ACTIVE_MODEL] + [m for m in GEMINI_CANDIDATES if m != ACTIVE_MODEL]
-
-            for model_name in models_to_try:
-                try:
-                    print(f"  [{variation_index}] Trying {model_name}...")
-                    resp = gemini_client.models.generate_content(
-                        model=model_name,
-                        contents=prompt,
-                        config=genai_types.GenerateContentConfig(
-                            temperature=0.8,
-                            max_output_tokens=8192,
-                            top_p=0.95,
-                        )
-                    )
-                    raw = resp.text.strip()
-                    if raw:
-                        ACTIVE_MODEL = model_name
-                        print(f"  [{variation_index}] Gemini OK ({model_name}, {len(raw):,} chars)")
-                        break
-                except Exception as me:
-                    eu = str(me).upper()
-                    all_errors.append(f"{model_name}: {str(me)[:100]}")
-                    if any(x in eu for x in ["429", "RESOURCE_EXHAUSTED", "QUOTA"]):
-                        print(f"  [{variation_index}] {model_name} quota exhausted")
-                        continue
-                    if any(x in eu for x in ["404", "NOT_FOUND"]):
-                        print(f"  [{variation_index}] {model_name} not found")
-                        continue
-                    if any(x in eu for x in ["503", "OVERLOADED"]):
-                        time.sleep(2)
-                        continue
-                    print(f"  [{variation_index}] {model_name}: {me}")
-                    continue
-
-        if not raw and openai_client:
-            try:
-                print(f"  [{variation_index}] Trying OpenAI...")
-                resp = openai_client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[{"role": "user", "content": prompt}],
+            print(f"  [{variation_index}] Trying {model_name}...")
+            resp = gemini_client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=genai_types.GenerateContentConfig(
                     temperature=0.8,
-                    max_tokens=7000,
+                    max_output_tokens=8192,
+                    top_p=0.95,
                 )
-                raw = resp.choices[0].message.content.strip()
-                if raw:
-                    print(f"  [{variation_index}] OpenAI OK ({len(raw):,} chars)")
-            except Exception as oe:
-                all_errors.append(f"openai: {str(oe)[:100]}")
-                print(f"  [{variation_index}] OpenAI failed: {oe}")
+            )
+            raw = resp.text.strip()
+            if raw:
+                ACTIVE_MODEL = model_name
+                print(f"  [{variation_index}] OK with {model_name} ({len(raw):,} chars)")
 
-        if not raw:
-            errs = str(all_errors)
-            if any(x in errs for x in ["429", "RESOURCE_EXHAUSTED", "QUOTA"]):
-                LAST_AI_ERROR = (
-                    "Gemini quota exhausted. Fix: (1) Wait 24h for reset, "
-                    "(2) Add OPENAI_API_KEY to Vercel env vars, "
-                    "(3) Enable billing at aistudio.google.com"
-                )
-            else:
-                LAST_AI_ERROR = f"All AI failed: {all_errors}"
-            return None
+                # Clean markdown fences
+                if "```html" in raw:
+                    raw = raw.split("```html", 1)[1].split("```", 1)[0].strip()
+                elif "```" in raw:
+                    raw = raw.split("```", 1)[1].split("```", 1)[0].strip()
 
-        if "```html" in raw:
-            raw = raw.split("```html", 1)[1].split("```", 1)[0].strip()
-        elif "```" in raw:
-            raw = raw.split("```", 1)[1].split("```", 1)[0].strip()
+                if not raw.lower().startswith("<!doctype"):
+                    raw = "<!DOCTYPE html>\n" + raw
 
-        if not raw.lower().startswith("<!doctype"):
-            raw = "<!DOCTYPE html>\n" + raw
+                if '<meta charset' not in raw.lower():
+                    raw = raw.replace('<head>', '<head>\n<meta charset="UTF-8">', 1)
 
-        if '<meta charset' not in raw.lower():
-            raw = raw.replace('<head>', '<head>\n<meta charset="UTF-8">', 1)
+                LAST_AI_ERROR = ""
+                return raw
 
-        hero_url, _, _, _ = get_images(
-            data.get('businessType') or data.get('business_type', 'business')
-        )
-        import re as _re
-        raw = _re.sub(
-            r'https?://(?:source\.unsplash\.com|picsum\.photos|via\.placeholder\.com|loremflickr\.com)[^\s"\']*',
-            hero_url,
-            raw
-        )
+        except Exception as me:
+            eu = str(me).upper()
+            LAST_AI_ERROR = str(me)
+            if any(x in eu for x in ["429", "RESOURCE_EXHAUSTED", "QUOTA"]):
+                print(f"  [{variation_index}] {model_name} quota — trying next")
+                continue
+            if any(x in eu for x in ["404", "NOT_FOUND"]):
+                print(f"  [{variation_index}] {model_name} not found — trying next")
+                continue
+            if any(x in eu for x in ["503", "OVERLOADED"]):
+                time.sleep(2)
+                continue
+            print(f"  [{variation_index}] {model_name} error: {me}")
+            continue
 
-        LAST_AI_ERROR = ""
-        return raw
-
-    except Exception as e:
-        LAST_AI_ERROR = f"generate_html error: {type(e).__name__}: {e}"
-        traceback.print_exc()
-        return None
-
+    LAST_AI_ERROR = f"All Gemini models failed. Last error: {LAST_AI_ERROR}"
+    return None
 
 # ────────────────────────────────────────────────
-#  CONVERSION BANNER  (injected into final site)
+#  CONVERSION BANNER
 # ────────────────────────────────────────────────
 
-def inject_conversion_banner(html, site, slug, base_url):
-    name              = site.get('business_name', 'Your Business')
-    btype             = site.get('business_type', 'business')
-    _hero_id, _card_id, emoji, accent = get_category_info(btype)
-    dl_url            = f"{base_url}/download/{slug}"
-    wa_url            = "https://wa.me/447700000000?text=I'd+like+to+launch+my+AI+website"
+def inject_banner(html, site, slug, base_url):
+    name = site.get('business_name', 'Your Business')
+    btype = site.get('business_type', 'business')
+    _, _, emoji, accent = get_category_info(btype)
+    dl  = f"{base_url}/download/{slug}"
+    wa  = "https://wa.me/447700000000?text=I+want+to+launch+my+AI+website"
 
-    banner = f"""
-<style>
-#_aicta{{
-  position:fixed;bottom:0;left:0;right:0;z-index:999999;
-  background:linear-gradient(135deg,#0f172a,#1e293b);
-  color:#fff;padding:14px 24px;
-  display:flex;align-items:center;justify-content:space-between;
-  gap:12px;flex-wrap:wrap;
-  box-shadow:0 -6px 32px rgba(0,0,0,.4);
-  font-family:'Segoe UI',system-ui,sans-serif;
-  font-size:14px;
-}}
-#_aicta .l{{display:flex;align-items:center;gap:10px}}
-#_aicta .badge{{
-  background:{accent};color:#fff;padding:3px 10px;
-  border-radius:20px;font-size:11px;font-weight:700;
-  letter-spacing:1px;text-transform:uppercase;white-space:nowrap;
-}}
-#_aicta .txt{{line-height:1.4}}
-#_aicta .txt strong{{font-size:15px;display:block}}
-#_aicta .r{{display:flex;gap:8px;flex-wrap:wrap;align-items:center}}
-#_aicta a,#_aicta button{{
-  padding:10px 18px;border-radius:30px;font-weight:700;
-  font-size:13px;cursor:pointer;border:none;text-decoration:none;
-  display:inline-flex;align-items:center;gap:5px;
-  transition:transform .2s,box-shadow .2s;white-space:nowrap;
-}}
-#_aicta a:hover,#_aicta button:hover{{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}}
-#_aicta .gbtn{{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}}
-#_aicta .dbtn{{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)!important}}
-#_aicta .xbtn{{background:transparent;color:rgba(255,255,255,.45);font-size:18px;padding:4px 8px}}
-body{{padding-bottom:78px!important}}
-@media(max-width:600px){{#_aicta{{padding:10px 16px}}#_aicta .txt strong{{font-size:13px}}}}
-</style>
-<div id="_aicta">
-  <div class="l">
-    <span class="badge">AI Preview</span>
-    <div class="txt">
-      <strong>{name} &mdash; Your website is ready!</strong>
-      Our team will finalise &amp; launch it for you &mdash; <strong style="color:#4ade80;display:inline">completely free</strong>
-    </div>
-  </div>
-  <div class="r">
-    <a href="{wa_url}" target="_blank" class="gbtn">Launch My Site Free</a>
-    <a href="{dl_url}" class="dbtn">Download HTML</a>
-    <button class="xbtn" onclick="document.getElementById('_aicta').remove();document.body.style.paddingBottom=0" title="Close">&#x2715;</button>
-  </div>
-</div>"""
-
-    # Ensure UTF-8 charset is declared in the generated site
-    if '<meta charset' not in html.lower():
-        html = html.replace('<head>', '<head>\n  <meta charset="UTF-8">', 1)
-
-    if "</body>" in html:
-        return html.replace("</body>", f"{banner}\n</body>", 1)
-    return html + banner
-
-
-# ────────────────────────────────────────────────
-#  HELPER: return HTML response with correct charset
-# ────────────────────────────────────────────────
-
-def html_response(content, status=200):
-    return Response(
-        content.encode('utf-8'),
-        status=status,
-        mimetype='text/html; charset=utf-8'
+    banner = (
+        "<style>"
+        "#_ab{position:fixed;bottom:0;left:0;right:0;z-index:999999;"
+        "background:linear-gradient(135deg,#0f172a,#1e293b);"
+        "color:#fff;padding:14px 24px;display:flex;align-items:center;"
+        "justify-content:space-between;gap:12px;flex-wrap:wrap;"
+        "box-shadow:0 -6px 32px rgba(0,0,0,.4);"
+        "font-family:'Segoe UI',system-ui,sans-serif;font-size:14px}"
+        "#_ab .l{display:flex;align-items:center;gap:10px}"
+        f"#_ab .bg{{background:{accent};color:#fff;padding:3px 10px;border-radius:20px;"
+        "font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase}"
+        "#_ab .t{line-height:1.4}"
+        "#_ab .t strong{font-size:15px;display:block}"
+        "#_ab .r{display:flex;gap:8px;flex-wrap:wrap;align-items:center}"
+        "#_ab a,#_ab button{padding:10px 18px;border-radius:30px;font-weight:700;"
+        "font-size:13px;cursor:pointer;border:none;text-decoration:none;"
+        "display:inline-flex;align-items:center;gap:5px;transition:.2s}"
+        "#_ab a:hover,#_ab button:hover{transform:translateY(-2px)}"
+        "#_ab .g{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}"
+        "#_ab .d{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)!important}"
+        "#_ab .x{background:transparent;color:rgba(255,255,255,.4);font-size:18px;padding:4px 8px}"
+        "body{padding-bottom:78px!important}"
+        "</style>"
+        f'<div id="_ab">'
+        f'<div class="l"><span class="bg">AI Preview</span>'
+        f'<div class="t"><strong>{name} &mdash; Your website is ready!</strong>'
+        f'Our team will finalise &amp; launch it &mdash; <strong style="color:#4ade80;display:inline">completely free</strong></div></div>'
+        f'<div class="r">'
+        f'<a href="{wa}" target="_blank" class="g">&#128640; Launch My Site Free</a>'
+        f'<a href="{dl}" class="d">&#11015; Download HTML</a>'
+        f'<button class="x" onclick="document.getElementById(\'_ab\').remove();document.body.style.paddingBottom=0">&#x2715;</button>'
+        f'</div></div>'
     )
 
+    if '<meta charset' not in html.lower():
+        html = html.replace('<head>', '<head>\n<meta charset="UTF-8">', 1)
+
+    return html.replace("</body>", f"{banner}\n</body>", 1) if "</body>" in html else html + banner
+
+# ────────────────────────────────────────────────
+#  FORM PAGE  (served from backend — no file:// issues)
+# ────────────────────────────────────────────────
+
+FORM_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build Your Website with AI | Free</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#f0f4ff 0%,#faf5ff 100%);min-height:100vh;padding:40px 20px}
+.wrap{max-width:860px;margin:0 auto}
+.card{background:rgba(255,255,255,0.85);backdrop-filter:blur(20px);border-radius:32px;box-shadow:0 32px 80px rgba(0,0,0,0.1);border:1px solid rgba(255,255,255,0.5);padding:56px 52px}
+h1{font-size:2.2rem;font-weight:800;color:#0f172a;margin-bottom:8px;letter-spacing:-0.5px}
+h1 span{background:linear-gradient(135deg,#6e8efb,#a777e3);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:#64748b;font-size:1rem;margin-bottom:40px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+label{display:block;font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:8px}
+input,select,textarea{width:100%;padding:14px 18px;border:2px solid #e5e7eb;border-radius:14px;font-size:0.95rem;font-family:'Inter',sans-serif;color:#111;background:rgba(255,255,255,0.8);transition:all 0.3s;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#6e8efb;box-shadow:0 0 0 4px rgba(110,142,251,0.15);transform:translateY(-1px)}
+textarea{resize:vertical;min-height:100px}
+.color-row{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:20px}
+.color-item{display:flex;flex-direction:column;align-items:center;gap:6px}
+.color-item input[type=color]{width:80px;height:44px;border-radius:10px;border:2px solid #e5e7eb;cursor:pointer;padding:3px}
+.color-item span{font-size:11px;color:#64748b;font-weight:600}
+.btn{width:100%;padding:20px;background:linear-gradient(135deg,#6e8efb,#a777e3,#6e8efb);background-size:200% auto;border:none;border-radius:18px;color:white;font-size:1.05rem;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;margin-top:28px;transition:all 0.5s}
+.btn:hover{background-position:right center;transform:translateY(-3px);box-shadow:0 20px 40px rgba(110,142,251,0.4)}
+.loading{display:none;position:fixed;inset:0;background:#fff;z-index:9999;flex-direction:column;align-items:center;justify-content:center}
+.spinner{width:72px;height:72px;border:4px solid #f0f0f0;border-top:4px solid #6e8efb;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:28px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#lt{font-size:1.8rem;font-weight:800;color:#0f172a;margin-bottom:8px}
+.prog-wrap{width:100%;max-width:460px;height:8px;background:#f0f0f0;border-radius:99px;overflow:hidden;margin-top:28px}
+.prog-fill{height:100%;background:linear-gradient(90deg,#6e8efb,#a777e3);border-radius:99px;transition:width 0.6s ease;width:0%}
+.sel-overlay{display:none;position:fixed;inset:0;background:#f8f9fa;z-index:10000;overflow-y:auto;padding:60px 20px}
+.sel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:28px;max-width:1200px;margin:40px auto}
+.d-card{background:white;border-radius:20px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.08);transition:all 0.3s;cursor:pointer}
+.d-card:hover{transform:translateY(-8px);box-shadow:0 28px 60px rgba(0,0,0,0.14)}
+.d-preview{height:460px;width:100%;border:none;transform:scale(0.94);transform-origin:top center;pointer-events:none}
+.d-info{padding:18px 22px;display:flex;justify-content:space-between;align-items:center;background:white}
+.btn-sel{background:linear-gradient(135deg,#6e8efb,#a777e3);color:white;border:none;padding:12px 26px;border-radius:50px;font-weight:700;cursor:pointer;transition:all 0.3s}
+.btn-sel:hover{transform:scale(1.05)}
+@media(max-width:600px){.card{padding:32px 24px}.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card">
+  <h1><span>AI</span> Web Architect</h1>
+  <p class="sub">Create a completely custom professional website in minutes — free.</p>
+  <form id="aiform">
+    <div class="row">
+      <div><label>Business Name *</label><input id="bn" placeholder="e.g. Elite Plumbing Solutions" required></div>
+      <div><label>Industry *</label>
+        <select id="bt" required>
+          <option value="" disabled selected>Select your industry</option>
+          <option value="plumber">Plumbing &amp; Heating</option>
+          <option value="electrician">Electrical Services</option>
+          <option value="restaurant">Restaurant / Cafe</option>
+          <option value="law">Law Firm / Legal</option>
+          <option value="consulting">Business Consulting</option>
+          <option value="fitness">Gym / Fitness</option>
+          <option value="realestate">Real Estate</option>
+          <option value="agency">Digital / Creative Agency</option>
+          <option value="shoes">Shoes / Retail</option>
+          <option value="beauty">Beauty / Spa</option>
+          <option value="medical">Medical / Clinic</option>
+          <option value="cleaning">Cleaning Services</option>
+          <option value="construction">Construction</option>
+          <option value="photography">Photography</option>
+          <option value="tech">Technology</option>
+          <option value="education">Education</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:20px">
+      <label>Services (comma separated) *</label>
+      <textarea id="sv" placeholder="e.g. Emergency repairs, Boiler installation, Drainage, Gas checks" required></textarea>
+    </div>
+    <div class="row">
+      <div><label>City / Location *</label><input id="loc" placeholder="e.g. Manchester, Lahore, Dubai" required></div>
+      <div><label>Preferred Style</label>
+        <select id="sty">
+          <option value="modern">Modern / Bold</option>
+          <option value="professional">Professional / Corporate</option>
+          <option value="creative">Creative / Artistic</option>
+          <option value="minimal">Minimal / Clean</option>
+        </select>
+      </div>
+    </div>
+    <label>Brand Colors</label>
+    <div class="color-row">
+      <div class="color-item"><input type="color" id="c1" value="#2563eb"><span>Primary</span></div>
+      <div class="color-item"><input type="color" id="c2" value="#7c3aed"><span>Secondary</span></div>
+      <div class="color-item"><input type="color" id="c3" value="#f8fafc"><span>Background</span></div>
+    </div>
+    <button type="submit" class="btn">Generate 3 Unique AI Designs &rarr;</button>
+  </form>
+</div>
+</div>
+
+<!-- Loading -->
+<div class="loading" id="ld">
+  <div class="spinner"></div>
+  <div id="lt">Analysing your business...</div>
+  <div style="color:#64748b;font-size:0.95rem" id="ls">Building 3 unique designs for you</div>
+  <div class="prog-wrap"><div class="prog-fill" id="pf"></div></div>
+</div>
+
+<!-- Selection -->
+<div class="sel-overlay" id="so">
+  <div style="text-align:center;margin-bottom:40px">
+    <h2 style="font-size:2rem;font-weight:800;color:#0f172a;margin-bottom:8px">Choose Your Design</h2>
+    <p style="color:#64748b">3 unique AI layouts — pick the one you love</p>
+  </div>
+  <div class="sel-grid" id="sg"></div>
+</div>
+
+<script>
+const BASE = window.location.origin;
+const MSGS = ['Analysing your business...','Designing Layout 1 of 3...','Building your homepage...','Designing Layout 2 of 3...','Adding colours and fonts...','Designing Layout 3 of 3...','Almost ready...'];
+
+document.getElementById('aiform').addEventListener('submit', async e => {
+  e.preventDefault();
+
+  const fd = {
+    businessName: document.getElementById('bn').value.trim(),
+    businessType: document.getElementById('bt').value,
+    services:     document.getElementById('sv').value.trim(),
+    location:     document.getElementById('loc').value.trim(),
+    style:        document.getElementById('sty').value,
+    colors: [document.getElementById('c1').value, document.getElementById('c2').value, document.getElementById('c3').value]
+  };
+
+  const ld = document.getElementById('ld');
+  const lt = document.getElementById('lt');
+  const ls = document.getElementById('ls');
+  const pf = document.getElementById('pf');
+  ld.style.display = 'flex';
+
+  let mi = 0;
+  const mi_int = setInterval(() => { mi=(mi+1)%MSGS.length; lt.textContent=MSGS[mi]; }, 5000);
+
+  function done(){ clearInterval(mi_int); }
+  function fail(msg){ done(); alert('Error: '+msg); ld.style.display='none'; }
+
+  try {
+    // Register
+    const r1 = await fetch(`${BASE}/api/generate-site`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(fd)
+    });
+    const d1 = await r1.json();
+    if(!d1.success){ fail(d1.message||'Registration failed'); return; }
+    const slug = d1.slug;
+
+    const vars = [];
+
+    // Generate each design sequentially — one request each, well within timeout
+    for(let i = 0; i < 3; i++){
+      lt.textContent = `Designing Layout ${i+1} of 3...`;
+      ls.textContent = `This usually takes 20-30 seconds...`;
+      pf.style.width = (15 + i*25)+'%';
+
+      try {
+        const r2 = await fetch(`${BASE}/api/generate-one/${slug}/${i}`);
+        const d2 = await r2.json();
+        if(d2.success){
+          vars.push({id:i, url:d2.preview_url});
+          pf.style.width = (35 + i*20)+'%';
+        } else {
+          console.warn('Design '+i+' failed:', d2.message);
+        }
+      } catch(err) {
+        console.warn('Design '+i+' fetch error:', err);
+      }
+    }
+
+    done();
+
+    if(vars.length === 0){ fail('All designs failed. Please try again.'); return; }
+
+    pf.style.width = '100%';
+    lt.textContent  = vars.length+' Designs Ready!';
+    ls.textContent  = 'Choose your favourite below...';
+
+    setTimeout(() => {
+      ld.style.display = 'none';
+      showDesigns(slug, vars);
+    }, 700);
+
+  } catch(err){ fail(err.message); }
+});
+
+function showDesigns(slug, vars){
+  const grid = document.getElementById('sg');
+  grid.innerHTML = '';
+  vars.forEach(v => {
+    const c = document.createElement('div');
+    c.className = 'd-card';
+    c.innerHTML = `
+      <iframe src="${v.url}" class="d-preview" loading="lazy"></iframe>
+      <div class="d-info">
+        <div><strong style="font-size:0.95rem">Design ${v.id+1}</strong><br><small style="color:#64748b">AI Custom Layout</small></div>
+        <button class="btn-sel" onclick="pick('${slug}',${v.id})">Select This</button>
+      </div>`;
+    grid.appendChild(c);
+  });
+  document.getElementById('so').style.display='block';
+  document.body.style.overflow='hidden';
+}
+
+async function pick(slug, idx){
+  document.getElementById('so').style.display='none';
+  const ld = document.getElementById('ld');
+  const lt = document.getElementById('lt');
+  ld.style.display='flex';
+  lt.textContent='Finalising your website...';
+  try{
+    const r = await fetch(`${BASE}/api/select-design`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({slug,designIndex:idx})
+    });
+    const d = await r.json();
+    if(d.success){ window.location = d.previewUrl; }
+    else{ alert('Error: '+(d.message||'Unknown')); ld.style.display='none'; document.body.style.overflow='auto'; }
+  }catch(e){ alert('Error: '+e.message); ld.style.display='none'; document.body.style.overflow='auto'; }
+}
+</script>
+</body>
+</html>"""
 
 # ────────────────────────────────────────────────
 #  ROUTES
 # ────────────────────────────────────────────────
 
+def html_r(body, status=200):
+    return Response(body.encode('utf-8'), status=status,
+                    mimetype='text/html; charset=utf-8')
+
 @app.route('/')
 def home():
-    return html_response("<h1>AI Website Builder — Backend OK</h1>")
+    return html_r(FORM_HTML)
 
-
-@app.route('/api/list-models')
-def list_models():
-    """Call this to see exactly which models your API key can access."""
-    if not gemini_client:
-        return jsonify({"error": "Gemini client not initialised — check GEMINI_API_KEY"})
-    try:
-        models = gemini_client.models.list()
-        names = sorted([
-            m.name for m in models
-            if "generateContent" in (m.supported_actions or [])
-               or "generateContent" in str(getattr(m, "supported_generation_methods", ""))
-        ])
-        # Also include raw model objects for full detail
-        raw = [str(m.name) for m in gemini_client.models.list()]
-        return jsonify({
-            "generate_content_models": names,
-            "all_models": raw,
-            "active_model": ACTIVE_MODEL,
-            "candidates_being_tried": GEMINI_CANDIDATES,
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)})
-
+@app.route('/build-with-ai')
+def build_page():
+    return html_r(FORM_HTML)
 
 @app.route('/health')
 def health():
     return jsonify({
-        "status":       "ok",
-        "active_model": ACTIVE_MODEL or "none",
-        "gemini":       bool(gemini_client),
-        "openai":       bool(openai_client),
-        "database":     bool(DATABASE_URL),
-        "last_error":   LAST_AI_ERROR or "none",
+        "status": "ok",
+        "gemini": bool(gemini_client),
+        "active_model": ACTIVE_MODEL,
+        "last_error": LAST_AI_ERROR or "none",
+        "db": bool(DATABASE_URL),
     })
-
 
 @app.route('/api/debug')
 def debug():
     return jsonify({
-        "GEMINI_KEY_set":   bool(GEMINI_KEY),
-        "OPENAI_KEY_set":   bool(OPENAI_KEY),
-        "active_model":     ACTIVE_MODEL,
-        "gemini_ready":     bool(gemini_client),
-        "openai_ready":     bool(openai_client),
-        "database_url_set": bool(DATABASE_URL),
-        "last_ai_error":    LAST_AI_ERROR or "none",
+        "GEMINI_KEY_set": bool(GEMINI_KEY),
+        "gemini_ready":   bool(gemini_client),
+        "active_model":   ACTIVE_MODEL,
+        "last_error":     LAST_AI_ERROR or "none",
     })
 
-
-# ── Step 1: Register job ─────────────────────────
-@app.route('/api/generate-site', methods=['POST'])
-def start_generation():
+@app.route('/api/list-models')
+def list_models():
+    if not gemini_client:
+        return jsonify({"error": "Gemini not initialised"})
     try:
-        data = request.get_json()
-        if not data or not data.get('businessName'):
-            return jsonify({"success": False, "message": "businessName is required"}), 400
-
-        slug = re.sub(r'[^a-z0-9]+', '-', data['businessName'].lower().strip())
-        slug = f"{slug}-{random.randint(10000, 99999)}"
-
-        conn = get_db()
-        cur  = conn.cursor()
-        cur.execute("""
-            INSERT INTO sites
-              (slug, business_name, business_type, location, services, style, colors, status, message)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,'STARTING','Job registered')
-            ON CONFLICT (slug) DO NOTHING
-        """, (
-            slug,
-            data.get('businessName'),
-            data.get('businessType', 'other'),
-            data.get('location', ''),
-            data.get('services', ''),
-            data.get('style', 'modern'),
-            data.get('colors', []),
-        ))
-        conn.commit()
-        cur.close()
-        conn.close()
-
-        return jsonify({"success": True, "slug": slug})
-
+        names = [str(m.name) for m in gemini_client.models.list()]
+        return jsonify({"models": names, "active": ACTIVE_MODEL})
     except Exception as e:
-        traceback.print_exc()
-        return jsonify({"success": False, "message": str(e)}), 500
-
-
-# ── Step 2: Poll + trigger AI ────────────────────
-@app.route('/api/status/<slug>')
-def check_status(slug):
-    try:
-        conn = get_db()
-        cur  = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute("SELECT * FROM sites WHERE slug=%s", (slug,))
-        site = cur.fetchone()
-
-        if not site:
-            conn.close()
-            return jsonify({"status": "NOT_FOUND"}), 404
-
-        current_status = site['status']
-
-        # Generate 1 design fast on first poll
-        if current_status == 'STARTING':
-            site_data = dict(site)
-
-            cur.execute(
-                "UPDATE sites SET status='GENERATING', message='AI is building your website...' WHERE slug=%s",
-                (slug,)
-            )
-            conn.commit()
-
-            html = generate_html(site_data, 0)
-
-            if not html:
-                err = LAST_AI_ERROR or "AI generation failed"
-                cur.execute(
-                    "UPDATE sites SET status='FAILED', message=%s WHERE slug=%s",
-                    (err, slug)
-                )
-                conn.commit()
-                conn.close()
-                return jsonify({"status": "FAILED", "message": err})
-
-            cur.execute(
-                "DELETE FROM variations WHERE site_slug=%s AND variation_index=%s",
-                (slug, 0)
-            )
-            cur.execute(
-                "INSERT INTO variations (site_slug, variation_index, html_content) VALUES (%s,%s,%s)",
-                (slug, 0, html)
-            )
-
-            cur.execute(
-                "UPDATE sites SET status='AWAITING_SELECTION', message='Your website is ready!' WHERE slug=%s",
-                (slug,)
-            )
-            conn.commit()
-            current_status = 'AWAITING_SELECTION'
-
-        elif current_status == 'GENERATING':
-            # Still running — just return current state, frontend will poll again
-            pass
-
-        # Fetch variation URLs
-        base = request.host_url.rstrip('/')
-        cur.execute(
-            "SELECT variation_index FROM variations WHERE site_slug=%s ORDER BY variation_index",
-            (slug,)
-        )
-        variations = [
-            {"id": r["variation_index"],
-             "url": f"{base}/view-design/{slug}/{r['variation_index']}"}
-            for r in cur.fetchall()
-        ]
-
-        resp = {
-            "status":     current_status,
-            "message":    site['message'],
-            "slug":       slug,
-            "variations": variations,
-        }
-        if current_status in ('AWAITING_SELECTION', 'COMPLETED'):
-            resp["selectionUrl"] = f"{base}/select/{slug}"
-            resp["previewUrl"]   = f"{base}/s/{slug}"
-
-        conn.close()
-        return jsonify(resp)
-
-    except psycopg2.Error as db_err:
-        return jsonify({"status": "DATABASE_ERROR", "message": str(db_err)}), 503
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"status": "ERROR", "message": str(e)}), 500
-
-
-# ── Step 3: Select a design ──────────────────────
-@app.route('/api/select-design', methods=['POST'])
-def select_design():
-    data  = request.get_json() or {}
-    slug  = data.get('slug')
-    index = data.get('designIndex')
-
-    if not slug or index is None:
-        return jsonify({"success": False, "message": "slug and designIndex required"}), 400
-
-    try:
-        conn = get_db()
-        cur  = conn.cursor(cursor_factory=RealDictCursor)
-
-        cur.execute(
-            "SELECT html_content FROM variations WHERE site_slug=%s AND variation_index=%s",
-            (slug, int(index))
-        )
-        row = cur.fetchone()
-        if not row:
-            conn.close()
-            return jsonify({"success": False, "message": "Design not found"}), 404
-
-        cur.execute("SELECT * FROM sites WHERE slug=%s", (slug,))
-        site = cur.fetchone()
-
-        base       = request.host_url.rstrip('/')
-        final_html = inject_conversion_banner(row['html_content'], dict(site), slug, base)
-
-        cur.execute("""
-            INSERT INTO final_sites (site_slug, html_content)
-            VALUES (%s, %s)
-            ON CONFLICT (site_slug) DO UPDATE SET html_content = EXCLUDED.html_content
-        """, (slug, final_html))
-
-        cur.execute(
-            "UPDATE sites SET status='COMPLETED', message='Website ready' WHERE slug=%s",
-            (slug,)
-        )
-        conn.commit()
-        conn.close()
-
-        return jsonify({
-            "success":     True,
-            "previewUrl":  f"{base}/s/{slug}",
-            "downloadUrl": f"{base}/download/{slug}",
-        })
-
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"success": False, "message": str(e)}), 500
-
-
-
-
-# ── Generate ONE design per request (Vercel-safe, <30s each) ─────────────────
-@app.route('/api/generate-one/<slug>/<int:idx>')
-def generate_one(slug, idx):
-    """
-    Generates exactly one design variation and saves it to DB.
-    Frontend calls this 3 times (idx=0,1,2) sequentially.
-    Each call is independent — safe within Vercel 60s timeout.
-    """
-    try:
-        conn = get_db()
-        cur  = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute("SELECT * FROM sites WHERE slug=%s", (slug,))
-        site = cur.fetchone()
-        conn.close()
-
-        if not site:
-            return jsonify({"success": False, "message": "Site not found"}), 404
-
-        if idx not in (0, 1, 2):
-            return jsonify({"success": False, "message": "idx must be 0, 1 or 2"}), 400
-
-        print(f"[{slug}] Generating design {idx}...")
-        html = generate_html(dict(site), idx)
-
-        if not html:
-            err = LAST_AI_ERROR or f"Design {idx} generation failed"
-            return jsonify({"success": False, "message": err})
-
-        # Save to DB
-        conn2 = get_db()
-        cur2  = conn2.cursor()
-        cur2.execute("DELETE FROM variations WHERE site_slug=%s AND variation_index=%s", (slug, idx))
-        cur2.execute(
-            "INSERT INTO variations (site_slug, variation_index, html_content) VALUES (%s,%s,%s)",
-            (slug, idx, html)
-        )
-
-        # If this is the last design, mark ready
-        if idx == 2:
-            cur2.execute(
-                "UPDATE sites SET status='AWAITING_SELECTION', message='All 3 designs ready!' WHERE slug=%s",
-                (slug,)
-            )
-        else:
-            cur2.execute(
-                "UPDATE sites SET status=%s, message=%s WHERE slug=%s",
-                (f'DONE_{idx}', f'Design {idx+1} of 3 ready', slug)
-            )
-
-        conn2.commit()
-        conn2.close()
-
-        base = request.host_url.rstrip('/')
-        return jsonify({
-            "success":       True,
-            "variation_id":  idx,
-            "preview_url":   f"{base}/view-design/{slug}/{idx}",
-            "all_done":      idx == 2,
-        })
-
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"success": False, "message": str(e)}), 500
-
-
-
+        return jsonify({"error": str(e)})
 
 # ── Register job ──────────────────────────────────────────────────────────────
 @app.route('/api/generate-site', methods=['POST'])
@@ -793,28 +652,62 @@ def start_generation():
         data = request.get_json()
         if not data or not data.get('businessName'):
             return jsonify({"success": False, "message": "businessName is required"}), 400
-
         slug = re.sub(r'[^a-z0-9]+', '-', data['businessName'].lower().strip())
         slug = f"{slug}-{random.randint(10000, 99999)}"
-
         conn = get_db()
         cur  = conn.cursor()
         cur.execute("""
-            INSERT INTO sites
-              (slug,business_name,business_type,location,services,style,colors,status,message)
+            INSERT INTO sites (slug,business_name,business_type,location,services,style,colors,status,message)
             VALUES (%s,%s,%s,%s,%s,%s,%s,'STARTING','Ready')
             ON CONFLICT (slug) DO NOTHING
         """, (slug, data.get('businessName'), data.get('businessType','other'),
               data.get('location',''), data.get('services',''),
               data.get('style','modern'), data.get('colors',[])))
         conn.commit()
-        cur.close()
-        conn.close()
+        cur.close(); conn.close()
         return jsonify({"success": True, "slug": slug})
     except Exception as e:
         traceback.print_exc()
         return jsonify({"success": False, "message": str(e)}), 500
 
+# ── Generate ONE design (safe per Vercel 60s limit) ───────────────────────────
+@app.route('/api/generate-one/<slug>/<int:idx>')
+def generate_one(slug, idx):
+    try:
+        conn = get_db()
+        cur  = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("SELECT * FROM sites WHERE slug=%s", (slug,))
+        site = cur.fetchone()
+        conn.close()
+        if not site:
+            return jsonify({"success": False, "message": "Site not found"}), 404
+        if idx not in (0, 1, 2):
+            return jsonify({"success": False, "message": "idx must be 0, 1 or 2"}), 400
+
+        html = generate_html(dict(site), idx)
+        if not html:
+            return jsonify({"success": False, "message": LAST_AI_ERROR or "Generation failed"})
+
+        conn2 = get_db()
+        cur2  = conn2.cursor()
+        cur2.execute("DELETE FROM variations WHERE site_slug=%s AND variation_index=%s", (slug, idx))
+        cur2.execute("INSERT INTO variations (site_slug,variation_index,html_content) VALUES (%s,%s,%s)",
+                     (slug, idx, html))
+        status = 'AWAITING_SELECTION' if idx == 2 else f'DONE_{idx}'
+        cur2.execute("UPDATE sites SET status=%s WHERE slug=%s", (status, slug))
+        conn2.commit()
+        cur2.close(); conn2.close()
+
+        base = request.host_url.rstrip('/')
+        return jsonify({
+            "success":     True,
+            "variation_id": idx,
+            "preview_url":  f"{base}/view-design/{slug}/{idx}",
+            "all_done":     idx == 2,
+        })
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"success": False, "message": str(e)}), 500
 
 # ── Select design ─────────────────────────────────────────────────────────────
 @app.route('/api/select-design', methods=['POST'])
@@ -835,39 +728,20 @@ def select_design():
             return jsonify({"success": False, "message": "Design not found"}), 404
         cur.execute("SELECT * FROM sites WHERE slug=%s", (slug,))
         site = cur.fetchone()
-        base       = request.host_url.rstrip('/')
-        final_html = inject_conversion_banner(row['html_content'], dict(site), slug, base)
-        cur.execute("""
-            INSERT INTO final_sites (site_slug, html_content)
-            VALUES (%s,%s)
-            ON CONFLICT (site_slug) DO UPDATE SET html_content=EXCLUDED.html_content
-        """, (slug, final_html))
-        cur.execute("UPDATE sites SET status='COMPLETED',message='Website ready' WHERE slug=%s",(slug,))
+        base = request.host_url.rstrip('/')
+        final = inject_banner(row['html_content'], dict(site), slug, base)
+        cur.execute("""INSERT INTO final_sites (site_slug,html_content)
+            VALUES (%s,%s) ON CONFLICT (site_slug) DO UPDATE SET html_content=EXCLUDED.html_content""",
+            (slug, final))
+        cur.execute("UPDATE sites SET status='COMPLETED' WHERE slug=%s", (slug,))
         conn.commit()
-        conn.close()
+        cur.close(); conn.close()
         return jsonify({"success":True,"previewUrl":f"{base}/s/{slug}","downloadUrl":f"{base}/download/{slug}"})
     except Exception as e:
         traceback.print_exc()
         return jsonify({"success": False, "message": str(e)}), 500
 
-
-# ── Serve final site ──────────────────────────────────────────────────────────
-@app.route('/s/<slug>')
-def show_site(slug):
-    try:
-        conn = get_db()
-        cur  = conn.cursor()
-        cur.execute("SELECT html_content FROM final_sites WHERE site_slug=%s", (slug,))
-        row = cur.fetchone()
-        conn.close()
-        if row:
-            return Response(row[0].encode('utf-8'), mimetype='text/html; charset=utf-8')
-        return Response("<h1>404 — Not found</h1>", status=404, mimetype='text/html')
-    except Exception as e:
-        return Response(f"<h1>Error: {e}</h1>", status=500, mimetype='text/html')
-
-
-# ── View one variation ────────────────────────────────────────────────────────
+# ── View variation ────────────────────────────────────────────────────────────
 @app.route('/view-design/<slug>/<int:idx>')
 def view_variation(slug, idx):
     try:
@@ -876,12 +750,24 @@ def view_variation(slug, idx):
         cur.execute("SELECT html_content FROM variations WHERE site_slug=%s AND variation_index=%s",(slug,idx))
         row = cur.fetchone()
         conn.close()
-        if row:
-            return Response(row[0].encode('utf-8'), mimetype='text/html; charset=utf-8')
-        return Response("<h1>Not found</h1>", status=404, mimetype='text/html')
+        if row: return html_r(row[0])
+        return html_r("<h1>Not found</h1>", 404)
     except Exception as e:
-        return Response(f"<h1>Error: {e}</h1>", status=500, mimetype='text/html')
+        return html_r(f"<h1>Error: {e}</h1>", 500)
 
+# ── Final site ────────────────────────────────────────────────────────────────
+@app.route('/s/<slug>')
+def show_site(slug):
+    try:
+        conn = get_db()
+        cur  = conn.cursor()
+        cur.execute("SELECT html_content FROM final_sites WHERE site_slug=%s",(slug,))
+        row = cur.fetchone()
+        conn.close()
+        if row: return html_r(row[0])
+        return html_r("<h1>Not found</h1>", 404)
+    except Exception as e:
+        return html_r(f"<h1>Error: {e}</h1>", 500)
 
 # ── Download ZIP ──────────────────────────────────────────────────────────────
 @app.route('/download/<slug>')
@@ -892,8 +778,7 @@ def download(slug):
         cur.execute("SELECT html_content FROM final_sites WHERE site_slug=%s",(slug,))
         row = cur.fetchone()
         conn.close()
-        if not row:
-            return Response("<h1>Not found</h1>", status=404, mimetype='text/html')
+        if not row: return html_r("<h1>Not found</h1>", 404)
         buf = BytesIO()
         with zipfile.ZipFile(buf,'w',zipfile.ZIP_DEFLATED) as zf:
             zf.writestr("index.html", row[0].encode('utf-8'))
@@ -901,88 +786,7 @@ def download(slug):
         return send_file(buf, mimetype='application/zip', as_attachment=True,
                          download_name=f"{slug}_website.zip")
     except Exception as e:
-        return Response(f"<h1>Error: {e}</h1>", status=500, mimetype='text/html')
-
-
-# ── Design selection page ─────────────────────────────────────────────────────
-@app.route('/select/<slug>')
-def select_page(slug):
-    try:
-        conn = get_db()
-        cur  = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute("SELECT * FROM sites WHERE slug=%s",(slug,))
-        site = cur.fetchone()
-        cur.execute("SELECT variation_index FROM variations WHERE site_slug=%s ORDER BY variation_index",(slug,))
-        variations = cur.fetchall()
-        conn.close()
-        if not site:
-            return Response("<h1>Not found</h1>", status=404, mimetype='text/html')
-        name  = site['business_name'] or 'Your Business'
-        btype = site['business_type'] or 'business'
-        _,_,emoji,accent = get_category_info(btype)
-        base  = request.host_url.rstrip('/')
-        cards = ""
-        for v in variations:
-            i = v['variation_index']
-            cards += f"""<div class="card">
-              <div class="clabel"><span class="badge">Design {i+1}</span></div>
-              <div class="pw"><iframe src="{base}/view-design/{slug}/{i}" loading="lazy"></iframe>
-              <div class="ov" onclick="pick('{slug}',{i})"></div></div>
-              <div class="cf">
-                <button class="pb" onclick="pick('{slug}',{i})">Choose This Design</button>
-                <a href="{base}/view-design/{slug}/{i}" target="_blank" class="pvb">Full Preview</a>
-              </div></div>"""
-        page = f"""<!DOCTYPE html><html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Choose Your Design</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-<style>
-*{{box-sizing:border-box;margin:0;padding:0}}body{{font-family:'Inter',sans-serif;background:#f0f4ff}}
-header{{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-bottom:1px solid rgba(0,0,0,.07);padding:16px 32px;display:flex;align-items:center;justify-content:space-between}}
-header h1{{font-size:1rem;font-weight:700}}.back{{color:#64748b;font-size:13px;font-weight:600;padding:8px 16px;border-radius:20px;border:1px solid #e2e8f0;text-decoration:none}}
-.hero{{text-align:center;padding:60px 24px 48px;background:linear-gradient(135deg,#0f172a,#1e3a5f);color:#fff}}
-.tag{{display:inline-block;background:{accent};color:#fff;padding:6px 18px;border-radius:30px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px}}
-.hero h2{{font-size:clamp(1.8rem,4vw,3rem);font-weight:900;letter-spacing:-.02em;margin-bottom:10px}}
-.hero p{{color:rgba(255,255,255,.65);font-size:1rem;max-width:500px;margin:0 auto}}
-.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:24px;max-width:1280px;margin:40px auto 60px;padding:0 24px}}
-.card{{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.08);transition:.3s}}
-.card:hover{{transform:translateY(-6px);box-shadow:0 24px 60px rgba(0,0,0,.13)}}
-.clabel{{padding:16px 20px 12px;display:flex;align-items:center;gap:10px}}
-.badge{{background:{accent};color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase}}
-.pw{{position:relative;height:440px;overflow:hidden}}.pw iframe{{width:100%;height:100%;border:none;pointer-events:none;transform:scale(.95);transform-origin:top center}}
-.ov{{position:absolute;inset:0;cursor:pointer}}.ov:hover{{background:rgba(79,70,229,.04)}}
-.cf{{padding:16px 20px;display:flex;gap:8px}}
-.pb{{flex:1;background:linear-gradient(135deg,{accent},#818cf8);color:#fff;border:none;padding:12px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer}}
-.pb:hover{{opacity:.9;transform:translateY(-1px)}}
-.pvb{{background:#f1f5f9;color:#475569;padding:12px 16px;border-radius:12px;text-decoration:none;font-size:12px;font-weight:600}}
-#loader{{display:none;position:fixed;inset:0;background:rgba(15,23,42,.85);backdrop-filter:blur(8px);z-index:9999;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center}}
-.ring{{width:60px;height:60px;border:4px solid rgba(255,255,255,.15);border-top-color:{accent};border-radius:50%;animation:spin .8s linear infinite;margin-bottom:20px}}
-@keyframes spin{{to{{transform:rotate(360deg)}}}}
-#loader h3{{font-size:1.4rem;font-weight:700}}
-</style></head><body>
-<header><h1>{name}</h1><a href="/" class="back">&larr; Home</a></header>
-<div class="hero"><div class="tag">AI Generation Complete</div>
-<h2>Choose Your Favourite Design</h2>
-<p>3 unique layouts built for {name}. Pick the one you love.</p></div>
-<div class="grid">{cards}</div>
-<div id="loader"><div class="ring"></div><h3>Finalising your website&hellip;</h3></div>
-<script>
-async function pick(slug,index){{
-  document.getElementById('loader').style.display='flex';
-  try{{
-    const r=await fetch('{base}/api/select-design',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{slug,designIndex:index}})}});
-    const d=await r.json();
-    if(d.success){{window.location=d.previewUrl}}
-    else{{alert('Error: '+(d.message||'Unknown'));document.getElementById('loader').style.display='none'}}
-  }}catch(e){{alert('Error: '+e.message);document.getElementById('loader').style.display='none'}}
-}}
-</script></body></html>"""
-        return Response(page.encode('utf-8'), mimetype='text/html; charset=utf-8')
-    except Exception as e:
-        traceback.print_exc()
-        return Response(f"<h1>Error: {e}</h1>", status=500, mimetype='text/html')
-
+        return html_r(f"<h1>Error: {e}</h1>", 500)
 
 if __name__ == '__main__':
-    print("AI Website Builder starting...")
     app.run(host='0.0.0.0', port=5000, debug=True)
