@@ -267,6 +267,7 @@ def debug_env():
 def debug_ai_direct():
     """Test AI generation directly and return the result/error."""
     try:
+        global LAST_AI_ERROR
         status = {
             "gemini_available": bool(model),
             "openai_available": bool(client),
