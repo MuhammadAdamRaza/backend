@@ -85,11 +85,12 @@ openai_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=openai_key) if openai_key else None
 
 gemini_key = os.getenv("GEMINI_API_KEY")
-gemini_model_name = os.getenv("GEMINI_MODEL", "models/gemini-3-flash-preview") # Use latest gemini 3 flash preview
+gemini_model_name = os.getenv("GEMINI_MODEL", "models/gemini-3-flash-preview")
 if gemini_key:
     try:
         genai.configure(api_key=gemini_key, transport='rest')
-        model = genai.GenerativeModel(gemini_model_name)
+        model = genai.GenerativeModel(model_name=gemini_model_name)
+        print(f"Gemini initialized with: {gemini_model_name}")
     except Exception as e:
         print(f"Gemini init error: {e}")
         model = None
