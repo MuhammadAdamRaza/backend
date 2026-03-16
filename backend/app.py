@@ -7,7 +7,7 @@ import re
 import subprocess
 import requests
 import datetime
-from flask import Flask, request, jsonify, send_from_directory, render_template_string
+from flask import Flask, request, jsonify, send_from_directory, render_template_string, send_file
 from flask_cors import CORS
 import google.generativeai as genai
 from openai import OpenAI
@@ -70,11 +70,12 @@ def init_db():
     conn.close()
 
 if DATABASE_URL:
-    try:
-        init_db()
-        print("Neon Postgres Database initialized!")
-    except Exception as e:
-        print(f"Database init error: {e}")
+    with app.app_context():
+        try:
+            init_db()
+            print("Neon Postgres Database initialized!")
+        except Exception as e:
+            print(f"Database init error: {e}")
 
 # Progress store - now backed by DB for persistence
 PROGRESS_STORE = {} 
@@ -858,7 +859,7 @@ def generate_site():
         site_slug = business_name.lower().replace(" ", "-").replace("'", "").replace("\"", "")
         site_slug = f"{site_slug}-{random.randint(1000, 9999)}"
         
-        # 1. Initialize Site in DB
+        # 1. Initialize Site in DB with STARTING status
         try:
             conn = get_db_connection()
             cur = conn.cursor()
@@ -866,59 +867,18 @@ def generate_site():
                 INSERT INTO sites (slug, business_name, business_type, location, services, style, colors, status, message)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (site_slug, business_name, data.get('businessType'), data.get('location'), 
-                  data.get('services'), data.get('style'), data.get('colors'), 'AI_CODE_GEN', 'Architect is designing 3 unique variations...'))
+                  data.get('services'), data.get('style'), data.get('colors'), 'STARTING', 'Architect is preparing the design environment...'))
             conn.commit()
             conn.close()
         except Exception as e:
             print(f"DB Insert Error: {e}")
-
-        # 2. RUN GENERATION SYNCHRONOUSLY
-        variations = []
-        for i in range(3):
-            print(f"Architecting variation {i+1} of 3 for {site_slug}...")
-            custom_html = None
-            try:
-                custom_html = generate_custom_site_html(data, variation_index=i)
-            except Exception as e:
-                print(f"AI Generation variation {i} failed: {e}")
-
-            if not custom_html:
-                custom_html = generate_fallback_site(data)
-            
-            if custom_html:
-                # Save variation to DB
-                try:
-                    conn = get_db_connection()
-                    cur = conn.cursor()
-                    cur.execute("""
-                        INSERT INTO variations (site_slug, variation_index, html_content)
-                        VALUES (%s, %s, %s)
-                    """, (site_slug, i, custom_html))
-                    conn.commit()
-                    conn.close()
-                except Exception as e:
-                    print(f"DB Variation Save Error: {e}")
-                
-                variations.append({"id": i, "html": custom_html[:500]})
-        
-        if not variations:
-            raise Exception("Internal generation engine failed to produce any variations.")
-
-        # Update Site Status to Waiting for Selection
-        try:
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute("UPDATE sites SET status = %s, message = %s WHERE slug = %s", 
-                        ('WAITING_FOR_SELECTION', '3 unique designs are ready! Please choose one.', site_slug))
-            conn.commit()
-            conn.close()
-        except: pass
+            return jsonify({"success": False, "message": "Database error"}), 500
 
         return jsonify({
             "success": True, 
             "slug": site_slug, 
-            "status": "WAITING_FOR_SELECTION",
-            "variations": variations
+            "status": "STARTING",
+            "message": "Generation started. Please poll status to continue."
         })
             
     except Exception as e:
@@ -999,22 +959,85 @@ def get_site_status(slug):
     try:
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute("SELECT status, message FROM sites WHERE slug = %s", (slug,))
+        cur.execute("SELECT * FROM sites WHERE slug = %s", (slug,))
         site = cur.fetchone()
         
         if not site:
             conn.close()
             return jsonify({"status": "NOT_FOUND", "message": "Site not found"}), 404
             
-        # If complete, add the preview URL
-        response_data = dict(site)
+        current_status = site['status']
+        
+        # INCREMENTAL GENERATION LOGIC
+        # If status is STARTING, generate var 0
+        # If status is AI_CODE_GEN_0, generate var 1
+        # If status is AI_CODE_GEN_1, generate var 2
+        # After var 2, status becomes WAITING_FOR_SELECTION
+        
+        target_variation = -1
+        next_status = ""
+        
+        if current_status == 'STARTING':
+            target_variation = 0
+            next_status = 'AI_CODE_GEN_0'
+        elif current_status == 'AI_CODE_GEN_0':
+            target_variation = 1
+            next_status = 'AI_CODE_GEN_1'
+        elif current_status == 'AI_CODE_GEN_1':
+            target_variation = 2
+            next_status = 'WAITING_FOR_SELECTION'
+            
+        if target_variation != -1:
+            print(f"Incremental generation: variation {target_variation} for {slug}")
+            # Prep data for generation
+            gen_data = {
+                "businessName": site['business_name'],
+                "businessType": site['business_type'],
+                "location": site['location'],
+                "services": site['services'],
+                "style": site['style'],
+                "colors": site['colors']
+            }
+            
+            custom_html = None
+            try:
+                custom_html = generate_custom_site_html(gen_data, variation_index=target_variation)
+            except Exception as e:
+                print(f"AI Generation variation {target_variation} failed: {e}")
+
+            if not custom_html:
+                custom_html = generate_fallback_site(gen_data)
+            
+            if custom_html:
+                # Save variation to DB
+                cur.execute("""
+                    INSERT INTO variations (site_slug, variation_index, html_content)
+                    VALUES (%s, %s, %s)
+                """, (slug, target_variation, custom_html))
+                
+                # Update main site status
+                msg = f"Variation {target_variation + 1} ready!" if target_variation < 2 else "All designs are ready! Please choose one."
+                cur.execute("UPDATE sites SET status = %s, message = %s WHERE slug = %s", (next_status, msg, slug))
+                conn.commit()
+                
+                # Update local site object for response
+                site['status'] = next_status
+                site['message'] = msg
+
+        # Prepare response
+        response_data = {
+            "status": site['status'],
+            "message": site['message'],
+            "slug": slug
+        }
+        
         if site['status'] == 'COMPLETED':
             base_url = request.host_url.rstrip('/')
             response_data['previewUrl'] = f"{base_url}/s/{slug}"
             
         # Get variations if they are ready
-        if site['status'] in ['WAITING_FOR_SELECTION', 'COMPLETED']:
-            cur.execute("SELECT id, variation_index FROM variations WHERE site_slug = %s", (slug,))
+        if site['status'] in ['WAITING_FOR_SELECTION', 'COMPLETED', 'AI_CODE_GEN_0', 'AI_CODE_GEN_1']:
+            cur.execute("SELECT variation_index FROM variations WHERE site_slug = %s", (slug,))
             vars = cur.fetchall()
             base_url = request.host_url.rstrip('/')
             response_data['variations'] = [{"id": v['variation_index'], "url": f"{base_url}/view-design/{slug}/{v['variation_index']}"} for v in vars]
@@ -1022,6 +1045,8 @@ def get_site_status(slug):
         conn.close()
         return jsonify(response_data)
     except Exception as e:
+        import traceback
+        print(f"Status check error: {traceback.format_exc()}")
         return jsonify({"status": "ERROR", "message": str(e)}), 500
 
 @app.route('/s/<path:slug>')
@@ -1060,6 +1085,8 @@ def view_design_variation(slug, design_index):
 
 @app.route('/download/<slug>')
 def download_site(slug):
+    import io
+    import zipfile
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -1072,19 +1099,19 @@ def download_site(slug):
             
         html_content = row[0]
         
-        # Create a temporary ZIP in /tmp
-        temp_dir = tempfile.gettempdir()
-        zip_path = os.path.join(temp_dir, f"{slug}_website")
+        # Create ZIP in-memory using BytesIO
+        memory_file = io.BytesIO()
+        with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zipf.writestr("index.html", html_content)
         
-        # We need a folder to zip
-        site_folder = os.path.join(temp_dir, slug)
-        os.makedirs(site_folder, exist_ok=True)
-        with open(os.path.join(site_folder, "index.html"), 'w', encoding='utf-8') as f:
-            f.write(html_content)
+        memory_file.seek(0)
         
-        final_zip = shutil.make_archive(zip_path, 'zip', site_folder)
-        
-        return send_from_directory(temp_dir, os.path.basename(final_zip), as_attachment=True)
+        return send_file(
+            memory_file,
+            mimetype='application/zip',
+            as_attachment=True,
+            download_name=f"{slug}_website.zip"
+        )
     except Exception as e:
         return f"Download error: {str(e)}", 500
 
