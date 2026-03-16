@@ -1,7 +1,18 @@
 {{{
         "version": 2,
         "builds": [
-                  { "src": "backend/app.py", "use": "@vercel/python" },
+                  { "src": "backend/app.py", "use": "@vercel/py{
+                            "version": 2,
+                            "builds": [
+                                        { "src": "backend/app.py", "use": "@vercel/python" },
+                                        { "src": "*.html", "use": "@vercel/static" },
+                                        { "src": "src/**", "use": "@vercel/static" }
+                            ],
+                            "routes": [
+                                        { "src": "/api/(.*)", "dest": "backend/app.py" },
+                                        { "src": "/(.*)", "dest": "/$1" }
+                            ]
+                  }thon" },
                   { "src": "*.html", "use": "@vercel/static" },
                   { "src": "src/**", "use": "@vercel/static" }
         ],
