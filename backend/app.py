@@ -22,8 +22,8 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 #  CATEGORY → IMAGE KEYWORD MAPPING
 # ────────────────────────────────────────────────
 
-# Curated Unsplash photo IDs — guaranteed correct category images, no random cats
-# Format: (hero_photo_id, card_photo_id, emoji, accent_color)
+# Curated Unsplash photo IDs — correct category images guaranteed
+# Format per key: (hero_photo_id, card_photo_id, emoji, accent_color)
 CATEGORY_IMAGES = {
     "plumber":      ("1504328345596-d9e5b6f2e9fc", "1558618666-fcd25c85cd64", "💧", "#0ea5e9"),
     "electrician":  ("1621905251189-08b45d6a269e", "1558618666-fcd25c85cd64", "⚡", "#f59e0b"),
@@ -45,6 +45,7 @@ CATEGORY_IMAGES = {
 }
 
 def get_category_info(business_type):
+    """Returns (hero_id, card_id, emoji, accent_color)."""
     bt = (business_type or "other").lower().strip()
     for key in CATEGORY_IMAGES:
         if key in bt:
@@ -52,17 +53,11 @@ def get_category_info(business_type):
     return CATEGORY_IMAGES["other"]
 
 def get_images(business_type):
-    """Return (hero_url, card_url, emoji, accent) with real Unsplash photos."""
+    """Returns (hero_url, card_url, emoji, accent_color)."""
     hero_id, card_id, emoji, accent = get_category_info(business_type)
-    hero = f"https://images.unsplash.com/photo-{hero_id}?w=1920&q=80&fit=crop"
-    card = f"https://images.unsplash.com/photo-{card_id}?w=800&q=80&fit=crop"
+    hero = f"https://images.unsplash.com/photo-{hero_id}?w=1920&q=80&fit=crop&auto=format"
+    card = f"https://images.unsplash.com/photo-{card_id}?w=800&q=80&fit=crop&auto=format"
     return hero, card, emoji, accent
-
-# ────────────────────────────────────────────────
-#  DATABASE
-# ────────────────────────────────────────────────
-
-DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_db():
     if not DATABASE_URL:
@@ -641,14 +636,7 @@ def _generate_html_unused(data, variation_index):
             raw = "<!DOCTYPE html>\n" + raw
 
         # Replace generic placeholder images with category images
-        img_kw, _, _ = get_category_info(
-            data.get("businessType") or data.get("business_type", "business")
-        )
-        raw = re.sub(
-            r"https?://(?:source\.unsplash\.com|picsum\.photos|via\.placeholder\.com|placehold\.co)[^\s\"']*",
-            f"https://loremflickr.com/1920/1080/{img_kw}",
-            raw
-        )
+        # image replacement not needed — images are set in build_prompt
 
         print(f"  Variation {variation_index} done ({len(raw):,} chars)")
         LAST_AI_ERROR = ""
@@ -669,7 +657,7 @@ def _generate_html_unused(data, variation_index):
 def inject_conversion_banner(html, site, slug, base_url):
     name              = site.get('business_name', 'Your Business')
     btype             = site.get('business_type', 'business')
-    _, emoji, accent  = get_category_info(btype)
+    _hero_id, _card_id, emoji, accent = get_category_info(btype)
     dl_url            = f"{base_url}/download/{slug}"
     wa_url            = "https://wa.me/447700000000?text=I'd+like+to+launch+my+AI+website"
 
@@ -1186,7 +1174,7 @@ def select_page(slug):
 
         name              = site['business_name'] or 'Your Business'
         btype             = site['business_type']  or 'business'
-        _, emoji, accent  = get_category_info(btype)
+        _hero_id, _card_id, emoji, accent = get_category_info(btype)
         base              = request.host_url.rstrip('/')
 
         cards = ""
