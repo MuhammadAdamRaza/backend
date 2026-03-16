@@ -113,8 +113,24 @@ with app.app_context():
 #  Install:  pip install google-genai
 # ────────────────────────────────────────────────
 
-GEMINI_KEY    = os.getenv("GEMINI_API_KEY")
-OPENAI_KEY    = os.getenv("OPENAI_API_KEY")
+# Try multiple common env var names for Gemini key
+GEMINI_KEY = (
+    os.getenv("GEMINI_API_KEY") or
+    os.getenv("GOOGLE_API_KEY") or
+    os.getenv("GOOGLE_GEMINI_KEY") or
+    os.getenv("GCP_API_KEY") or
+    ""
+)
+
+# Try multiple common env var names for OpenAI key
+OPENAI_KEY = (
+    os.getenv("OPENAI_API_KEY") or
+    os.getenv("OPENAI_KEY") or
+    ""
+)
+
+print(f"ENV CHECK — GEMINI_KEY set: {bool(GEMINI_KEY)} | OPENAI_KEY set: {bool(OPENAI_KEY)}")
+print(f"ALL ENV VARS: {[k for k in os.environ.keys()]}")
 
 gemini_client = None
 openai_client = None
@@ -122,53 +138,42 @@ ACTIVE_MODEL  = None
 LAST_AI_ERROR = ""
 
 # ── New google-genai SDK ──────────────────────────
+# Model probe happens at first call, not at startup,
+# so a cold Vercel boot doesn't burn time/quota.
+GEMINI_CANDIDATES = [
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+]
+
 if GEMINI_KEY:
     try:
         from google import genai as google_genai
         gemini_client = google_genai.Client(api_key=GEMINI_KEY)
-
-        # Test which model is available — try in order of preference
-        GEMINI_CANDIDATES = [
-            "gemini-2.5-flash",
-            "gemini-2.0-flash",
-            "gemini-1.5-flash",
-            "gemini-1.5-pro",
-        ]
-        for candidate in GEMINI_CANDIDATES:
-            try:
-                test = gemini_client.models.generate_content(
-                    model=candidate,
-                    contents="Reply with just: OK"
-                )
-                if test.text:
-                    ACTIVE_MODEL = candidate
-                    print(f"Gemini ready: {candidate}")
-                    break
-            except Exception as probe_err:
-                print(f"  Model {candidate} unavailable: {probe_err}")
-                continue
-
-        if not ACTIVE_MODEL:
-            print("No working Gemini model found — falling back to OpenAI")
-            gemini_client = None
-
+        # Don't probe at startup — set default model and confirm at first use
+        ACTIVE_MODEL  = "gemini-2.5-flash"
+        print(f"Gemini client ready (default model: {ACTIVE_MODEL})")
     except ImportError:
-        print("google-genai not installed. Run: pip install google-genai")
+        print("ERROR: google-genai not installed — add 'google-genai' to requirements.txt")
     except Exception as e:
-        print(f"Gemini setup error: {e}")
+        print(f"Gemini client error: {e}")
         gemini_client = None
+else:
+    print("WARNING: No Gemini key found in environment variables")
 
 # ── OpenAI fallback ───────────────────────────────
-if OPENAI_KEY and not gemini_client:
+if OPENAI_KEY:
     try:
         from openai import OpenAI
         openai_client = OpenAI(api_key=OPENAI_KEY)
-        ACTIVE_MODEL  = "gpt-4o-mini"
-        print(f"OpenAI ready: {ACTIVE_MODEL}")
+        if not ACTIVE_MODEL:
+            ACTIVE_MODEL = "gpt-4o-mini"
+        print(f"OpenAI client ready")
     except ImportError:
-        print("openai package not installed")
+        print("ERROR: openai not installed — add 'openai' to requirements.txt")
     except Exception as e:
-        print(f"OpenAI setup error: {e}")
+        print(f"OpenAI client error: {e}")
 
 # ────────────────────────────────────────────────
 #  PROMPT BUILDER
@@ -257,12 +262,12 @@ Output the complete single-file HTML page for Variation {variation_index + 1} no
 # ────────────────────────────────────────────────
 
 def generate_html(data, variation_index):
-    global LAST_AI_ERROR
+    global LAST_AI_ERROR, ACTIVE_MODEL
 
     if not gemini_client and not openai_client:
         LAST_AI_ERROR = (
             "No AI client configured. "
-            "Set GEMINI_API_KEY or OPENAI_API_KEY in your environment variables."
+            "Please set GEMINI_API_KEY or OPENAI_API_KEY in your Vercel environment variables."
         )
         print(f"ERROR: {LAST_AI_ERROR}")
         return None
@@ -273,22 +278,68 @@ def generate_html(data, variation_index):
     try:
         raw = ""
 
-        # ── New google-genai SDK call ─────────────────────────
+        # Try every Gemini candidate model — skip on 429 quota errors
         if gemini_client:
-            print(f"  Gemini ({ACTIVE_MODEL}) generating variation {variation_index}...")
+            import time
             from google.genai import types as genai_types
-            response = gemini_client.models.generate_content(
-                model=ACTIVE_MODEL,
-                contents=prompt,
-                config=genai_types.GenerateContentConfig(
-                    temperature=temperature,
-                    max_output_tokens=8192,
-                    top_p=0.95,
-                )
-            )
-            raw = response.text.strip()
+            models_to_try = [ACTIVE_MODEL] + [m for m in GEMINI_CANDIDATES if m != ACTIVE_MODEL]
+            last_err = ""
 
-        # ── OpenAI fallback ───────────────────────────────────
+            for model_name in models_to_try:
+                try:
+                    print(f"  Trying {model_name} for variation {variation_index}...")
+                    response = gemini_client.models.generate_content(
+                        model=model_name,
+                        contents=prompt,
+                        config=genai_types.GenerateContentConfig(
+                            temperature=temperature,
+                            max_output_tokens=8192,
+                            top_p=0.95,
+                        )
+                    )
+                    raw = response.text.strip()
+                    if raw:
+                        ACTIVE_MODEL = model_name
+                        print(f"  Success with {model_name}")
+                        break
+                except Exception as me:
+                    last_err = str(me)
+                    err_up = str(me).upper()
+                    if "429" in err_up or "RESOURCE_EXHAUSTED" in err_up or "QUOTA" in err_up:
+                        print(f"  {model_name} quota exhausted — trying next model...")
+                        continue
+                    if "503" in err_up or "OVERLOADED" in err_up or "UNAVAILABLE" in err_up:
+                        print(f"  {model_name} overloaded — waiting 3s...")
+                        time.sleep(3)
+                        continue
+                    print(f"  {model_name} error: {me}")
+                    continue
+
+            # All Gemini models exhausted — try OpenAI as last resort
+            if not raw and openai_client:
+                print("  All Gemini models exhausted — trying OpenAI fallback...")
+                resp = openai_client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=temperature,
+                    max_tokens=8000,
+                )
+                raw = resp.choices[0].message.content.strip()
+
+            if not raw:
+                err_up = last_err.upper()
+                if "429" in err_up or "QUOTA" in err_up or "RESOURCE_EXHAUSTED" in err_up:
+                    LAST_AI_ERROR = (
+                        "QUOTA EXHAUSTED: Your Gemini API key has hit the free tier limit (20 req/day). "
+                        "You MUST use the API key from your paid Google AI Studio account. "
+                        "Go to aistudio.google.com, sign in with your Pro account, create a new API key, "
+                        "and update GEMINI_API_KEY in Vercel environment variables."
+                    )
+                else:
+                    LAST_AI_ERROR = f"All AI models failed. Last error: {last_err}"
+                return None
+
+        # OpenAI only (no Gemini key configured)
         elif openai_client:
             print(f"  OpenAI generating variation {variation_index}...")
             resp = openai_client.chat.completions.create(
@@ -299,28 +350,25 @@ def generate_html(data, variation_index):
             )
             raw = resp.choices[0].message.content.strip()
 
-        # ── Clean output ──────────────────────────────────────
-        # Strip markdown code fences if model added them
+        # Clean markdown fences if model added them
         if "```html" in raw:
-            raw = raw.split("```html", 1)[1]
-            raw = raw.split("```", 1)[0].strip()
+            raw = raw.split("```html", 1)[1].split("```", 1)[0].strip()
         elif raw.startswith("```"):
             raw = raw.lstrip("`").strip()
             if raw.startswith("html"):
                 raw = raw[4:].strip()
             raw = raw.rsplit("```", 1)[0].strip()
 
-        # Ensure proper doctype
         if not raw.lower().startswith("<!doctype"):
             raw = "<!DOCTYPE html>\n" + raw
 
-        # Replace any generic placeholder images with category-specific ones
+        # Replace generic placeholder images with category images
         img_kw, _, _ = get_category_info(
-            data.get('businessType') or data.get('business_type', 'business')
+            data.get("businessType") or data.get("business_type", "business")
         )
         raw = re.sub(
-            r'https?://(?:source\.unsplash\.com|picsum\.photos|via\.placeholder\.com|placehold\.co)[^\s"\']*',
-            f'https://loremflickr.com/1920/1080/{img_kw}',
+            r"https?://(?:source\.unsplash\.com|picsum\.photos|via\.placeholder\.com|placehold\.co)[^\s\"']*",
+            f"https://loremflickr.com/1920/1080/{img_kw}",
             raw
         )
 
@@ -333,6 +381,7 @@ def generate_html(data, variation_index):
         print(f"  ERROR: {LAST_AI_ERROR}")
         traceback.print_exc()
         return None
+
 
 
 # ────────────────────────────────────────────────
