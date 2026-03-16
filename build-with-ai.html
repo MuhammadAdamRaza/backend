@@ -139,6 +139,7 @@
       margin-bottom: 8px;
       background: linear-gradient(135deg, #1a1a1a, #666);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
@@ -409,10 +410,8 @@
       const progressBar = document.querySelector('.progress-bar-inner');
 
       overlay.style.display = 'flex';
-      // Use current origin if possible, or fallback to the provided backend URL
-      const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-        ? 'http://127.0.0.1:5000' 
-        : 'https://backend-ten-omega-72.vercel.app';
+      // Dynamic API_BASE: Always use the current host
+      const API_BASE = window.location.origin;
 
       try {
         const response = await fetch(`${API_BASE}/api/generate-site`, {
@@ -470,8 +469,12 @@
             }
           }, 3000);
         } else {
-          alert('Error: ' + initialData.message);
           overlay.style.display = 'none';
+          if (initialData.message && initialData.message.includes("No AI model")) {
+            alert('AI Configuration Error: The Gemini AI model is not initialized. Please ensure GEMINI_API_KEY is set correctly in Vercel Environment Variables.');
+          } else {
+            alert('Error: ' + initialData.message);
+          }
         }
       } catch (error) {
         console.error('Error:', error);

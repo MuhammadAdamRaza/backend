@@ -255,17 +255,24 @@ def debug_env():
         "GEMINI_KEY_SET": bool(os.getenv("GEMINI_API_KEY")),
         "OPENAI_KEY_SET": bool(os.getenv("OPENAI_API_KEY")),
         "GEMINI_MODEL": os.getenv("GEMINI_MODEL"),
-        "PROJECT_ROOT": PROJECT_ROOT,
-        "BASE_DIR": BASE_DIR,
-        "PYTHON_PATH": sys.path if 'sys' in globals() else "sys not imported"
+        "PYTHON_PATH": sys.path if 'sys' in globals() else "sys not imported",
+        "DATABASE_URL_SET": bool(os.getenv("DATABASE_URL"))
     })
 
 @app.route('/debug-ai-direct')
 def debug_ai_direct():
     """Test AI generation directly and return the result/error."""
     try:
+        status = {
+            "gemini_available": bool(model),
+            "openai_available": bool(client),
+            "gemini_key_exists": bool(os.getenv("GEMINI_API_KEY")),
+            "openai_key_exists": bool(os.getenv("OPENAI_API_KEY")),
+            "gemini_model": gemini_model_name
+        }
+        
         if not model and not client:
-            return jsonify({"success": False, "message": "No AI model available"}), 500
+            return jsonify({"success": False, "message": "No AI model available. Check your API keys.", "status": status}), 500
             
         test_data = {
             "businessName": "Debug Test",
@@ -850,6 +857,12 @@ def generate_fallback_site(data):
 def generate_site():
     if request.method == "OPTIONS":
         return jsonify({"success": True}), 204
+    if not model and not client:
+        return jsonify({
+            "success": False, 
+            "message": "No AI model available. Please configure GEMINI_API_KEY in Vercel Environment Variables."
+        }), 500
+        
     try:
         data = request.json
         if not data:
