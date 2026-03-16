@@ -217,19 +217,26 @@ def build_prompt(data, variation_index):
     card_img     = f"https://loremflickr.com/800/500/{img_kw}"
     layout       = LAYOUTS[variation_index % len(LAYOUTS)]
 
-    return f"""Output ONLY a single complete HTML file. No markdown. No explanation. Start with <!DOCTYPE html>.
+    STYLE_THEMES = [
+        ("modern bold",    "dark hero, gradient accents, sharp cards"),
+        ("professional",   "clean white layout, blue accents, trust badges"),
+        ("creative",       "asymmetric layout, big typography, colour blocks"),
+    ]
+    theme_name, theme_desc = STYLE_THEMES[variation_index % 3]
 
-Business: {name} | Type: {btype} | Location: {location} | Style: {style}
-Colors: primary={colors[0]} secondary={colors[1]} bg={colors[2]}
-Services: {', '.join(svc_list)}
-Hero image: {hero_img}
-Card image: {card_img}
-Layout variation {variation_index + 1}: {layout}
+    return f"""Output ONLY a complete single-file HTML website. Start with <!DOCTYPE html>. No markdown, no backticks.
 
-Rules: CSS in <style>, JS in <script>, Google Fonts + FontAwesome CDN only, mobile responsive, real copy not lorem ipsum.
-Sections: sticky nav, hero with bg image, about, services grid (one card per service with FA icon), why-choose-us (4 tiles), testimonials (3 quotes), contact form, footer.
+Business: {name} | Industry: {btype} | Location: {location}
+Primary: {colors[0]} | Secondary: {colors[1]} | Background: {colors[2]}
+Services: {", ".join(svc_list[:5])}
+Design theme: {theme_name} — {theme_desc}
+Hero image URL: {hero_img}
 
-HTML:"""
+Rules: CSS in <style>, Google Fonts CDN, Font Awesome 6 CDN, mobile-first, NO frameworks.
+Include: sticky nav, hero with bg-image + CTA, services cards with FA icons, why-choose-us, testimonials, contact form, footer © {name}.
+Write real persuasive copy for {btype} in {location}. No lorem ipsum.
+
+<!DOCTYPE html>"""
 
 
 # ────────────────────────────────────────────────
@@ -268,9 +275,9 @@ def generate_html(data, variation_index):
                         model=model_name,
                         contents=prompt,
                         config=genai_types.GenerateContentConfig(
-                            temperature=temperature,
-                            max_output_tokens=8192,
-                            top_p=0.95,
+                            temperature=0.7,
+                            max_output_tokens=3500,
+                            top_p=0.9,
                         )
                     )
                     raw = response.text.strip()
@@ -301,8 +308,8 @@ def generate_html(data, variation_index):
                 resp = openai_client.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=[{"role": "user", "content": prompt}],
-                    temperature=temperature,
-                    max_tokens=8000,
+                    temperature=0.7,
+                    max_tokens=3500,
                 )
                 raw = resp.choices[0].message.content.strip()
                 if raw:
@@ -551,30 +558,20 @@ def check_status(slug):
 
         current_status = site['status']
 
-        # Generate all 3 variations in parallel on the first call
+        # Generate 1 design fast on first poll
         if current_status == 'STARTING':
-            import concurrent.futures
             site_data = dict(site)
 
             cur.execute(
-                "UPDATE sites SET status='GENERATING_ALL', message='AI is building your 3 designs in parallel...' WHERE slug=%s",
+                "UPDATE sites SET status='GENERATING', message='AI is building your website...' WHERE slug=%s",
                 (slug,)
             )
             conn.commit()
 
-            def gen_variation(idx):
-                return idx, generate_html(site_data, idx)
+            html = generate_html(site_data, 0)
 
-            results = {}
-            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-                futures = {executor.submit(gen_variation, i): i for i in range(3)}
-                for future in concurrent.futures.as_completed(futures):
-                    idx, html = future.result()
-                    results[idx] = html
-
-            # Check if all failed
-            if all(v is None for v in results.values()):
-                err = LAST_AI_ERROR or "All 3 AI generations failed"
+            if not html:
+                err = LAST_AI_ERROR or "AI generation failed"
                 cur.execute(
                     "UPDATE sites SET status='FAILED', message=%s WHERE slug=%s",
                     (err, slug)
@@ -583,26 +580,22 @@ def check_status(slug):
                 conn.close()
                 return jsonify({"status": "FAILED", "message": err})
 
-            # Save whichever variations succeeded
-            for idx in sorted(results.keys()):
-                html = results[idx]
-                if html:
-                    cur.execute("""
-                        INSERT INTO variations (site_slug, variation_index, html_content)
-                        VALUES (%s, %s, %s)
-                        ON CONFLICT (site_slug, variation_index)
-                        DO UPDATE SET html_content = EXCLUDED.html_content
-                    """, (slug, idx, html))
+            cur.execute("""
+                INSERT INTO variations (site_slug, variation_index, html_content)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (site_slug, variation_index)
+                DO UPDATE SET html_content = EXCLUDED.html_content
+            """, (slug, 0, html))
 
             cur.execute(
-                "UPDATE sites SET status='AWAITING_SELECTION', message='All designs ready! Choose your favourite.' WHERE slug=%s",
+                "UPDATE sites SET status='AWAITING_SELECTION', message='Your website is ready!' WHERE slug=%s",
                 (slug,)
             )
             conn.commit()
             current_status = 'AWAITING_SELECTION'
 
-        elif current_status == 'GENERATING_ALL':
-            # Still running in another request — just return current state
+        elif current_status == 'GENERATING':
+            # Still running — just return current state, frontend will poll again
             pass
 
         # Fetch variation URLs
@@ -689,6 +682,127 @@ def select_design():
         traceback.print_exc()
         return jsonify({"success": False, "message": str(e)}), 500
 
+
+
+
+# ── LONG POLL: generate all 3, hold connection open until done ───────────────
+@app.route('/api/generate-all/<slug>')
+def generate_all(slug):
+    """
+    Long-poll endpoint. Frontend calls this ONCE.
+    Server generates all 3 designs in parallel threads,
+    then responds with the results when all are done.
+    Vercel Pro timeout: 300s. Vercel Hobby: 60s.
+    """
+    try:
+        conn = get_db()
+        cur  = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("SELECT * FROM sites WHERE slug=%s", (slug,))
+        site = cur.fetchone()
+
+        if not site:
+            conn.close()
+            return jsonify({"success": False, "message": "Site not found"}), 404
+
+        # If already done, return immediately
+        if site['status'] == 'AWAITING_SELECTION':
+            cur.execute(
+                "SELECT variation_index FROM variations WHERE site_slug=%s ORDER BY variation_index",
+                (slug,)
+            )
+            base = request.host_url.rstrip('/')
+            variations = [
+                {"id": r["variation_index"],
+                 "url": f"{base}/view-design/{slug}/{r['variation_index']}"}
+                for r in cur.fetchall()
+            ]
+            conn.close()
+            return jsonify({
+                "success": True,
+                "status": "AWAITING_SELECTION",
+                "selectionUrl": f"{base}/select/{slug}",
+                "variations": variations
+            })
+
+        cur.execute(
+            "UPDATE sites SET status='GENERATING_ALL', message='Building 3 designs...' WHERE slug=%s",
+            (slug,)
+        )
+        conn.commit()
+        conn.close()
+
+        site_data = dict(site)
+        import concurrent.futures
+
+        # Generate all 3 in parallel threads
+        def gen(idx):
+            return idx, generate_html(site_data, idx)
+
+        results = {}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as ex:
+            for idx, html in ex.map(lambda i: gen(i), range(3)):
+                results[idx] = html
+
+        # Save results to DB
+        conn2 = get_db()
+        cur2  = conn2.cursor()
+
+        success_count = 0
+        for idx in range(3):
+            html = results.get(idx)
+            if html:
+                cur2.execute("""
+                    INSERT INTO variations (site_slug, variation_index, html_content)
+                    VALUES (%s,%s,%s)
+                    ON CONFLICT (site_slug, variation_index)
+                    DO UPDATE SET html_content = EXCLUDED.html_content
+                """, (slug, idx, html))
+                success_count += 1
+
+        if success_count == 0:
+            err = LAST_AI_ERROR or "All 3 generations failed"
+            cur2.execute(
+                "UPDATE sites SET status='FAILED', message=%s WHERE slug=%s",
+                (err, slug)
+            )
+            conn2.commit()
+            conn2.close()
+            return jsonify({"success": False, "message": err})
+
+        cur2.execute(
+            "UPDATE sites SET status='AWAITING_SELECTION', message='All designs ready!' WHERE slug=%s",
+            (slug,)
+        )
+        conn2.commit()
+
+        base = request.host_url.rstrip('/')
+        cur2.execute(
+            "SELECT variation_index FROM variations WHERE site_slug=%s ORDER BY variation_index",
+            (slug,)
+        )
+        import psycopg2.extras as _pge
+        cur2_r = conn2.cursor(cursor_factory=RealDictCursor)
+        cur2_r.execute(
+            "SELECT variation_index FROM variations WHERE site_slug=%s ORDER BY variation_index",
+            (slug,)
+        )
+        variations = [
+            {"id": r["variation_index"],
+             "url": f"{base}/view-design/{slug}/{r['variation_index']}"}
+            for r in cur2_r.fetchall()
+        ]
+        conn2.close()
+
+        return jsonify({
+            "success":      True,
+            "status":       "AWAITING_SELECTION",
+            "selectionUrl": f"{base}/select/{slug}",
+            "variations":   variations,
+        })
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"success": False, "message": str(e)}), 500
 
 # ── Serve final site ─────────────────────────────
 @app.route('/s/<slug>')
