@@ -289,7 +289,7 @@ def debug_ai_direct():
                 "message": "No AI model available. Check your API keys.", 
                 "status": status,
                 "last_error": LAST_AI_ERROR
-            }), 500
+            }) # Return 200 so we can actually see the JSON on Vercel
             
         test_data = {
             "businessName": "Debug Test",
@@ -314,7 +314,7 @@ def debug_ai_direct():
                 "message": "generate_custom_site_html returned None",
                 "last_error": LAST_AI_ERROR,
                 "status": status
-            }), 500
+            }) # Return 200 for visibility
     except Exception as e:
         import traceback
         LAST_AI_ERROR = str(e) + "\n" + traceback.format_exc()
@@ -711,12 +711,11 @@ CRITICAL RULES:
                     # Known working models (standard fully qualified names and aliases)
                     model_names.extend([
                         "models/gemini-3-flash-preview",
+                        "models/gemini-pro-latest",
                         "models/gemini-2.0-flash-lite",
                         "models/gemini-1.5-flash", 
-                        "models/gemini-1.5-flash-latest", 
                         "models/gemini-flash-latest",
                         "models/gemini-2.0-flash-exp",
-                        "models/gemini-pro-latest",
                         "models/gemini-pro"
                     ])
                     
