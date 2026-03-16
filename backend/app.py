@@ -85,7 +85,8 @@ openai_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=openai_key) if openai_key else None
 
 gemini_key = os.getenv("GEMINI_API_KEY")
-gemini_model_name = os.getenv("GEMINI_MODEL", "models/gemini-3-flash-preview")
+# Hardcode the model name directly
+gemini_model_name = "models/gemini-3-flash-preview"
 if gemini_key:
     try:
         genai.configure(api_key=gemini_key, transport='rest')
@@ -254,13 +255,10 @@ def debug_fetch():
 
 @app.route('/debug-env')
 def debug_env():
-    """Diagnostic endpoint to check environment variables."""
     return jsonify({
         "VERCEL": os.getenv("VERCEL"),
         "GEMINI_KEY_SET": bool(os.getenv("GEMINI_API_KEY")),
-        "OPENAI_KEY_SET": bool(os.getenv("OPENAI_API_KEY")),
-        "GEMINI_MODEL": os.getenv("GEMINI_MODEL"),
-        "PYTHON_PATH": sys.path if 'sys' in globals() else "sys not imported",
+        "ACTIVE_MODEL": gemini_model_name, # Shows your hardcoded model
         "DATABASE_URL_SET": bool(os.getenv("DATABASE_URL"))
     })
 
@@ -700,14 +698,9 @@ CRITICAL RULES:
                     top_k=40
                 )
                 try:
-                    # Try a few different model names in case of availability issues
-                    primary_model_name = os.getenv("GEMINI_MODEL")
-                    model_names = []
-                    if primary_model_name:
-                        if not primary_model_name.startswith("models/"):
-                            model_names.append(f"models/{primary_model_name}")
-                        else:
-                            model_names.append(primary_model_name)
+                    # Use hardcoded primary model
+                    primary_model_name = gemini_model_name
+                    model_names = [primary_model_name]
                     
                     # Known working models (standard fully qualified names and aliases)
                     model_names.extend([
