@@ -195,8 +195,10 @@ if OPENAI_KEY:
     except Exception as e:
         print(f"OpenAI client error: {e}")
 
+
+
 # ────────────────────────────────────────────────
-#  PROMPT BUILDER  — 3 visually distinct designs
+#  AI PROMPT BUILDER  — 3 distinct design briefs
 # ────────────────────────────────────────────────
 
 def build_prompt(data, variation_index):
@@ -218,436 +220,182 @@ def build_prompt(data, variation_index):
 
     hero_url, card_url, _, _ = get_images(btype)
     p, s, bg = colors[0], colors[1], colors[2]
-    svc_lines = "\n".join(f"  - {sv}" for sv in svc_list)
+    svc_items = chr(10).join(f"- {sv}" for sv in svc_list)
 
-    # 3 completely different design specs
     DESIGNS = [
-        # ── Design 1: Dark Bold Hero ──────────────────────────────────────────
         {
-            "title": "Dark Bold Hero",
-            "font_url": "Montserrat:wght@400;700;900",
-            "font_family": "'Montserrat', sans-serif",
-            "nav_css": "background:rgba(8,8,8,0.97);backdrop-filter:blur(10px);",
-            "nav_text": "color:#ffffff;",
-            "logo_style": "color:#fff;font-weight:900;font-size:1.4rem;",
-            "hero_css": f"min-height:100vh;background:linear-gradient(rgba(0,0,0,0.60),rgba(0,0,0,0.60)),url('{hero_url}') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;padding:100px 24px 60px;",
-            "hero_h1": "font-size:clamp(2.8rem,6vw,5rem);font-weight:900;color:#fff;letter-spacing:-2px;line-height:1.05;margin-bottom:20px;",
-            "hero_p": "font-size:1.2rem;color:rgba(255,255,255,0.85);max-width:580px;margin:0 auto 36px;",
-            "btn1_css": f"background:{p};color:#fff;padding:18px 48px;border-radius:50px;font-weight:700;",
-            "btn2_css": "",
-            "section_services_bg": "#ffffff",
-            "card_css": "background:#fff;border-radius:12px;padding:36px 28px;box-shadow:0 4px 24px rgba(0,0,0,0.08);transition:all 0.3s;",
-            "icon_css": f"font-size:2.2rem;color:{p};margin-bottom:16px;display:block;",
-            "card_h3_css": "font-size:1.05rem;font-weight:800;color:#0a0a0a;margin-bottom:10px;",
-            "why_css": f"background:{p};padding:80px 5%;",
-            "cta_css": f"background:linear-gradient(135deg,{p},{s});padding:90px 5%;text-align:center;",
-            "footer_css": "background:#0a0a0a;color:rgba(255,255,255,0.55);",
+            "style": "DARK BOLD HERO",
+            "font":  "Montserrat",
+            "nav":   "fixed, black background rgba(0,0,0,0.95), white logo and links",
+            "hero":  f"full viewport height, background-image url('{hero_url}') with dark overlay 0.6 opacity, centered white text, h1 font-size 4.5rem font-weight 900, one CTA button background {p} color white border-radius 50px padding 18px 48px",
+            "cards": f"white background, box-shadow 0 4px 24px rgba(0,0,0,0.08), border-radius 12px, icon color {p}, hover translateY(-6px)",
+            "why_bg": f"background {p} color white",
+            "footer": "background #0a0a0a color rgba(255,255,255,0.6)",
         },
-        # ── Design 2: Clean Corporate Split ──────────────────────────────────
         {
-            "title": "Clean Corporate",
-            "font_url": "Inter:wght@300;400;600;700;800",
-            "font_family": "'Inter', sans-serif",
-            "nav_css": "background:#ffffff;border-bottom:2px solid #f0f0f0;",
-            "nav_text": f"color:{p};",
-            "logo_style": f"color:{p};font-weight:800;font-size:1.3rem;",
-            "hero_css": f"min-height:88vh;display:grid;grid-template-columns:1fr 1fr;padding-top:72px;",
-            "hero_h1": "font-size:clamp(2rem,4vw,3.6rem);font-weight:800;color:#fff;letter-spacing:-1px;line-height:1.1;margin-bottom:20px;",
-            "hero_p": "font-size:1rem;color:rgba(255,255,255,0.88);margin-bottom:36px;line-height:1.7;",
-            "btn1_css": "background:#fff;color:{P};padding:16px 40px;border-radius:8px;font-weight:700;".replace("{P}", p),
-            "btn2_css": "",
-            "section_services_bg": "#f9fafb",
-            "card_css": "background:#fff;border-radius:10px;padding:32px 24px;border:1px solid #e5e7eb;transition:box-shadow 0.3s;",
-            "icon_css": f"font-size:1.9rem;color:{p};margin-bottom:14px;display:block;",
-            "card_h3_css": f"font-size:1rem;font-weight:700;color:{p};margin-bottom:8px;",
-            "why_css": f"background:{p};padding:80px 5%;",
-            "cta_css": "background:#111827;padding:90px 5%;text-align:center;",
-            "footer_css": "background:#1f2937;color:rgba(255,255,255,0.55);",
+            "style": "CLEAN CORPORATE SPLIT HERO",
+            "font":  "Inter",
+            "nav":   f"fixed, white background, border-bottom 1px solid #e5e7eb, logo color {p}",
+            "hero":  f"CSS grid 1fr 1fr no padding-top: LEFT column background {p} padding 80px flex column justify-center white h1 3.5rem font-weight 800 CTA button white color {p}; RIGHT column background-image url('{hero_url}') cover no-repeat min-height 100vh",
+            "cards": f"white background, border 1px solid #e5e7eb, border-radius 8px, icon color {p}, hover box-shadow increase",
+            "why_bg": "background #1e293b color white",
+            "footer": "background #1f2937 color rgba(255,255,255,0.6)",
         },
-        # ── Design 3: Vibrant Gradient Creative ──────────────────────────────
         {
-            "title": "Vibrant Creative",
-            "font_url": "Poppins:wght@400;600;700;800;900",
-            "font_family": "'Poppins', sans-serif",
-            "nav_css": f"background:linear-gradient(135deg,{p},{s});",
-            "nav_text": "color:#ffffff;",
-            "logo_style": "color:#fff;font-weight:900;font-size:1.4rem;",
-            "hero_css": f"min-height:92vh;background:linear-gradient(135deg,{p} 0%,{s} 100%);display:flex;align-items:center;justify-content:center;text-align:center;padding:100px 5% 60px;",
-            "hero_h1": "font-size:clamp(2.8rem,6vw,5.5rem);font-weight:900;color:#fff;letter-spacing:-3px;line-height:1.0;margin-bottom:20px;",
-            "hero_p": "font-size:1.15rem;color:rgba(255,255,255,0.88);max-width:560px;margin:0 auto 40px;",
-            "btn1_css": f"background:#fff;color:{p};padding:18px 44px;border-radius:50px;font-weight:800;margin:0 8px 8px;",
-            "btn2_css": "background:transparent;color:#fff;padding:18px 44px;border-radius:50px;font-weight:700;border:2px solid rgba(255,255,255,0.7);margin:0 8px 8px;",
-            "section_services_bg": "#ffffff",
-            "card_css": f"background:#fff;border-radius:16px;padding:36px 28px;box-shadow:0 8px 32px rgba(0,0,0,0.08);border-top:4px solid {p};transition:transform 0.3s;",
-            "icon_css": f"font-size:2rem;width:54px;height:54px;background:linear-gradient(135deg,{p},{s});border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;margin-bottom:18px;",
-            "card_h3_css": "font-size:1.05rem;font-weight:700;color:#111;margin-bottom:10px;",
-            "why_css": f"background:linear-gradient(135deg,{p}18,{s}18);padding:80px 5%;",
-            "cta_css": f"background:linear-gradient(135deg,{p},{s});padding:100px 5%;text-align:center;",
-            "footer_css": "background:#0f172a;color:rgba(255,255,255,0.55);",
+            "style": "VIBRANT GRADIENT CREATIVE",
+            "font":  "Poppins",
+            "nav":   f"fixed, gradient background linear-gradient(135deg, {p}, {s}), white logo and links",
+            "hero":  f"gradient background linear-gradient(135deg, {p}, {s}) min-height 92vh flex center, h1 white font-size 5rem font-weight 900 letter-spacing -3px, TWO buttons: solid white color {p} + outline white transparent",
+            "cards": f"white background, border-top 4px solid {p}, border-radius 16px, icon inside filled circle {p}, hover translateY(-6px)",
+            "why_bg": f"background linear-gradient(135deg, {p}22, {s}22)",
+            "footer": "background #0f172a color rgba(255,255,255,0.6)",
         },
     ]
 
-    d   = DESIGNS[variation_index % 3]
-    idx = variation_index % 3
+    d = DESIGNS[variation_index % 3]
 
-    FA_ICONS = ["star","wrench","shield-halved","rocket","check-circle","award","bolt","gem","crown","handshake","leaf","fire"]
-
-    # Build service cards
-    service_cards = "\n".join(
-        f'<div class="svc-card">'
-        f'<span class="svc-icon"><i class="fa-solid fa-{FA_ICONS[i % len(FA_ICONS)]}"></i></span>'
-        f'<h3>{sv}</h3>'
-        f'<p>Professional {sv.lower()} delivered by the expert team at {name}. Trusted by clients across {location} for quality results and reliable service.</p>'
-        f'</div>'
-        for i, sv in enumerate(svc_list)
+    prompt = (
+        "You are an expert front-end developer. Output ONLY raw HTML starting with <!DOCTYPE html>."
+        " No markdown, no backticks, no explanation text."
+        " All CSS in one <style> tag. Load ONLY Google Fonts + Font Awesome 6.5 from CDN."
+        " NO Bootstrap, NO Tailwind. Mobile responsive with media queries.\n\n"
+        f"BUSINESS: {name} | Industry: {btype} | Location: {location}\n"
+        f"Primary colour: {p} | Secondary: {s}\n"
+        f"Hero image: {hero_url}\n"
+        f"Card image: {card_url}\n"
+        f"\nSERVICES (one card each, exact names):\n{svc_items}\n"
+        f"\nDESIGN STYLE: {d['style']}\n"
+        f"Font: {d['font']} from Google Fonts\n"
+        f"Navigation: {d['nav']}\n"
+        f"Hero: {d['hero']}\n"
+        f"Service cards: {d['cards']}\n"
+        f"Why Choose Us: {d['why_bg']}, 4 tiles: 500+ Clients / 10 Yrs Experience / 4.9 Star Rating / 24/7 Support\n"
+        f"Footer: {d['footer']}\n"
+        "\nREQUIRED SECTIONS (all mandatory):\n"
+        f"1. Fixed nav: logo={name}, links=Services/About/Reviews/Contact, CTA button Get Quote\n"
+        "2. Hero section as described above\n"
+        "3. Services grid: one card per service with Font Awesome icon + exact service name + 2-line description\n"
+        f"4. About: image left + 2 paragraphs about {name} in {location} right\n"
+        "5. Why Choose Us: 4 stat tiles on coloured bg\n"
+        "6. Testimonials: 3 cards with 5 stars, quote, name\n"
+        "7. Contact form: name/email/phone/message + submit\n"
+        f"8. Footer: copyright {name}, {location}\n"
+        f"\nWrite real copy mentioning {name} and {location}. No lorem ipsum.\n"
+        "\n<!DOCTYPE html>"
     )
+    return prompt
 
-    # Hero HTML varies per design
-    if idx == 1:
-        hero_html = (
-            f'<section class="hero" id="home">'
-            f'<div class="hero-left">'
-            f'<h1>Professional {btype.title()}<br>Services in {location}</h1>'
-            f'<p>Welcome to {name} — your trusted {btype} partner in {location}. We deliver quality results with integrity and expertise.</p>'
-            f'<a href="#contact" class="btn-primary">Get Free Consultation &rarr;</a>'
-            f'</div>'
-            f'<div class="hero-right" style="background:url(\'{hero_url}\') center/cover no-repeat;"></div>'
-            f'</section>'
-        )
-    else:
-        btn2 = f'<a href="#services" class="btn-secondary" style="{d["btn2_css"]}">Explore Services</a>' if d["btn2_css"] else ""
-        hero_html = (
-            f'<section class="hero" id="home">'
-            f'<div>'
-            f'<h1>The #1 {btype.title()}<br>in {location}</h1>'
-            f'<p>Welcome to {name}. We deliver exceptional {btype} services across {location} — trusted, professional, and always on time.</p>'
-            f'<a href="#contact" class="btn-primary" style="{d["btn1_css"]}">Book Free Consultation</a>'
-            f'{btn2}'
-            f'</div>'
-            f'</section>'
-        )
 
-    # Why-tile icon color
-    why_icon_col = "#fff" if idx in [0,1] else p
-    cta_btn_style = f"background:#fff;color:{p};padding:18px 48px;border-radius:50px;font-weight:800;text-decoration:none;display:inline-block;"
-
-    return f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{name} | {btype.title()} in {location}</title>
-<link href="https://fonts.googleapis.com/css2?family={d['font_url']}&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<style>
-*,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
-html{{scroll-behavior:smooth}}
-body{{font-family:{d['font_family']};color:#111;line-height:1.6;background:#fff}}
-a{{text-decoration:none}}
-img{{max-width:100%}}
-
-/* ─ NAV ─ */
-nav{{position:fixed;top:0;width:100%;z-index:1000;{d['nav_css']}padding:0 5%;height:70px;display:flex;align-items:center;justify-content:space-between;}}
-.nav-logo{{{d['logo_style']}text-decoration:none;}}
-.nav-links a{{text-decoration:none;{d['nav_text']}margin-left:28px;font-size:0.9rem;font-weight:600;opacity:0.9;}}
-.nav-links a:hover{{opacity:1}}
-.nav-cta{{background:{p};color:#fff !important;padding:10px 22px;border-radius:6px;margin-left:16px;opacity:1 !important;}}
-@media(max-width:768px){{.nav-links{{display:none}}}}
-
-/* ─ HERO ─ */
-.hero{{{d['hero_css']}}}
-.hero h1{{{d['hero_h1']}}}
-.hero p{{{d['hero_p']}}}
-.hero-left{{background:{p};padding:80px 60px;display:flex;flex-direction:column;justify-content:center;}}
-.hero-right{{min-height:500px;}}
-.btn-primary{{display:inline-block;{d['btn1_css']}text-decoration:none;transition:all 0.3s;}}
-.btn-primary:hover{{transform:translateY(-3px);box-shadow:0 12px 28px rgba(0,0,0,0.2)}}
-
-/* ─ SECTIONS ─ */
-.section{{padding:90px 5%;}}
-.section h2{{font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:800;text-align:center;margin-bottom:12px;letter-spacing:-0.5px;}}
-.section-sub{{text-align:center;color:#666;font-size:1rem;margin-bottom:48px;max-width:540px;margin-left:auto;margin-right:auto;}}
-
-/* ─ SERVICES ─ */
-.svc-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;}}
-.svc-card{{{d['card_css']}}}
-.svc-card:hover{{transform:translateY(-6px);box-shadow:0 16px 48px rgba(0,0,0,0.12)}}
-.svc-icon{{{d['icon_css']}}}
-.svc-card h3{{{d['card_h3_css']}}}
-.svc-card p{{color:#666;font-size:0.88rem;line-height:1.65;}}
-
-/* ─ ABOUT ─ */
-.about-grid{{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;max-width:1100px;margin:0 auto;}}
-.about-img{{width:100%;height:420px;object-fit:cover;border-radius:16px;display:block;}}
-.about-text h2{{text-align:left;margin-bottom:16px;}}
-.about-text p{{color:#555;line-height:1.8;margin-bottom:16px;font-size:0.97rem;}}
-
-/* ─ WHY US ─ */
-.why-wrap{{{d['why_css']}}}
-.why-wrap h2{{color:#fff;text-align:center;font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:800;margin-bottom:12px;}}
-.why-sub{{text-align:center;color:rgba(255,255,255,0.8);margin-bottom:48px;}}
-.why-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;max-width:900px;margin:0 auto;}}
-.why-tile{{background:rgba(255,255,255,0.13);border-radius:14px;padding:32px 20px;text-align:center;border:1px solid rgba(255,255,255,0.2);}}
-.why-tile i{{font-size:2rem;color:{why_icon_col};margin-bottom:12px;display:block;}}
-.why-tile .stat{{font-size:2.2rem;font-weight:900;color:#fff;display:block;line-height:1;}}
-.why-tile .lbl{{color:rgba(255,255,255,0.8);font-size:0.85rem;margin-top:6px;display:block;}}
-
-/* ─ TESTIMONIALS ─ */
-.testi-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;}}
-.testi-card{{background:#fff;border-radius:12px;padding:32px;box-shadow:0 4px 20px rgba(0,0,0,0.07);border-left:4px solid {p};}}
-.stars{{color:#f59e0b;font-size:1rem;margin-bottom:12px;}}
-.testi-card blockquote{{color:#444;font-size:0.93rem;line-height:1.72;margin-bottom:14px;font-style:italic;}}
-.testi-card cite{{font-weight:700;color:#111;font-size:0.88rem;}}
-
-/* ─ CTA ─ */
-.cta-wrap{{{d['cta_css']}}}
-.cta-wrap h2{{color:#fff;font-size:clamp(1.8rem,4vw,3rem);font-weight:800;margin-bottom:14px;}}
-.cta-wrap p{{color:rgba(255,255,255,0.85);font-size:1.05rem;margin-bottom:36px;max-width:500px;margin-left:auto;margin-right:auto;}}
-.cta-btn{{display:inline-block;{cta_btn_style}transition:all 0.3s;}}
-.cta-btn:hover{{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.25)}}
-
-/* ─ CONTACT ─ */
-.contact-inner{{max-width:640px;margin:0 auto;}}
-.form-row{{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}}
-.contact-inner input,.contact-inner textarea{{width:100%;padding:14px 18px;border:2px solid #e5e7eb;border-radius:10px;font-size:0.95rem;font-family:inherit;outline:none;transition:border-color 0.3s;}}
-.contact-inner input:focus,.contact-inner textarea:focus{{border-color:{p};}}
-.contact-inner textarea{{min-height:130px;resize:vertical;margin-bottom:16px;}}
-.submit-btn{{width:100%;background:{p};color:#fff;padding:16px;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity 0.2s;}}
-.submit-btn:hover{{opacity:0.9}}
-
-/* ─ FOOTER ─ */
-footer{{{d['footer_css']}padding:40px 5%;text-align:center;font-size:0.85rem;}}
-footer .fn{{color:#fff;font-weight:700;display:block;margin-bottom:8px;font-size:1rem;}}
-
-/* ─ RESPONSIVE ─ */
-@media(max-width:768px){{
-  .hero{{grid-template-columns:1fr !important;}}
-  .hero-right{{display:none}}
-  .hero-left{{padding:100px 24px 60px}}
-  .about-grid{{grid-template-columns:1fr}}
-  .form-row{{grid-template-columns:1fr}}
-  .section{{padding:60px 5%}}
-  nav{{padding:0 4%}}
-}}
-</style>
-</head>
-<body>
-
-<nav>
-  <a href="#home" class="nav-logo">{name}</a>
-  <div class="nav-links">
-    <a href="#services">Services</a>
-    <a href="#about">About</a>
-    <a href="#testimonials">Reviews</a>
-    <a href="#contact">Contact</a>
-    <a href="#contact" class="nav-cta">Get a Quote</a>
-  </div>
-</nav>
-
-{hero_html}
-
-<section class="section" id="services" style="background:{d['section_services_bg']}">
-  <h2>Our Services in {location}</h2>
-  <p class="section-sub">From {svc_list[0]} to {svc_list[-1] if len(svc_list)>1 else svc_list[0]} — {name} delivers exceptional results every time.</p>
-  <div class="svc-grid">
-    {service_cards}
-  </div>
-</section>
-
-<div class="why-wrap" id="why">
-  <h2>Why Choose {name}?</h2>
-  <p class="why-sub">Trusted by hundreds of clients across {location}</p>
-  <div class="why-grid">
-    <div class="why-tile"><i class="fa-solid fa-trophy"></i><span class="stat">500+</span><span class="lbl">Happy Clients</span></div>
-    <div class="why-tile"><i class="fa-solid fa-calendar-check"></i><span class="stat">10+</span><span class="lbl">Years Experience</span></div>
-    <div class="why-tile"><i class="fa-solid fa-star"></i><span class="stat">4.9★</span><span class="lbl">Avg Rating</span></div>
-    <div class="why-tile"><i class="fa-solid fa-headset"></i><span class="stat">24/7</span><span class="lbl">Support</span></div>
-  </div>
-</div>
-
-<section class="section" id="about" style="background:#f9fafb">
-  <div class="about-grid">
-    <img class="about-img" src="{card_url}" alt="About {name}" loading="lazy">
-    <div class="about-text">
-      <h2>About {name}</h2>
-      <p>{name} is a leading {btype} business proudly serving {location} and surrounding areas. With over a decade of hands-on experience, we have built a reputation for quality workmanship, honest pricing, and unmatched customer care.</p>
-      <p>Whether you need {svc_list[0]} or any of our other specialist services, our skilled team is ready to deliver results that exceed your expectations — on time, every time.</p>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="testimonials">
-  <h2>What Clients Say</h2>
-  <p class="section-sub">Real reviews from satisfied customers across {location}</p>
-  <div class="testi-grid">
-    <div class="testi-card"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"Absolutely outstanding service from {name}. Professional, efficient, and the results were incredible. Would recommend to everyone in {location}."</blockquote><cite>— Sarah M., {location}</cite></div>
-    <div class="testi-card"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"Used {name} for {svc_list[0]}. Fair pricing, excellent communication, and quality that truly stands out. Will definitely use again."</blockquote><cite>— James T., {location}</cite></div>
-    <div class="testi-card"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"From first call to completion, the {name} team made everything stress-free. True professionals who care about their customers."</blockquote><cite>— Priya K., {location}</cite></div>
-  </div>
-</section>
-
-<div class="cta-wrap">
-  <h2>Ready to Work With {name}?</h2>
-  <p>Get your free consultation today. Proudly serving {location} and surrounding areas.</p>
-  <a href="#contact" class="cta-btn">Book Free Consultation</a>
-</div>
-
-<section class="section" id="contact">
-  <h2>Get In Touch</h2>
-  <p class="section-sub">Send us a message and we will get back to you within 24 hours.</p>
-  <div class="contact-inner">
-    <div class="form-row">
-      <input type="text" placeholder="Your Full Name" required>
-      <input type="email" placeholder="Email Address" required>
-    </div>
-    <div class="form-row">
-      <input type="tel" placeholder="Phone Number">
-      <input type="text" placeholder="Service Needed">
-    </div>
-    <textarea placeholder="Tell us about your project..."></textarea>
-    <button class="submit-btn" type="button" onclick="this.textContent='Message Sent! We will contact you shortly.';this.style.background='#22c55e'">Send Message &#8594;</button>
-  </div>
-</section>
-
-<footer>
-  <span class="fn">{name}</span>
-  {btype.title()} &bull; {location} &bull; &copy; 2025 {name}. All rights reserved.
-</footer>
-
-</body>
-</html>"""
-
+# ────────────────────────────────────────────────
+#  AI HTML GENERATION
+# ────────────────────────────────────────────────
 
 def generate_html(data, variation_index):
-    """
-    Returns a complete, professional HTML page.
-    The page structure, CSS and content are built directly in Python (build_prompt).
-    AI is optionally used only to enhance the copy text.
-    """
-    global LAST_AI_ERROR
-    try:
-        html = build_prompt(data, variation_index)
-        if html and html.strip().lower().startswith("<!doctype"):
-            print(f"  Variation {variation_index} built ({len(html):,} chars)")
-            return html
-        LAST_AI_ERROR = "build_prompt returned invalid output"
-        return None
-    except Exception as e:
-        LAST_AI_ERROR = f"Variation {variation_index} build error: {e}"
-        traceback.print_exc()
-        return None
-
-def _generate_html_unused(data, variation_index):
-    """Legacy AI-based generation — kept for reference only."""
     global LAST_AI_ERROR, ACTIVE_MODEL
 
     if not gemini_client and not openai_client:
-        LAST_AI_ERROR = "No AI client configured."
+        LAST_AI_ERROR = "No AI key set. Add GEMINI_API_KEY or OPENAI_API_KEY in Vercel env vars."
         return None
 
-    prompt      = build_prompt(data, variation_index)
-    temperature = round(0.7 + variation_index * 0.08, 2)
+    prompt = build_prompt(data, variation_index)
 
     try:
-        raw = ""
+        raw        = ""
         all_errors = []
 
-        import time
-        from google.genai import types as genai_types
-
-        # ── Try Gemini models ──────────────────────────────────────────────
         if gemini_client:
+            import time
+            from google.genai import types as genai_types
             models_to_try = [ACTIVE_MODEL] + [m for m in GEMINI_CANDIDATES if m != ACTIVE_MODEL]
 
             for model_name in models_to_try:
                 try:
-                    print(f"  Trying Gemini {model_name} for variation {variation_index}...")
-                    response = gemini_client.models.generate_content(
+                    print(f"  [{variation_index}] Trying {model_name}...")
+                    resp = gemini_client.models.generate_content(
                         model=model_name,
                         contents=prompt,
                         config=genai_types.GenerateContentConfig(
-                            temperature=0.75,
+                            temperature=0.8,
                             max_output_tokens=8192,
                             top_p=0.95,
                         )
                     )
-                    raw = response.text.strip()
+                    raw = resp.text.strip()
                     if raw:
                         ACTIVE_MODEL = model_name
-                        print(f"  Gemini success: {model_name}")
+                        print(f"  [{variation_index}] Gemini OK ({model_name}, {len(raw):,} chars)")
                         break
                 except Exception as me:
-                    err_str = str(me)
-                    err_up  = err_str.upper()
-                    all_errors.append(f"{model_name}: {err_str[:120]}")
-                    if "429" in err_up or "RESOURCE_EXHAUSTED" in err_up or "QUOTA" in err_up:
-                        print(f"  {model_name} quota exhausted — next...")
+                    eu = str(me).upper()
+                    all_errors.append(f"{model_name}: {str(me)[:100]}")
+                    if any(x in eu for x in ["429", "RESOURCE_EXHAUSTED", "QUOTA"]):
+                        print(f"  [{variation_index}] {model_name} quota exhausted")
                         continue
-                    if "404" in err_up or "NOT_FOUND" in err_up:
-                        print(f"  {model_name} not found — next...")
+                    if any(x in eu for x in ["404", "NOT_FOUND"]):
+                        print(f"  [{variation_index}] {model_name} not found")
                         continue
-                    if "503" in err_up or "OVERLOADED" in err_up:
-                        time.sleep(3)
+                    if any(x in eu for x in ["503", "OVERLOADED"]):
+                        time.sleep(2)
                         continue
-                    print(f"  {model_name}: {me}")
+                    print(f"  [{variation_index}] {model_name}: {me}")
                     continue
 
-        # ── OpenAI: used if Gemini failed OR no Gemini key ─────────────────
         if not raw and openai_client:
             try:
-                print(f"  Trying OpenAI gpt-4o-mini for variation {variation_index}...")
+                print(f"  [{variation_index}] Trying OpenAI...")
                 resp = openai_client.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=[{"role": "user", "content": prompt}],
-                    temperature=0.75,
-                    max_tokens=6000,
+                    temperature=0.8,
+                    max_tokens=7000,
                 )
                 raw = resp.choices[0].message.content.strip()
                 if raw:
-                    print(f"  OpenAI success")
+                    print(f"  [{variation_index}] OpenAI OK ({len(raw):,} chars)")
             except Exception as oe:
-                all_errors.append(f"openai/gpt-4o-mini: {str(oe)[:120]}")
-                print(f"  OpenAI failed: {oe}")
+                all_errors.append(f"openai: {str(oe)[:100]}")
+                print(f"  [{variation_index}] OpenAI failed: {oe}")
 
-        # ── Nothing worked ─────────────────────────────────────────────────
         if not raw:
-            errors_joined = str(all_errors)
-            if "429" in errors_joined or "RESOURCE_EXHAUSTED" in errors_joined or "QUOTA" in errors_joined:
+            errs = str(all_errors)
+            if any(x in errs for x in ["429", "RESOURCE_EXHAUSTED", "QUOTA"]):
                 LAST_AI_ERROR = (
-                    "Your Gemini free-tier quota is exhausted (20 req/day limit). "
-                    "Solutions: (1) Wait until tomorrow for quota reset, OR "
-                    "(2) Add OPENAI_API_KEY to your Vercel env vars as a backup engine, OR "
-                    "(3) Enable billing on your Google AI Studio project at aistudio.google.com."
+                    "Gemini quota exhausted. Fix: (1) Wait 24h for reset, "
+                    "(2) Add OPENAI_API_KEY to Vercel env vars, "
+                    "(3) Enable billing at aistudio.google.com"
                 )
             else:
-                LAST_AI_ERROR = f"All AI models failed. All errors: {all_errors}"
+                LAST_AI_ERROR = f"All AI failed: {all_errors}"
             return None
 
-        # Clean markdown fences if model added them
         if "```html" in raw:
             raw = raw.split("```html", 1)[1].split("```", 1)[0].strip()
-        elif raw.startswith("```"):
-            raw = raw.lstrip("`").strip()
-            if raw.startswith("html"):
-                raw = raw[4:].strip()
-            raw = raw.rsplit("```", 1)[0].strip()
+        elif "```" in raw:
+            raw = raw.split("```", 1)[1].split("```", 1)[0].strip()
 
         if not raw.lower().startswith("<!doctype"):
             raw = "<!DOCTYPE html>\n" + raw
 
-        # Replace generic placeholder images with category images
-        # image replacement not needed — images are set in build_prompt
+        if '<meta charset' not in raw.lower():
+            raw = raw.replace('<head>', '<head>\n<meta charset="UTF-8">', 1)
 
-        print(f"  Variation {variation_index} done ({len(raw):,} chars)")
+        hero_url, _, _, _ = get_images(
+            data.get('businessType') or data.get('business_type', 'business')
+        )
+        import re as _re
+        raw = _re.sub(
+            r'https?://(?:source\.unsplash\.com|picsum\.photos|via\.placeholder\.com|loremflickr\.com)[^\s"\']*',
+            hero_url,
+            raw
+        )
+
         LAST_AI_ERROR = ""
         return raw
 
     except Exception as e:
-        LAST_AI_ERROR = f"Variation {variation_index} — {type(e).__name__}: {e}"
-        print(f"  ERROR: {LAST_AI_ERROR}")
+        LAST_AI_ERROR = f"generate_html error: {type(e).__name__}: {e}"
         traceback.print_exc()
         return None
-
 
 
 # ────────────────────────────────────────────────
