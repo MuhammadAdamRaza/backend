@@ -266,8 +266,13 @@ def build_prompt(data, variation_index):
         f"   - 'Get Quote' CTA button (color {p})\n"
         f"   - Mobile hamburger menu (3 lines icon)\n\n"
         
-        f"2. HERO SECTION (exactly as specified above)\n"
-        f"   - Hero image MUST display: {hero_url}\n"
+        f"2. HERO SECTION (IMAGES CRITICAL - MUST DISPLAY)\n"
+        f"   - HERO IMAGE: {hero_url}\n"
+        f"   - Image MUST be visible: use background-image OR <img> tag\n"
+        f"   - If background-image: add dark overlay for text contrast\n"
+        f"   - If <img> tag: absolute position behind text with z-index\n"
+        f"   - Image: width 100%, height 100%, object-fit cover\n"
+        f"   - Image must load from URL - test in browser\n"
         f"   - Compelling headline (50-70 chars)\n"
         f"   - Benefit subheading (100+ chars)\n"
         f"   - Primary CTA button\n"
@@ -280,9 +285,11 @@ def build_prompt(data, variation_index):
         f"   - 2-3 sentence description with benefits\n"
         f"   - Hover effect (elevation or color change)\n\n"
         
-        f"4. ABOUT US / WHY US SECTION\n"
+        f"4. ABOUT US / WHY US SECTION (IMAGES CRITICAL - MUST DISPLAY)\n"
         f"   - Two column layout\n"
-        f"   - LEFT: Image url('{card_url}') responsive\n"
+        f"   - LEFT: Image {card_url}\n"
+        f"   - Image MUST be visible: <img src='{card_url}' alt='About' style='width:100%; height:auto; object-fit:cover;'>\n"
+        f"   - Image: responsive, proper sizing\n"
         f"   - RIGHT: 3+ paragraphs (300+ words) about {name}\n"
         f"   - Mention business name and {location} naturally\n"
         f"   - Talk about: experience, values, commitment\n"
@@ -336,11 +343,33 @@ def build_prompt(data, variation_index):
         f"  ✓ FAQs: Real questions, detailed answers\n"
         f"  ✓ All text: Natural, authentic, professional tone\n\n"
         
+        "CRITICAL IMAGE DISPLAY REQUIREMENTS (MUST FOLLOW):\n"
+        f"  ✓ HERO IMAGE ({hero_url}):\n"
+        f"    - Use as background-image with CSS background-size: cover\n"
+        f"    - OR use <img> tag with position absolute, z-index -1\n"
+        f"    - Always add semi-transparent overlay for text contrast\n"
+        f"    - Set explicit width: 100% and height: 100vh or 90vh\n"
+        f"    - Use background-position: center for backgrounds\n"
+        f"    - TEST: Image must be visible when you render the HTML\n\n"
+        f"  ✓ ABOUT SECTION IMAGE ({card_url}):\n"
+        f"    - Use <img src='{card_url}' alt='About Our Business' />\n"
+        f"    - Set width: 100%, height: auto, max-width: 500px\n"
+        f"    - Add object-fit: cover for proper aspect ratio\n"
+        f"    - Add border-radius: 12px for modern look\n"
+        f"    - Set box-shadow: 0 10px 30px rgba(0,0,0,0.1)\n"
+        f"    - TEST: Image must display clearly in two-column layout\n\n"
+        f"  ✓ ALL IMAGES:\n"
+        f"    - Use EXACT URLs provided - do NOT modify\n"
+        f"    - Set crossOrigin='anonymous' if using <img> tags\n"
+        f"    - Test loading in Chrome DevTools (Network tab)\n"
+        f"    - Unsplash images: always public, always work\n"
+        f"    - If image doesn't load, check console for CORS errors\n\n"
+        
         "CRITICAL DESIGN & DISPLAY REQUIREMENTS:\n"
         f"  ✓ Images MUST LOAD: Use URLs exactly as provided\n"
-        f"  ✓ Images MUST SHOW: Set width/height, background-size: cover\n"
-        f"  ✓ Hero image visible: proper contrast if overlay\n"
-        f"  ✓ All sections visible: NO hidden elements initially\n"
+        f"  ✓ Images MUST SHOW: VISIBLE in rendered website\n"
+        f"  ✓ Hero image visible: proper contrast overlay\n"
+        f"  ✓ All sections visible: NO display:none initially\n"
         f"  ✓ Hero height: 100vh or 90vh minimum\n"
         f"  ✓ Section padding: 60px 20px minimum (desktop)\n"
         f"  ✓ Typography: h1 3.5-5rem, h2 2-3rem, h3 1.3-1.8rem\n"
@@ -369,7 +398,7 @@ def build_prompt(data, variation_index):
 # ════════════════════════════════════════════════════════════════
 
 def generate_html(data, variation_index):
-    """Generate HTML website using Gemini AI"""
+    """Generate HTML website using Gemini AI with retry logic"""
     global LAST_AI_ERROR, ACTIVE_MODEL
 
     if not gemini_client:
@@ -379,32 +408,62 @@ def generate_html(data, variation_index):
     prompt = build_prompt(data, variation_index)
     models_to_try = [ACTIVE_MODEL] + [m for m in GEMINI_MODELS if m != ACTIVE_MODEL]
 
-    for model_name in models_to_try:
-        try:
-            response = gemini_client.models.generate_content(
-                model=model_name,
-                contents=prompt,
-                config={
-                    "temperature": 1,
-                    "max_output_tokens": 16000,
-                },
-            )
-            
-            if response.text:
+    for attempt in range(1, 4):  # 3 retry attempts per model
+        for model_name in models_to_try:
+            try:
+                print(f"[DESIGN {variation_index}] Attempt {attempt}: Trying {model_name}...")
+                
+                response = gemini_client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config={
+                        "temperature": 1,
+                        "max_output_tokens": 16000,
+                    },
+                )
+                
+                if not response or not response.text:
+                    print(f"[DESIGN {variation_index}] Empty response from {model_name}")
+                    continue
+                
                 html = response.text.strip()
-                if html.startswith("<!DOCTYPE"):
+                
+                # Validate HTML structure
+                if not html:
+                    print(f"[DESIGN {variation_index}] Empty HTML from {model_name}")
+                    continue
+                    
+                # Check for complete HTML structure
+                has_doctype = "<!DOCTYPE" in html.upper()
+                has_html_tags = "<html" in html.lower() and "</html>" in html.lower()
+                has_body = "<body" in html.lower() and "</body>" in html.lower()
+                
+                if not (has_html_tags and has_body):
+                    print(f"[DESIGN {variation_index}] Invalid HTML structure from {model_name}")
+                    continue
+                
+                # Clean up and return
+                if has_doctype:
                     LAST_AI_ERROR = ""
+                    print(f"[DESIGN {variation_index}] SUCCESS with {model_name}")
                     return html
-                elif html.startswith("<"):
+                else:
                     LAST_AI_ERROR = ""
+                    print(f"[DESIGN {variation_index}] SUCCESS with {model_name} (added DOCTYPE)")
                     return "<!DOCTYPE html>\n" + html
                     
-        except Exception as e:
-            print(f"Model {model_name} failed: {e}")
-            LAST_AI_ERROR = str(e)
-            continue
+            except Exception as e:
+                print(f"[DESIGN {variation_index}] Model {model_name} error: {str(e)[:100]}")
+                LAST_AI_ERROR = f"Attempt {attempt}: {str(e)[:200]}"
+                continue
+        
+        # Small delay between retry attempts
+        if attempt < 3:
+            import time
+            time.sleep(2)
 
-    LAST_AI_ERROR = "All models failed to generate valid HTML"
+    LAST_AI_ERROR = f"Failed to generate design {variation_index} after 3 attempts across all models"
+    print(f"[DESIGN {variation_index}] FAILED: {LAST_AI_ERROR}")
     return None
 
 # ════════════════════════════════════════════════════════════════
