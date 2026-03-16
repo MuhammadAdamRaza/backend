@@ -87,9 +87,22 @@ def init_db():
                 site_slug       TEXT REFERENCES sites(slug) ON DELETE CASCADE,
                 variation_index INT,
                 html_content    TEXT,
-                created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(site_slug, variation_index)
+                created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+        """)
+        # Add UNIQUE constraint if it doesn't already exist (safe to run repeatedly)
+        cur.execute("""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_constraint
+                    WHERE conname = 'variations_site_slug_variation_index_key'
+                ) THEN
+                    ALTER TABLE variations
+                    ADD CONSTRAINT variations_site_slug_variation_index_key
+                    UNIQUE (site_slug, variation_index);
+                END IF;
+            END$$;
         """)
         cur.execute("""
             CREATE TABLE IF NOT EXISTS final_sites (
@@ -580,12 +593,14 @@ def check_status(slug):
                 conn.close()
                 return jsonify({"status": "FAILED", "message": err})
 
-            cur.execute("""
-                INSERT INTO variations (site_slug, variation_index, html_content)
-                VALUES (%s, %s, %s)
-                ON CONFLICT (site_slug, variation_index)
-                DO UPDATE SET html_content = EXCLUDED.html_content
-            """, (slug, 0, html))
+            cur.execute(
+                "DELETE FROM variations WHERE site_slug=%s AND variation_index=%s",
+                (slug, 0)
+            )
+            cur.execute(
+                "INSERT INTO variations (site_slug, variation_index, html_content) VALUES (%s,%s,%s)",
+                (slug, 0, html)
+            )
 
             cur.execute(
                 "UPDATE sites SET status='AWAITING_SELECTION', message='Your website is ready!' WHERE slug=%s",
@@ -751,12 +766,14 @@ def generate_all(slug):
         for idx in range(3):
             html = results.get(idx)
             if html:
-                cur2.execute("""
-                    INSERT INTO variations (site_slug, variation_index, html_content)
-                    VALUES (%s,%s,%s)
-                    ON CONFLICT (site_slug, variation_index)
-                    DO UPDATE SET html_content = EXCLUDED.html_content
-                """, (slug, idx, html))
+                cur2.execute(
+                    "DELETE FROM variations WHERE site_slug=%s AND variation_index=%s",
+                    (slug, idx)
+                )
+                cur2.execute(
+                    "INSERT INTO variations (site_slug, variation_index, html_content) VALUES (%s,%s,%s)",
+                    (slug, idx, html)
+                )
                 success_count += 1
 
         if success_count == 0:
