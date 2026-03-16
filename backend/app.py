@@ -85,7 +85,7 @@ openai_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=openai_key) if openai_key else None
 
 gemini_key = os.getenv("GEMINI_API_KEY")
-gemini_model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash") # Use stable flash model
+gemini_model_name = os.getenv("GEMINI_MODEL", "models/gemini-3-flash-preview") # Use latest gemini 3 flash preview
 if gemini_key:
     try:
         genai.configure(api_key=gemini_key, transport='rest')
@@ -710,6 +710,7 @@ CRITICAL RULES:
                     
                     # Known working models (standard fully qualified names and aliases)
                     model_names.extend([
+                        "models/gemini-3-flash-preview",
                         "models/gemini-2.0-flash-lite",
                         "models/gemini-1.5-flash", 
                         "models/gemini-1.5-flash-latest", 
@@ -743,9 +744,6 @@ CRITICAL RULES:
                         global LAST_AI_ERROR
                         LAST_AI_ERROR = " | ".join(err_logs)
                         raise Exception(f"All AI models failed. Errors: {LAST_AI_ERROR}")
-                    
-                    if not response or not response.text:
-                        raise Exception(f"All AI models failed. Last error: {last_err}")
                         
                     html_code = response.text.strip()
                 except Exception as e:
