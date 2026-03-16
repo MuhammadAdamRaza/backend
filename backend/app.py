@@ -488,9 +488,8 @@ def generate_custom_site_html(data, variation_index=0):
     This function uses multiple design patterns, randomized layouts, and
     industry-specific aesthetics to ensure each generated site is unique.
     """
+    global LAST_AI_ERROR
     if not model and not client:
-        print("No AI model available")
-        return None
     
     business_name = data.get('businessName', 'My Business')
     business_type = data.get('businessType', 'business')
@@ -734,7 +733,6 @@ CRITICAL RULES:
                             continue
                     
                     if not response or not response.text:
-                        global LAST_AI_ERROR
                         LAST_AI_ERROR = " | ".join(err_logs)
                         raise Exception(f"All AI models failed. Errors: {LAST_AI_ERROR}")
                         
@@ -812,7 +810,6 @@ CRITICAL RULES:
             return html_code
             
         except Exception as e:
-            global LAST_AI_ERROR
             LAST_AI_ERROR = f"Attempt {attempt + 1} error: {str(e)}"
             print(f"Attempt {attempt + 1} error: {e}")
             if attempt == max_retries - 1:
