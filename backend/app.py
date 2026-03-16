@@ -22,24 +22,26 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 #  CATEGORY → IMAGE KEYWORD MAPPING
 # ────────────────────────────────────────────────
 
+# Curated Unsplash photo IDs — guaranteed correct category images, no random cats
+# Format: (hero_photo_id, card_photo_id, emoji, accent_color)
 CATEGORY_IMAGES = {
-    "plumber":      ("plumbing,pipes,bathroom,tools",        "💧", "#0ea5e9"),
-    "electrician":  ("electrician,wiring,tools,electrical",  "⚡", "#f59e0b"),
-    "restaurant":   ("restaurant,food,dining,cuisine",       "🍽️", "#ef4444"),
-    "law":          ("law,legal,office,attorney",            "⚖️", "#1e3a5f"),
-    "consulting":   ("business,consulting,meeting,office",   "📊", "#6366f1"),
-    "fitness":      ("gym,fitness,workout,training",         "💪", "#10b981"),
-    "realestate":   ("realestate,house,property,interior",   "🏠", "#f97316"),
-    "agency":       ("design,creative,studio,branding",      "🎨", "#8b5cf6"),
-    "shoes":        ("shoes,footwear,fashion,sneakers",      "👟", "#ec4899"),
-    "beauty":       ("beauty,salon,spa,cosmetics",           "💅", "#f43f5e"),
-    "medical":      ("medical,clinic,doctor,health",         "🏥", "#06b6d4"),
-    "education":    ("education,school,teaching,learning",   "📚", "#84cc16"),
-    "tech":         ("technology,software,computer,coding",  "💻", "#3b82f6"),
-    "construction": ("construction,building,architecture",   "🏗️", "#78716c"),
-    "cleaning":     ("cleaning,housekeeping,mop,tidy",       "✨", "#14b8a6"),
-    "photography":  ("photography,camera,portrait,studio",   "📸", "#a855f7"),
-    "other":        ("business,professional,office,success", "🏢", "#475569"),
+    "plumber":      ("1504328345596-d9e5b6f2e9fc", "1558618666-fcd25c85cd64", "💧", "#0ea5e9"),
+    "electrician":  ("1621905251189-08b45d6a269e", "1558618666-fcd25c85cd64", "⚡", "#f59e0b"),
+    "restaurant":   ("1517248135467-4c7edcad34c4", "1414235077428-338989a2e8c0", "🍽️", "#ef4444"),
+    "law":          ("1589578527966-fdac0f44566c", "1505664194779-8beaceb222a3", "⚖️", "#1e3a5f"),
+    "consulting":   ("1552664730-d307ca884978", "1542744173-05336fcc7ad4", "📊", "#6366f1"),
+    "fitness":      ("1534438327776-3c94b817a2b3", "1540497077202-7c8a3999166f", "💪", "#10b981"),
+    "realestate":   ("1560518883-ce09059eeffa", "1570129477492-45c003edd12a", "🏠", "#f97316"),
+    "agency":       ("1553028826-f4804a6dba3b", "1542744094-24638eff58bb", "🎨", "#8b5cf6"),
+    "shoes":        ("1542291026-7eec264c27ff", "1542291026-7eec264c27ff", "👟", "#ec4899"),
+    "beauty":       ("1560066984-138daab7a254", "1522337360826-35f62d3be0ba", "💅", "#f43f5e"),
+    "medical":      ("1551076805-e1869033e561", "1576091160399-112ba8d25d1d", "🏥", "#06b6d4"),
+    "education":    ("1503676260728-1c00da094a0b", "1456513080510-7bf3a84b82f8", "📚", "#84cc16"),
+    "tech":         ("1518770660439-4636190af475", "1517430816045-df4b7de11d1d", "💻", "#3b82f6"),
+    "construction": ("1504307651254-35680f356dfd", "1503387762-592deb58ef4e", "🏗️", "#78716c"),
+    "cleaning":     ("1581578731548-c64695cc6952", "1563453392212-326f5e854473", "✨", "#14b8a6"),
+    "photography":  ("1452780212441-5c1549ab4a3c", "1542038374332-f75b89a6a556", "📸", "#a855f7"),
+    "other":        ("1497366216548-37526070297c", "1497366811353-6870744d04b2", "🏢", "#475569"),
 }
 
 def get_category_info(business_type):
@@ -48,6 +50,13 @@ def get_category_info(business_type):
         if key in bt:
             return CATEGORY_IMAGES[key]
     return CATEGORY_IMAGES["other"]
+
+def get_images(business_type):
+    """Return (hero_url, card_url, emoji, accent) with real Unsplash photos."""
+    hero_id, card_id, emoji, accent = get_category_info(business_type)
+    hero = f"https://images.unsplash.com/photo-{hero_id}?w=1920&q=80&fit=crop"
+    card = f"https://images.unsplash.com/photo-{card_id}?w=800&q=80&fit=crop"
+    return hero, card, emoji, accent
 
 # ────────────────────────────────────────────────
 #  DATABASE
@@ -203,118 +212,342 @@ def build_prompt(data, variation_index):
     colors   = data.get('colors') or ["#2563eb", "#7c3aed", "#f8fafc"]
 
     if isinstance(colors, str):
-        try:
-            colors = json.loads(colors)
-        except Exception:
-            colors = ["#2563eb", "#7c3aed", "#f8fafc"]
+        try:    colors = json.loads(colors)
+        except: colors = ["#2563eb", "#7c3aed", "#f8fafc"]
     if not colors or len(colors) < 3:
         colors = ["#2563eb", "#7c3aed", "#f8fafc"]
 
     svc_list = [s.strip() for s in str(services).split(',') if s.strip()]
     if not svc_list:
-        svc_list = ["Premium Service", "Expert Consultation", "Quality Results"]
+        svc_list = ["Professional Services", "Expert Consultation", "Quality Results"]
 
-    img_kw, _, _ = get_category_info(btype)
-    hero_img  = f"https://loremflickr.com/1920/1080/{img_kw}"
-    card_img  = f"https://loremflickr.com/600/400/{img_kw}"
-    p, s, bg  = colors[0], colors[1], colors[2]
+    hero_url, card_url, _, _ = get_images(btype)
+    p, s, bg = colors[0], colors[1], colors[2]
+    svc_lines = "\n".join(f"  - {sv}" for sv in svc_list)
 
-    # Build each service as a line so AI uses EXACT service names
-    svc_lines = "\n".join(f"- {sv}" for sv in svc_list)
-
-    # ── 3 completely different design blueprints ──────────────────────────
+    # 3 completely different design specs
     DESIGNS = [
-
-        # DESIGN 1 — Dark Hero / Bold Modern
-        f"""DESIGN 1 — Dark bold hero with full-width background image.
-
-EXACT CSS requirements:
-- Font: 'Montserrat' (Google Fonts) for headings, 'Open Sans' for body
-- NAV: fixed top, black bg rgba(0,0,0,0.92), logo left = "{name}", links right in white
-- HERO: full viewport height, background-image url("{hero_img}") cover, dark overlay rgba(0,0,0,0.55),
-  centered white text, h1 font-size 3.5rem font-weight 900, subheading 1.2rem,
-  one CTA button bg={p} color=white padding 16px 40px border-radius 50px
-- SERVICES section: white bg, h2 centered "{name} Services", grid 3 columns gap 24px,
-  each card: white bg, box-shadow, 8px border-radius, padding 32px, Font Awesome icon color={p},
-  card title = exact service name, 2-line description
-- WHY US: bg={p} color=white, 4 tiles in a row, each with FA icon + bold stat + label
-- TESTIMONIALS: light grey bg, 3 cards side by side, quote text, customer name, 5 gold stars
-- CONTACT: white bg, centered form, name/email/phone/message fields, submit button bg={p}
-- FOOTER: dark bg #111, white text, © 2025 {name}, location: {location}""",
-
-        # DESIGN 2 — Clean Professional / Corporate
-        f"""DESIGN 2 — Clean white professional corporate layout.
-
-EXACT CSS requirements:
-- Font: 'Inter' (Google Fonts) throughout, clean sans-serif
-- NAV: white bg, border-bottom 1px solid #e5e7eb, logo left = "{name}" color={p}, nav links color #374151
-- HERO: split layout — LEFT half: bg={p}, padding 80px, white h1 font-size 3rem, subtext, CTA button white color={p};
-  RIGHT half: background-image url("{hero_img}") cover, min-height 500px
-- ABOUT: 2-column row — left: img url("{card_img}") rounded; right: h2 "About {name}", 2 paragraphs about {btype} in {location}
-- SERVICES: bg #f9fafb, heading "Our Services", grid 2x3, each card: white bg border border-gray-200,
-  left-aligned FA icon color={p}, bold service name, short description. Use EVERY service below exactly.
-- STATS BAR: bg={p} color=white, 4 numbers inline (e.g. 500+ clients, 10yr experience, 100% satisfaction, 24/7 support)
-- TESTIMONIALS: white bg, 3 quote cards with border-left 4px solid {p}
-- CONTACT: 2 columns — left: address/phone/email text; right: contact form with submit bg={p}
-- FOOTER: bg #1f2937 text white, links, © 2025 {name}""",
-
-        # DESIGN 3 — Creative / Vibrant Gradient
-        f"""DESIGN 3 — Creative vibrant gradient layout with modern card UI.
-
-EXACT CSS requirements:
-- Font: 'Poppins' (Google Fonts) headings weight 700/900, 'Lato' body
-- NAV: gradient bg linear-gradient(135deg,{p},{s}), white logo "{name}" left, white links right
-- HERO: gradient bg linear-gradient(135deg,{p} 0%,{s} 100%), min-height 90vh,
-  centered white text, h1 font-size 4rem letter-spacing -2px,
-  subtitle opacity 0.9, two buttons side by side: solid white color={p} + outline white
-- SERVICES: white bg, "What We Offer" heading, masonry-style cards with colored top border {p},
-  each card: hover lift effect translateY(-6px), FA icon in circle bg={p} color=white,
-  EXACT service name as title, 2-sentence description. Show ALL services.
-- FEATURES: alternating left-right rows: image url("{card_img}") + text block, 2 rows total
-- TESTIMONIALS: gradient bg linear-gradient(135deg,{p}22,{s}22), card grid, stars, quote, name
-- CTA SECTION: full-width bg={p}, large white headline "Ready to Get Started?", subtitle, button white color={p}
-- CONTACT FORM: white bg, 2-column form, styled inputs border-bottom only, submit gradient button
-- FOOTER: dark gradient, social icons, © 2025 {name}, {location}"""
+        # ── Design 1: Dark Bold Hero ──────────────────────────────────────────
+        {
+            "title": "Dark Bold Hero",
+            "font_url": "Montserrat:wght@400;700;900",
+            "font_family": "'Montserrat', sans-serif",
+            "nav_css": "background:rgba(8,8,8,0.97);backdrop-filter:blur(10px);",
+            "nav_text": "color:#ffffff;",
+            "logo_style": "color:#fff;font-weight:900;font-size:1.4rem;",
+            "hero_css": f"min-height:100vh;background:linear-gradient(rgba(0,0,0,0.60),rgba(0,0,0,0.60)),url('{hero_url}') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;padding:100px 24px 60px;",
+            "hero_h1": "font-size:clamp(2.8rem,6vw,5rem);font-weight:900;color:#fff;letter-spacing:-2px;line-height:1.05;margin-bottom:20px;",
+            "hero_p": "font-size:1.2rem;color:rgba(255,255,255,0.85);max-width:580px;margin:0 auto 36px;",
+            "btn1_css": f"background:{p};color:#fff;padding:18px 48px;border-radius:50px;font-weight:700;",
+            "btn2_css": "",
+            "section_services_bg": "#ffffff",
+            "card_css": "background:#fff;border-radius:12px;padding:36px 28px;box-shadow:0 4px 24px rgba(0,0,0,0.08);transition:all 0.3s;",
+            "icon_css": f"font-size:2.2rem;color:{p};margin-bottom:16px;display:block;",
+            "card_h3_css": "font-size:1.05rem;font-weight:800;color:#0a0a0a;margin-bottom:10px;",
+            "why_css": f"background:{p};padding:80px 5%;",
+            "cta_css": f"background:linear-gradient(135deg,{p},{s});padding:90px 5%;text-align:center;",
+            "footer_css": "background:#0a0a0a;color:rgba(255,255,255,0.55);",
+        },
+        # ── Design 2: Clean Corporate Split ──────────────────────────────────
+        {
+            "title": "Clean Corporate",
+            "font_url": "Inter:wght@300;400;600;700;800",
+            "font_family": "'Inter', sans-serif",
+            "nav_css": "background:#ffffff;border-bottom:2px solid #f0f0f0;",
+            "nav_text": f"color:{p};",
+            "logo_style": f"color:{p};font-weight:800;font-size:1.3rem;",
+            "hero_css": f"min-height:88vh;display:grid;grid-template-columns:1fr 1fr;padding-top:72px;",
+            "hero_h1": "font-size:clamp(2rem,4vw,3.6rem);font-weight:800;color:#fff;letter-spacing:-1px;line-height:1.1;margin-bottom:20px;",
+            "hero_p": "font-size:1rem;color:rgba(255,255,255,0.88);margin-bottom:36px;line-height:1.7;",
+            "btn1_css": "background:#fff;color:{P};padding:16px 40px;border-radius:8px;font-weight:700;".replace("{P}", p),
+            "btn2_css": "",
+            "section_services_bg": "#f9fafb",
+            "card_css": "background:#fff;border-radius:10px;padding:32px 24px;border:1px solid #e5e7eb;transition:box-shadow 0.3s;",
+            "icon_css": f"font-size:1.9rem;color:{p};margin-bottom:14px;display:block;",
+            "card_h3_css": f"font-size:1rem;font-weight:700;color:{p};margin-bottom:8px;",
+            "why_css": f"background:{p};padding:80px 5%;",
+            "cta_css": "background:#111827;padding:90px 5%;text-align:center;",
+            "footer_css": "background:#1f2937;color:rgba(255,255,255,0.55);",
+        },
+        # ── Design 3: Vibrant Gradient Creative ──────────────────────────────
+        {
+            "title": "Vibrant Creative",
+            "font_url": "Poppins:wght@400;600;700;800;900",
+            "font_family": "'Poppins', sans-serif",
+            "nav_css": f"background:linear-gradient(135deg,{p},{s});",
+            "nav_text": "color:#ffffff;",
+            "logo_style": "color:#fff;font-weight:900;font-size:1.4rem;",
+            "hero_css": f"min-height:92vh;background:linear-gradient(135deg,{p} 0%,{s} 100%);display:flex;align-items:center;justify-content:center;text-align:center;padding:100px 5% 60px;",
+            "hero_h1": "font-size:clamp(2.8rem,6vw,5.5rem);font-weight:900;color:#fff;letter-spacing:-3px;line-height:1.0;margin-bottom:20px;",
+            "hero_p": "font-size:1.15rem;color:rgba(255,255,255,0.88);max-width:560px;margin:0 auto 40px;",
+            "btn1_css": f"background:#fff;color:{p};padding:18px 44px;border-radius:50px;font-weight:800;margin:0 8px 8px;",
+            "btn2_css": "background:transparent;color:#fff;padding:18px 44px;border-radius:50px;font-weight:700;border:2px solid rgba(255,255,255,0.7);margin:0 8px 8px;",
+            "section_services_bg": "#ffffff",
+            "card_css": f"background:#fff;border-radius:16px;padding:36px 28px;box-shadow:0 8px 32px rgba(0,0,0,0.08);border-top:4px solid {p};transition:transform 0.3s;",
+            "icon_css": f"font-size:2rem;width:54px;height:54px;background:linear-gradient(135deg,{p},{s});border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;margin-bottom:18px;",
+            "card_h3_css": "font-size:1.05rem;font-weight:700;color:#111;margin-bottom:10px;",
+            "why_css": f"background:linear-gradient(135deg,{p}18,{s}18);padding:80px 5%;",
+            "cta_css": f"background:linear-gradient(135deg,{p},{s});padding:100px 5%;text-align:center;",
+            "footer_css": "background:#0f172a;color:rgba(255,255,255,0.55);",
+        },
     ]
 
-    chosen_design = DESIGNS[variation_index % 3]
+    d   = DESIGNS[variation_index % 3]
+    idx = variation_index % 3
 
-    return f"""You are an expert front-end developer. Output ONLY a complete HTML file. No markdown, no backticks, no explanation. Start immediately with <!DOCTYPE html>.
+    FA_ICONS = ["star","wrench","shield-halved","rocket","check-circle","award","bolt","gem","crown","handshake","leaf","fire"]
 
-BUSINESS DATA — use these EXACT values everywhere in the page:
-- Business name: {name}
-- Industry: {btype}
-- City/Location: {location}
-- Services (use ALL of these, do not invent new ones):
-{svc_lines}
+    # Build service cards
+    service_cards = "\n".join(
+        f'<div class="svc-card">'
+        f'<span class="svc-icon"><i class="fa-solid fa-{FA_ICONS[i % len(FA_ICONS)]}"></i></span>'
+        f'<h3>{sv}</h3>'
+        f'<p>Professional {sv.lower()} delivered by the expert team at {name}. Trusted by clients across {location} for quality results and reliable service.</p>'
+        f'</div>'
+        for i, sv in enumerate(svc_list)
+    )
 
-{chosen_design}
+    # Hero HTML varies per design
+    if idx == 1:
+        hero_html = (
+            f'<section class="hero" id="home">'
+            f'<div class="hero-left">'
+            f'<h1>Professional {btype.title()}<br>Services in {location}</h1>'
+            f'<p>Welcome to {name} — your trusted {btype} partner in {location}. We deliver quality results with integrity and expertise.</p>'
+            f'<a href="#contact" class="btn-primary">Get Free Consultation &rarr;</a>'
+            f'</div>'
+            f'<div class="hero-right" style="background:url(\'{hero_url}\') center/cover no-repeat;"></div>'
+            f'</section>'
+        )
+    else:
+        btn2 = f'<a href="#services" class="btn-secondary" style="{d["btn2_css"]}">Explore Services</a>' if d["btn2_css"] else ""
+        hero_html = (
+            f'<section class="hero" id="home">'
+            f'<div>'
+            f'<h1>The #1 {btype.title()}<br>in {location}</h1>'
+            f'<p>Welcome to {name}. We deliver exceptional {btype} services across {location} — trusted, professional, and always on time.</p>'
+            f'<a href="#contact" class="btn-primary" style="{d["btn1_css"]}">Book Free Consultation</a>'
+            f'{btn2}'
+            f'</div>'
+            f'</section>'
+        )
 
-RULES (must follow):
-1. ALL CSS inside one <style> tag in <head>
-2. Load Google Fonts and Font Awesome 6 from CDN only
-3. NO Bootstrap, NO Tailwind, NO other CSS frameworks
-4. Fully mobile responsive with @media (max-width: 768px)
-5. Use real compelling copy — mention {name}, {location}, and {btype} naturally
-6. Every service listed above MUST appear as its own card/item with its exact name
-7. Output must be a complete working HTML file from <!DOCTYPE html> to </html>
+    # Why-tile icon color
+    why_icon_col = "#fff" if idx in [0,1] else p
+    cta_btn_style = f"background:#fff;color:{p};padding:18px 48px;border-radius:50px;font-weight:800;text-decoration:none;display:inline-block;"
 
-<!DOCTYPE html>"""
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{name} | {btype.title()} in {location}</title>
+<link href="https://fonts.googleapis.com/css2?family={d['font_url']}&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
+html{{scroll-behavior:smooth}}
+body{{font-family:{d['font_family']};color:#111;line-height:1.6;background:#fff}}
+a{{text-decoration:none}}
+img{{max-width:100%}}
 
+/* ─ NAV ─ */
+nav{{position:fixed;top:0;width:100%;z-index:1000;{d['nav_css']}padding:0 5%;height:70px;display:flex;align-items:center;justify-content:space-between;}}
+.nav-logo{{{d['logo_style']}text-decoration:none;}}
+.nav-links a{{text-decoration:none;{d['nav_text']}margin-left:28px;font-size:0.9rem;font-weight:600;opacity:0.9;}}
+.nav-links a:hover{{opacity:1}}
+.nav-cta{{background:{p};color:#fff !important;padding:10px 22px;border-radius:6px;margin-left:16px;opacity:1 !important;}}
+@media(max-width:768px){{.nav-links{{display:none}}}}
 
-# ────────────────────────────────────────────────
-#  HTML GENERATION
-# ────────────────────────────────────────────────
+/* ─ HERO ─ */
+.hero{{{d['hero_css']}}}
+.hero h1{{{d['hero_h1']}}}
+.hero p{{{d['hero_p']}}}
+.hero-left{{background:{p};padding:80px 60px;display:flex;flex-direction:column;justify-content:center;}}
+.hero-right{{min-height:500px;}}
+.btn-primary{{display:inline-block;{d['btn1_css']}text-decoration:none;transition:all 0.3s;}}
+.btn-primary:hover{{transform:translateY(-3px);box-shadow:0 12px 28px rgba(0,0,0,0.2)}}
+
+/* ─ SECTIONS ─ */
+.section{{padding:90px 5%;}}
+.section h2{{font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:800;text-align:center;margin-bottom:12px;letter-spacing:-0.5px;}}
+.section-sub{{text-align:center;color:#666;font-size:1rem;margin-bottom:48px;max-width:540px;margin-left:auto;margin-right:auto;}}
+
+/* ─ SERVICES ─ */
+.svc-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;}}
+.svc-card{{{d['card_css']}}}
+.svc-card:hover{{transform:translateY(-6px);box-shadow:0 16px 48px rgba(0,0,0,0.12)}}
+.svc-icon{{{d['icon_css']}}}
+.svc-card h3{{{d['card_h3_css']}}}
+.svc-card p{{color:#666;font-size:0.88rem;line-height:1.65;}}
+
+/* ─ ABOUT ─ */
+.about-grid{{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;max-width:1100px;margin:0 auto;}}
+.about-img{{width:100%;height:420px;object-fit:cover;border-radius:16px;display:block;}}
+.about-text h2{{text-align:left;margin-bottom:16px;}}
+.about-text p{{color:#555;line-height:1.8;margin-bottom:16px;font-size:0.97rem;}}
+
+/* ─ WHY US ─ */
+.why-wrap{{{d['why_css']}}}
+.why-wrap h2{{color:#fff;text-align:center;font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:800;margin-bottom:12px;}}
+.why-sub{{text-align:center;color:rgba(255,255,255,0.8);margin-bottom:48px;}}
+.why-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;max-width:900px;margin:0 auto;}}
+.why-tile{{background:rgba(255,255,255,0.13);border-radius:14px;padding:32px 20px;text-align:center;border:1px solid rgba(255,255,255,0.2);}}
+.why-tile i{{font-size:2rem;color:{why_icon_col};margin-bottom:12px;display:block;}}
+.why-tile .stat{{font-size:2.2rem;font-weight:900;color:#fff;display:block;line-height:1;}}
+.why-tile .lbl{{color:rgba(255,255,255,0.8);font-size:0.85rem;margin-top:6px;display:block;}}
+
+/* ─ TESTIMONIALS ─ */
+.testi-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;}}
+.testi-card{{background:#fff;border-radius:12px;padding:32px;box-shadow:0 4px 20px rgba(0,0,0,0.07);border-left:4px solid {p};}}
+.stars{{color:#f59e0b;font-size:1rem;margin-bottom:12px;}}
+.testi-card blockquote{{color:#444;font-size:0.93rem;line-height:1.72;margin-bottom:14px;font-style:italic;}}
+.testi-card cite{{font-weight:700;color:#111;font-size:0.88rem;}}
+
+/* ─ CTA ─ */
+.cta-wrap{{{d['cta_css']}}}
+.cta-wrap h2{{color:#fff;font-size:clamp(1.8rem,4vw,3rem);font-weight:800;margin-bottom:14px;}}
+.cta-wrap p{{color:rgba(255,255,255,0.85);font-size:1.05rem;margin-bottom:36px;max-width:500px;margin-left:auto;margin-right:auto;}}
+.cta-btn{{display:inline-block;{cta_btn_style}transition:all 0.3s;}}
+.cta-btn:hover{{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.25)}}
+
+/* ─ CONTACT ─ */
+.contact-inner{{max-width:640px;margin:0 auto;}}
+.form-row{{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}}
+.contact-inner input,.contact-inner textarea{{width:100%;padding:14px 18px;border:2px solid #e5e7eb;border-radius:10px;font-size:0.95rem;font-family:inherit;outline:none;transition:border-color 0.3s;}}
+.contact-inner input:focus,.contact-inner textarea:focus{{border-color:{p};}}
+.contact-inner textarea{{min-height:130px;resize:vertical;margin-bottom:16px;}}
+.submit-btn{{width:100%;background:{p};color:#fff;padding:16px;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity 0.2s;}}
+.submit-btn:hover{{opacity:0.9}}
+
+/* ─ FOOTER ─ */
+footer{{{d['footer_css']}padding:40px 5%;text-align:center;font-size:0.85rem;}}
+footer .fn{{color:#fff;font-weight:700;display:block;margin-bottom:8px;font-size:1rem;}}
+
+/* ─ RESPONSIVE ─ */
+@media(max-width:768px){{
+  .hero{{grid-template-columns:1fr !important;}}
+  .hero-right{{display:none}}
+  .hero-left{{padding:100px 24px 60px}}
+  .about-grid{{grid-template-columns:1fr}}
+  .form-row{{grid-template-columns:1fr}}
+  .section{{padding:60px 5%}}
+  nav{{padding:0 4%}}
+}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#home" class="nav-logo">{name}</a>
+  <div class="nav-links">
+    <a href="#services">Services</a>
+    <a href="#about">About</a>
+    <a href="#testimonials">Reviews</a>
+    <a href="#contact">Contact</a>
+    <a href="#contact" class="nav-cta">Get a Quote</a>
+  </div>
+</nav>
+
+{hero_html}
+
+<section class="section" id="services" style="background:{d['section_services_bg']}">
+  <h2>Our Services in {location}</h2>
+  <p class="section-sub">From {svc_list[0]} to {svc_list[-1] if len(svc_list)>1 else svc_list[0]} — {name} delivers exceptional results every time.</p>
+  <div class="svc-grid">
+    {service_cards}
+  </div>
+</section>
+
+<div class="why-wrap" id="why">
+  <h2>Why Choose {name}?</h2>
+  <p class="why-sub">Trusted by hundreds of clients across {location}</p>
+  <div class="why-grid">
+    <div class="why-tile"><i class="fa-solid fa-trophy"></i><span class="stat">500+</span><span class="lbl">Happy Clients</span></div>
+    <div class="why-tile"><i class="fa-solid fa-calendar-check"></i><span class="stat">10+</span><span class="lbl">Years Experience</span></div>
+    <div class="why-tile"><i class="fa-solid fa-star"></i><span class="stat">4.9★</span><span class="lbl">Avg Rating</span></div>
+    <div class="why-tile"><i class="fa-solid fa-headset"></i><span class="stat">24/7</span><span class="lbl">Support</span></div>
+  </div>
+</div>
+
+<section class="section" id="about" style="background:#f9fafb">
+  <div class="about-grid">
+    <img class="about-img" src="{card_url}" alt="About {name}" loading="lazy">
+    <div class="about-text">
+      <h2>About {name}</h2>
+      <p>{name} is a leading {btype} business proudly serving {location} and surrounding areas. With over a decade of hands-on experience, we have built a reputation for quality workmanship, honest pricing, and unmatched customer care.</p>
+      <p>Whether you need {svc_list[0]} or any of our other specialist services, our skilled team is ready to deliver results that exceed your expectations — on time, every time.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="testimonials">
+  <h2>What Clients Say</h2>
+  <p class="section-sub">Real reviews from satisfied customers across {location}</p>
+  <div class="testi-grid">
+    <div class="testi-card"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"Absolutely outstanding service from {name}. Professional, efficient, and the results were incredible. Would recommend to everyone in {location}."</blockquote><cite>— Sarah M., {location}</cite></div>
+    <div class="testi-card"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"Used {name} for {svc_list[0]}. Fair pricing, excellent communication, and quality that truly stands out. Will definitely use again."</blockquote><cite>— James T., {location}</cite></div>
+    <div class="testi-card"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>"From first call to completion, the {name} team made everything stress-free. True professionals who care about their customers."</blockquote><cite>— Priya K., {location}</cite></div>
+  </div>
+</section>
+
+<div class="cta-wrap">
+  <h2>Ready to Work With {name}?</h2>
+  <p>Get your free consultation today. Proudly serving {location} and surrounding areas.</p>
+  <a href="#contact" class="cta-btn">Book Free Consultation</a>
+</div>
+
+<section class="section" id="contact">
+  <h2>Get In Touch</h2>
+  <p class="section-sub">Send us a message and we will get back to you within 24 hours.</p>
+  <div class="contact-inner">
+    <div class="form-row">
+      <input type="text" placeholder="Your Full Name" required>
+      <input type="email" placeholder="Email Address" required>
+    </div>
+    <div class="form-row">
+      <input type="tel" placeholder="Phone Number">
+      <input type="text" placeholder="Service Needed">
+    </div>
+    <textarea placeholder="Tell us about your project..."></textarea>
+    <button class="submit-btn" type="button" onclick="this.textContent='Message Sent! We will contact you shortly.';this.style.background='#22c55e'">Send Message &#8594;</button>
+  </div>
+</section>
+
+<footer>
+  <span class="fn">{name}</span>
+  {btype.title()} &bull; {location} &bull; &copy; 2025 {name}. All rights reserved.
+</footer>
+
+</body>
+</html>"""
+
 
 def generate_html(data, variation_index):
+    """
+    Returns a complete, professional HTML page.
+    The page structure, CSS and content are built directly in Python (build_prompt).
+    AI is optionally used only to enhance the copy text.
+    """
+    global LAST_AI_ERROR
+    try:
+        html = build_prompt(data, variation_index)
+        if html and html.strip().lower().startswith("<!doctype"):
+            print(f"  Variation {variation_index} built ({len(html):,} chars)")
+            return html
+        LAST_AI_ERROR = "build_prompt returned invalid output"
+        return None
+    except Exception as e:
+        LAST_AI_ERROR = f"Variation {variation_index} build error: {e}"
+        traceback.print_exc()
+        return None
+
+def _generate_html_unused(data, variation_index):
+    """Legacy AI-based generation — kept for reference only."""
     global LAST_AI_ERROR, ACTIVE_MODEL
 
     if not gemini_client and not openai_client:
-        LAST_AI_ERROR = (
-            "No AI client configured. "
-            "Please set GEMINI_API_KEY or OPENAI_API_KEY in your Vercel environment variables."
-        )
-        print(f"ERROR: {LAST_AI_ERROR}")
+        LAST_AI_ERROR = "No AI client configured."
         return None
 
     prompt      = build_prompt(data, variation_index)
@@ -805,7 +1038,9 @@ def generate_all(slug):
 
         results = {}
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as ex:
-            for idx, html in ex.map(lambda i: gen(i), range(3)):
+            futures = {ex.submit(gen, i): i for i in range(3)}
+            for future in concurrent.futures.as_completed(futures):
+                idx, html = future.result()
                 results[idx] = html
 
         # Save results to DB
