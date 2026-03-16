@@ -7,6 +7,10 @@
         ],
         "routes": [
                   { "src": "/api/(.*)", "dest": "backend/app.py" },
+                  { "src": "/view-design/(.*)", "dest": "backend/app.py" },
+                  { "src": "/s/(.*)", "dest": "backend/app.py" },
+                  { "src": "/download/(.*)", "dest": "backend/app.py" },
+                  { "src": "/debug-(.*)", "dest": "backend/app.py" },
                   { "src": "/(.*)", "dest": "/$1" }
         ]
 }

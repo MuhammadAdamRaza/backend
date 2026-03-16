@@ -119,7 +119,7 @@ PROJECT_ROOT = os.path.dirname(BASE_DIR)
 if os.getenv("VERCEL"):
     # On Vercel, /var/task is usually the root if deployed correctly
     WRITABLE_ROOT = "/tmp"
-    GITHUB_RAW_BASE = "https://raw.githubusercontent.com/MuhammadAdamRaza/backend/main/backend"
+    GITHUB_RAW_BASE = "https://raw.githubusercontent.com/MuhammadAdamRaza/backend/main"
 else:
     WRITABLE_ROOT = PROJECT_ROOT
     GITHUB_RAW_BASE = "https://raw.githubusercontent.com/MuhammadAdamRaza/backend/main/backend"

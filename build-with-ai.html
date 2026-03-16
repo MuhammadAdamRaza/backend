@@ -173,8 +173,8 @@
       background: #fff;
       border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.05);
-      border: 1px solid rgba(0,0,0,0.05);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.05);
       transition: all 0.4s ease;
       cursor: pointer;
       position: relative;
@@ -182,7 +182,7 @@
 
     .design-card:hover {
       transform: translateY(-10px);
-      box-shadow: 0 25px 50px rgba(0,0,0,0.1);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
       border-color: #6e8efb;
     }
 
@@ -199,7 +199,7 @@
     .design-info {
       padding: 24px;
       background: #fff;
-      border-top: 1px solid rgba(0,0,0,0.05);
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -221,16 +221,17 @@
     }
 
     .color-preview-container {
-        display: flex;
-        gap: 10px;
-        margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
     }
+
     .color-circle {
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        border: 2px solid #fff;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
   </style>
 </head>
@@ -301,15 +302,18 @@
             <label class="form-label d-block">Brand Color Theme (Choose 3 Colors)</label>
             <div class="d-flex gap-3 flex-wrap">
               <div class="d-flex flex-column align-items-center">
-                <input type="color" class="form-control form-control-color" id="colorPrimary" value="#6e8efb" title="Primary Color" style="width: 100px; height: 50px; padding: 5px;">
+                <input type="color" class="form-control form-control-color" id="colorPrimary" value="#6e8efb"
+                  title="Primary Color" style="width: 100px; height: 50px; padding: 5px;">
                 <small class="text-muted mt-1">Primary</small>
               </div>
               <div class="d-flex flex-column align-items-center">
-                <input type="color" class="form-control form-control-color" id="colorSecondary" value="#a777e3" title="Secondary Color" style="width: 100px; height: 50px; padding: 5px;">
+                <input type="color" class="form-control form-control-color" id="colorSecondary" value="#a777e3"
+                  title="Secondary Color" style="width: 100px; height: 50px; padding: 5px;">
                 <small class="text-muted mt-1">Secondary</small>
               </div>
               <div class="d-flex flex-column align-items-center">
-                <input type="color" class="form-control form-control-color" id="colorAccent" value="#ffffff" title="Accent Color" style="width: 100px; height: 50px; padding: 5px;">
+                <input type="color" class="form-control form-control-color" id="colorAccent" value="#ffffff"
+                  title="Accent Color" style="width: 100px; height: 50px; padding: 5px;">
                 <small class="text-muted mt-1">Accent/Background</small>
               </div>
             </div>
@@ -334,7 +338,8 @@
     <div class="selection-container">
       <div class="text-center mb-5">
         <h2 class="display-5 fw-bold"><span style="color: #6e8efb;">Choose</span> Your Design</h2>
-        <p class="text-muted fs-5">Our AI has generated 3 unique variations based on your brand. Select your favorite to finalize.</p>
+        <p class="text-muted fs-5">Our AI has generated 3 unique variations based on your brand. Select your favorite to
+          finalize.</p>
       </div>
       <div class="selection-grid" id="selectionGrid">
         <!-- AI Designs will be injected here -->
@@ -412,7 +417,8 @@
       overlay.style.display = 'flex';
       // Dynamic API_BASE: Always use the current host, fallback to Vercel if local file
       let API_BASE = window.location.origin;
-      if (window.location.protocol === 'file:' || API_BASE.includes('null')) {
+      if (window.location.protocol === 'file:' || API_BASE.includes('null') || API_BASE === 'null') {
+        // Use the primary reported Vercel URL
         API_BASE = 'https://awake-murex.vercel.app';
       }
 
@@ -427,7 +433,7 @@
 
         if (initialData.success) {
           const slug = initialData.slug;
-          
+
           // If variations returned immediately (Vercel synchronous path)
           if (initialData.status === "WAITING_FOR_SELECTION") {
             overlay.style.display = 'none';
@@ -489,9 +495,9 @@
     function showSelectionScreen(slug, variations, apiBase) {
       const selectionOverlay = document.getElementById('selectionOverlay');
       const selectionGrid = document.getElementById('selectionGrid');
-      
+
       selectionGrid.innerHTML = '';
-      
+
       variations.forEach((variation, index) => {
         const card = document.createElement('div');
         card.className = 'design-card';
@@ -507,7 +513,7 @@
         `;
         selectionGrid.appendChild(card);
       });
-      
+
       selectionOverlay.style.display = 'block';
       document.body.style.overflow = 'hidden';
     }
@@ -517,19 +523,19 @@
       const overlay = document.getElementById('loadingOverlay');
       const mainText = document.getElementById('loadingText');
       const subText = document.getElementById('loadingSubtext');
-      
+
       selectionOverlay.style.display = 'none';
       overlay.style.display = 'flex';
       mainText.innerText = "Finalizing Your Design...";
       subText.innerText = "Applying the finishing touches to your bespoke website.";
-      
+
       try {
         const response = await fetch(`${apiBase}/api/select-design`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ slug, designIndex })
         });
-        
+
         const data = await response.json();
         if (data.success) {
           window.location.href = data.previewUrl;
