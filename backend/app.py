@@ -703,10 +703,13 @@ CRITICAL RULES:
                     primary_model_name = os.getenv("GEMINI_MODEL")
                     model_names = []
                     if primary_model_name:
-                        model_names.append(primary_model_name)
+                        if not primary_model_name.startswith("models/"):
+                            model_names.append(f"models/{primary_model_name}")
+                        else:
+                            model_names.append(primary_model_name)
                     
-                    # Known working models
-                    model_names.extend(["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"])
+                    # Known working models (standard fully qualified names)
+                    model_names.extend(["models/gemini-1.5-flash", "models/gemini-1.5-flash-latest", "models/gemini-pro", "models/gemini-pro-latest"])
                     
                     # Remove duplicates while preserving order
                     model_names = list(dict.fromkeys(model_names))
