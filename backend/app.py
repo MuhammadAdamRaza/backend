@@ -91,7 +91,7 @@ openai_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=openai_key) if openai_key else None
 
 gemini_key = os.getenv("GEMINI_API_KEY")
-gemini_model_name = "gemini-1.5-flash"   # FIXED: use stable model (March 2026)
+gemini_model_name = "gemini-2.5-flash"   # FIXED: use stable model (March 2026)
 
 model = None
 if gemini_key:
