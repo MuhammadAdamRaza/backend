@@ -192,25 +192,14 @@ if OPENAI_KEY:
         print(f"OpenAI client error: {e}")
 
 # ────────────────────────────────────────────────
-#  PROMPT BUILDER
+#  PROMPT BUILDER  — 3 visually distinct designs
 # ────────────────────────────────────────────────
-
-LAYOUTS = [
-    "Split-screen hero (image left, headline right) + 3-column services grid + dark footer",
-    "Full-width cinematic hero with centred headline + wave divider + card services + testimonial strip",
-    "Minimal typographic hero (giant business name) + bento grid services + bold CTA section",
-    "Diagonal-cut hero with overlay text + icon services list + stats bar + contact form",
-    "Dark hero with gradient text + glassmorphism service cards + light about section",
-    "Asymmetric layout image-right + bullet services left + green CTA + social proof strip",
-    "Magazine-style hero with large serif headline + colour-block service tiles + FAQ section",
-]
 
 def build_prompt(data, variation_index):
     name     = data.get('businessName') or data.get('business_name', 'My Business')
     btype    = data.get('businessType') or data.get('business_type', 'business')
     location = data.get('location', 'London')
     services = data.get('services', 'Professional Services')
-    style    = data.get('style', 'modern')
     colors   = data.get('colors') or ["#2563eb", "#7c3aed", "#f8fafc"]
 
     if isinstance(colors, str):
@@ -221,33 +210,94 @@ def build_prompt(data, variation_index):
     if not colors or len(colors) < 3:
         colors = ["#2563eb", "#7c3aed", "#f8fafc"]
 
-    svc_list     = [s.strip() for s in str(services).split(',') if s.strip()]
+    svc_list = [s.strip() for s in str(services).split(',') if s.strip()]
     if not svc_list:
-        svc_list = ["Premium Services", "Expert Consultation", "Quality Results"]
+        svc_list = ["Premium Service", "Expert Consultation", "Quality Results"]
 
     img_kw, _, _ = get_category_info(btype)
-    hero_img     = f"https://loremflickr.com/1920/1080/{img_kw}"
-    card_img     = f"https://loremflickr.com/800/500/{img_kw}"
-    layout       = LAYOUTS[variation_index % len(LAYOUTS)]
+    hero_img  = f"https://loremflickr.com/1920/1080/{img_kw}"
+    card_img  = f"https://loremflickr.com/600/400/{img_kw}"
+    p, s, bg  = colors[0], colors[1], colors[2]
 
-    STYLE_THEMES = [
-        ("modern bold",    "dark hero, gradient accents, sharp cards"),
-        ("professional",   "clean white layout, blue accents, trust badges"),
-        ("creative",       "asymmetric layout, big typography, colour blocks"),
+    # Build each service as a line so AI uses EXACT service names
+    svc_lines = "\n".join(f"- {sv}" for sv in svc_list)
+
+    # ── 3 completely different design blueprints ──────────────────────────
+    DESIGNS = [
+
+        # DESIGN 1 — Dark Hero / Bold Modern
+        f"""DESIGN 1 — Dark bold hero with full-width background image.
+
+EXACT CSS requirements:
+- Font: 'Montserrat' (Google Fonts) for headings, 'Open Sans' for body
+- NAV: fixed top, black bg rgba(0,0,0,0.92), logo left = "{name}", links right in white
+- HERO: full viewport height, background-image url("{hero_img}") cover, dark overlay rgba(0,0,0,0.55),
+  centered white text, h1 font-size 3.5rem font-weight 900, subheading 1.2rem,
+  one CTA button bg={p} color=white padding 16px 40px border-radius 50px
+- SERVICES section: white bg, h2 centered "{name} Services", grid 3 columns gap 24px,
+  each card: white bg, box-shadow, 8px border-radius, padding 32px, Font Awesome icon color={p},
+  card title = exact service name, 2-line description
+- WHY US: bg={p} color=white, 4 tiles in a row, each with FA icon + bold stat + label
+- TESTIMONIALS: light grey bg, 3 cards side by side, quote text, customer name, 5 gold stars
+- CONTACT: white bg, centered form, name/email/phone/message fields, submit button bg={p}
+- FOOTER: dark bg #111, white text, © 2025 {name}, location: {location}""",
+
+        # DESIGN 2 — Clean Professional / Corporate
+        f"""DESIGN 2 — Clean white professional corporate layout.
+
+EXACT CSS requirements:
+- Font: 'Inter' (Google Fonts) throughout, clean sans-serif
+- NAV: white bg, border-bottom 1px solid #e5e7eb, logo left = "{name}" color={p}, nav links color #374151
+- HERO: split layout — LEFT half: bg={p}, padding 80px, white h1 font-size 3rem, subtext, CTA button white color={p};
+  RIGHT half: background-image url("{hero_img}") cover, min-height 500px
+- ABOUT: 2-column row — left: img url("{card_img}") rounded; right: h2 "About {name}", 2 paragraphs about {btype} in {location}
+- SERVICES: bg #f9fafb, heading "Our Services", grid 2x3, each card: white bg border border-gray-200,
+  left-aligned FA icon color={p}, bold service name, short description. Use EVERY service below exactly.
+- STATS BAR: bg={p} color=white, 4 numbers inline (e.g. 500+ clients, 10yr experience, 100% satisfaction, 24/7 support)
+- TESTIMONIALS: white bg, 3 quote cards with border-left 4px solid {p}
+- CONTACT: 2 columns — left: address/phone/email text; right: contact form with submit bg={p}
+- FOOTER: bg #1f2937 text white, links, © 2025 {name}""",
+
+        # DESIGN 3 — Creative / Vibrant Gradient
+        f"""DESIGN 3 — Creative vibrant gradient layout with modern card UI.
+
+EXACT CSS requirements:
+- Font: 'Poppins' (Google Fonts) headings weight 700/900, 'Lato' body
+- NAV: gradient bg linear-gradient(135deg,{p},{s}), white logo "{name}" left, white links right
+- HERO: gradient bg linear-gradient(135deg,{p} 0%,{s} 100%), min-height 90vh,
+  centered white text, h1 font-size 4rem letter-spacing -2px,
+  subtitle opacity 0.9, two buttons side by side: solid white color={p} + outline white
+- SERVICES: white bg, "What We Offer" heading, masonry-style cards with colored top border {p},
+  each card: hover lift effect translateY(-6px), FA icon in circle bg={p} color=white,
+  EXACT service name as title, 2-sentence description. Show ALL services.
+- FEATURES: alternating left-right rows: image url("{card_img}") + text block, 2 rows total
+- TESTIMONIALS: gradient bg linear-gradient(135deg,{p}22,{s}22), card grid, stars, quote, name
+- CTA SECTION: full-width bg={p}, large white headline "Ready to Get Started?", subtitle, button white color={p}
+- CONTACT FORM: white bg, 2-column form, styled inputs border-bottom only, submit gradient button
+- FOOTER: dark gradient, social icons, © 2025 {name}, {location}"""
     ]
-    theme_name, theme_desc = STYLE_THEMES[variation_index % 3]
 
-    return f"""Output ONLY a complete single-file HTML website. Start with <!DOCTYPE html>. No markdown, no backticks.
+    chosen_design = DESIGNS[variation_index % 3]
 
-Business: {name} | Industry: {btype} | Location: {location}
-Primary: {colors[0]} | Secondary: {colors[1]} | Background: {colors[2]}
-Services: {", ".join(svc_list[:5])}
-Design theme: {theme_name} — {theme_desc}
-Hero image URL: {hero_img}
+    return f"""You are an expert front-end developer. Output ONLY a complete HTML file. No markdown, no backticks, no explanation. Start immediately with <!DOCTYPE html>.
 
-Rules: CSS in <style>, Google Fonts CDN, Font Awesome 6 CDN, mobile-first, NO frameworks.
-Include: sticky nav, hero with bg-image + CTA, services cards with FA icons, why-choose-us, testimonials, contact form, footer © {name}.
-Write real persuasive copy for {btype} in {location}. No lorem ipsum.
+BUSINESS DATA — use these EXACT values everywhere in the page:
+- Business name: {name}
+- Industry: {btype}
+- City/Location: {location}
+- Services (use ALL of these, do not invent new ones):
+{svc_lines}
+
+{chosen_design}
+
+RULES (must follow):
+1. ALL CSS inside one <style> tag in <head>
+2. Load Google Fonts and Font Awesome 6 from CDN only
+3. NO Bootstrap, NO Tailwind, NO other CSS frameworks
+4. Fully mobile responsive with @media (max-width: 768px)
+5. Use real compelling copy — mention {name}, {location}, and {btype} naturally
+6. Every service listed above MUST appear as its own card/item with its exact name
+7. Output must be a complete working HTML file from <!DOCTYPE html> to </html>
 
 <!DOCTYPE html>"""
 
@@ -288,9 +338,9 @@ def generate_html(data, variation_index):
                         model=model_name,
                         contents=prompt,
                         config=genai_types.GenerateContentConfig(
-                            temperature=0.7,
-                            max_output_tokens=3500,
-                            top_p=0.9,
+                            temperature=0.75,
+                            max_output_tokens=8192,
+                            top_p=0.95,
                         )
                     )
                     raw = response.text.strip()
@@ -321,8 +371,8 @@ def generate_html(data, variation_index):
                 resp = openai_client.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=[{"role": "user", "content": prompt}],
-                    temperature=0.7,
-                    max_tokens=3500,
+                    temperature=0.75,
+                    max_tokens=6000,
                 )
                 raw = resp.choices[0].message.content.strip()
                 if raw:
