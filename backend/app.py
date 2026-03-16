@@ -140,12 +140,15 @@ LAST_AI_ERROR = ""
 # ── New google-genai SDK ──────────────────────────
 # Model probe happens at first call, not at startup,
 # so a cold Vercel boot doesn't burn time/quota.
+# All known valid model IDs for google-genai SDK (new API)
 GEMINI_CANDIDATES = [
-    "gemini-2.5-flash-preview-05-20",
     "gemini-2.0-flash",
     "gemini-2.0-flash-lite",
     "gemini-1.5-flash",
-    "gemini-1.5-flash-8b",
+    "gemini-1.5-flash-latest",
+    "gemini-2.5-flash-preview-05-20",
+    "gemini-2.5-flash",
+    "gemini-2.0-pro-exp",
 ]
 
 if GEMINI_KEY:
@@ -279,12 +282,13 @@ def generate_html(data, variation_index):
     try:
         raw = ""
 
-        # Try every Gemini candidate model — skip on 429 quota errors
+        # Try every Gemini candidate model — skip on quota/404 errors
         if gemini_client:
             import time
             from google.genai import types as genai_types
             models_to_try = [ACTIVE_MODEL] + [m for m in GEMINI_CANDIDATES if m != ACTIVE_MODEL]
-            last_err = ""
+            last_err  = ""
+            all_errors = []
 
             for model_name in models_to_try:
                 try:
@@ -304,10 +308,14 @@ def generate_html(data, variation_index):
                         print(f"  Success with {model_name}")
                         break
                 except Exception as me:
-                    last_err = str(me)
-                    err_up = str(me).upper()
+                    last_err  = str(me)
+                    err_up    = str(me).upper()
+                    all_errors.append(f"{model_name}: {str(me)[:120]}")
                     if "429" in err_up or "RESOURCE_EXHAUSTED" in err_up or "QUOTA" in err_up:
-                        print(f"  {model_name} quota exhausted — trying next model...")
+                        print(f"  {model_name} quota exhausted — trying next...")
+                        continue
+                    if "404" in err_up or "NOT_FOUND" in err_up:
+                        print(f"  {model_name} not found — trying next...")
                         continue
                     if "503" in err_up or "OVERLOADED" in err_up or "UNAVAILABLE" in err_up:
                         print(f"  {model_name} overloaded — waiting 3s...")
@@ -331,13 +339,11 @@ def generate_html(data, variation_index):
                 err_up = last_err.upper()
                 if "429" in err_up or "QUOTA" in err_up or "RESOURCE_EXHAUSTED" in err_up:
                     LAST_AI_ERROR = (
-                        "QUOTA EXHAUSTED: Your Gemini API key has hit the free tier limit (20 req/day). "
-                        "You MUST use the API key from your paid Google AI Studio account. "
-                        "Go to aistudio.google.com, sign in with your Pro account, create a new API key, "
-                        "and update GEMINI_API_KEY in Vercel environment variables."
+                        "QUOTA EXHAUSTED: Free tier limit hit. "
+                        "Use API key from your paid Google AI Studio account."
                     )
                 else:
-                    LAST_AI_ERROR = f"All AI models failed. Last error: {last_err}"
+                    LAST_AI_ERROR = f"All AI models failed. All errors: {all_errors}"
                 return None
 
         # OpenAI only (no Gemini key configured)
@@ -473,6 +479,30 @@ def html_response(content, status=200):
 @app.route('/')
 def home():
     return html_response("<h1>AI Website Builder — Backend OK</h1>")
+
+
+@app.route('/api/list-models')
+def list_models():
+    """Call this to see exactly which models your API key can access."""
+    if not gemini_client:
+        return jsonify({"error": "Gemini client not initialised — check GEMINI_API_KEY"})
+    try:
+        models = gemini_client.models.list()
+        names = sorted([
+            m.name for m in models
+            if "generateContent" in (m.supported_actions or [])
+               or "generateContent" in str(getattr(m, "supported_generation_methods", ""))
+        ])
+        # Also include raw model objects for full detail
+        raw = [str(m.name) for m in gemini_client.models.list()]
+        return jsonify({
+            "generate_content_models": names,
+            "all_models": raw,
+            "active_model": ACTIVE_MODEL,
+            "candidates_being_tried": GEMINI_CANDIDATES,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 
 @app.route('/health')
