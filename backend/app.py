@@ -750,11 +750,140 @@ def download(slug):
         return html_r(f"<h1>Error: {e}</h1>", 500)
 
 # ════════════════════════════════════════════════════════════════
+#  TEMPLATE SUBMISSION ENDPOINT (for submit-template.html)
+# ════════════════════════════════════════════════════════════════
+
+def init_submission_db():
+    """Initialize submissions table"""
+    if not DATABASE_URL:
+        print("WARNING: DATABASE_URL missing")
+        return
+    try:
+        conn = get_db()
+        cur  = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS template_submissions (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                email TEXT NOT NULL,
+                template_name TEXT NOT NULL,
+                category TEXT,
+                preview_url TEXT,
+                description TEXT,
+                file_name TEXT,
+                file_size BIGINT,
+                file_path TEXT,
+                status TEXT DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        conn.commit()
+        cur.close()
+        conn.close()
+        print("✓ Submissions table ready")
+    except Exception as e:
+        print(f"✗ Submissions table error: {e}")
+
+# Initialize submission DB
+init_submission_db()
+
+# Configure maximum file size (50MB)
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB
+
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', '/tmp/template_submissions')
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+@app.route('/api/submit-template', methods=['POST'])
+def submit_template():
+    """Handle template submission with file upload (supports up to 50MB)"""
+    try:
+        # Get form fields
+        name = request.form.get('name', '').strip()
+        email = request.form.get('email', '').strip()
+        template_name = request.form.get('template_name', '').strip()
+        category = request.form.get('category', 'other').strip()
+        preview_url = request.form.get('preview_url', '').strip()
+        description = request.form.get('description', '').strip()
+        
+        # Validate required fields
+        if not all([name, email, template_name, description]):
+            return jsonify({"success": False, "message": "Missing required fields"}), 400
+        
+        # Validate email
+        if '@' not in email:
+            return jsonify({"success": False, "message": "Invalid email address"}), 400
+        
+        # Get file
+        if 'file' not in request.files:
+            return jsonify({"success": False, "message": "No file provided"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"success": False, "message": "No file selected"}), 400
+        
+        if not file.filename.lower().endswith('.zip'):
+            return jsonify({"success": False, "message": "Only ZIP files are allowed"}), 400
+        
+        # Check file size (50MB limit)
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)
+        
+        if file_size > 50 * 1024 * 1024:  # 50MB
+            return jsonify({"success": False, "message": "File is too large. Maximum size is 50MB"}), 413
+        
+        # Save file
+        timestamp = int(os.times()[4] * 1000)
+        safe_filename = f"{timestamp}_{re.sub(r'[^a-z0-9_.-]', '', file.filename.lower())}"
+        file_path = os.path.join(UPLOAD_FOLDER, safe_filename)
+        
+        file.save(file_path)
+        print(f"✓ File uploaded: {safe_filename} ({file_size / (1024*1024):.2f}MB)")
+        
+        # Save to database
+        try:
+            conn = get_db()
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO template_submissions 
+                (name, email, template_name, category, preview_url, description, file_name, file_size, file_path, status)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending')
+            """, (name, email, template_name, category, preview_url, description, safe_filename, file_size, file_path))
+            conn.commit()
+            cur.close()
+            conn.close()
+            print(f"✓ Submission saved to database")
+        except Exception as db_err:
+            print(f"✗ Database error: {db_err}")
+            # File was saved but database failed - still return success to user
+            return jsonify({"success": True, "message": "Submission received. We'll review and contact you soon."}), 200
+        
+        return jsonify({"success": True, "message": "Submission received. We'll review your template and contact you soon."}), 200
+        
+    except Exception as e:
+        print(f"✗ Submission error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({"success": False, "message": f"Server error: {str(e)[:100]}"}), 500
+
+@app.route('/api/submissions', methods=['GET'])
+def get_submissions():
+    """Get all template submissions (admin endpoint)"""
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("SELECT * FROM template_submissions ORDER BY created_at DESC")
+        submissions = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return jsonify({"success": True, "submissions": submissions}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+# ════════════════════════════════════════════════════════════════
 #  RUN SERVER
 # ════════════════════════════════════════════════════════════════
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-
-
-
