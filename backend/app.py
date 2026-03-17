@@ -823,9 +823,19 @@ def submit_template():
             category = request.form.get('category')
             preview_url = request.form.get('preview_url')
             description = request.form.get('description')
+
+            if not template_name or not name or not email:
+                return jsonify({"success": False, "message": "Missing required fields"}), 400
             
-            # Save file
-            filename = secure_filename(f"{template_name}_{file.filename}") if template_name else secure_filename(file.filename)
+            # Save file with timestamp prefix to prevent collisions
+            import time
+            timestamp = int(time.time())
+            safe_tmpl_name = secure_filename(template_name)
+            filename = secure_filename(f"{timestamp}_{safe_tmpl_name}_{file.filename}")
+            
+            if not os.path.exists(UPLOAD_FOLDER):
+                os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+                
             file_path = os.path.join(UPLOAD_FOLDER, filename)
             file.save(file_path)
             
@@ -846,7 +856,9 @@ def submit_template():
             
     except Exception as e:
         traceback.print_exc()
-        return jsonify({"success": False, "message": str(e)}), 500
+        if "permission denied" in str(e).lower():
+            return jsonify({"success": False, "message": "Server storage permission error"}), 500
+        return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
