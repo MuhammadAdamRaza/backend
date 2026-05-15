@@ -293,6 +293,7 @@ def build_prompt(data, variation_index):
     if not svc_list:
         svc_list = ["Professional Services", "Expert Consultation", "Quality Results"]
 
+    hero_url, card_url, _, _ = get_images(btype)
     p, s = colors[0], colors[1]
     svc_lines = "\n".join(f"  - {sv}" for sv in svc_list)
 
@@ -337,26 +338,74 @@ def build_prompt(data, variation_index):
 
     d = DESIGNS[variation_index % 3]
 
+    DESIGNS = [
+        {
+            "name": "Dark Bold Hero",
+            "font": "Montserrat",
+            "nav":  f"position fixed, background rgba(0,0,0,0.96), white logo '{name}', white nav links",
+            "hero": f"100vh height, background-image url('{hero_url}') cover with dark overlay rgba(0,0,0,0.6), centered white text, h1 font-size 4.5rem font-weight 900 Montserrat, subheading 1.2rem, CTA button background {p} color white border-radius 50px padding 18px 48px",
+            "services_bg": "#ffffff",
+            "card": f"white bg, box-shadow 0 4px 24px rgba(0,0,0,0.09), border-radius 12px, padding 32px, Font Awesome icon color {p} font-size 2rem, h3 font-weight 800, hover translateY(-6px)",
+            "why":  f"background {p}, white text, 4 tiles with stats (500+ Clients, 10 Yrs Experience, 4.9 Star Rating, 24/7 Support)",
+            "cta":  f"background linear-gradient(135deg, {p}, {s}), white text, white button",
+            "footer": "background #0a0a0a, white text",
+        },
+        {
+            "name": "Clean Corporate Split",
+            "font": "Inter",
+            "nav":  f"position fixed, background white, border-bottom 2px solid #f1f5f9, logo '{name}' color {p} font-weight 800",
+            "hero": f"CSS grid 2 columns, NO top padding, full height: LEFT column background {p} padding 80px 60px white text h1 3.5rem font-weight 800 subtext CTA button white color {p} border-radius 8px; RIGHT column background-image url('{hero_url}') cover center min-height 100vh",
+            "services_bg": "#f8fafc",
+            "card": f"white bg, border 1px solid #e2e8f0, border-radius 10px, padding 28px, icon color {p}, h3 font-weight 700 color {p}, hover box-shadow increase",
+            "why":  "background #1e293b (dark navy), white text, 4 stat tiles",
+            "cta":  "background #111827, white text, gradient button",
+            "footer": "background #1f2937, white text",
+        },
+        {
+            "name": "Vibrant Gradient Creative",
+            "font": "Poppins",
+            "nav":  f"position fixed, background linear-gradient(135deg, {p}, {s}), white logo '{name}' font-weight 900, white links",
+            "hero": f"background linear-gradient(135deg, {p} 0%, {s} 100%), min-height 92vh, flex center, h1 white font-size 5rem font-weight 900 letter-spacing -3px line-height 1.0, TWO buttons: (1) solid white color {p} border-radius 50px padding 18px 44px, (2) outline white transparent",
+            "services_bg": "#ffffff",
+            "card": f"white bg, border-top 4px solid {p}, border-radius 16px, padding 32px, icon inside circle background {p} color white, h3 font-weight 700, hover translateY(-6px) box-shadow increase",
+            "why":  f"background linear-gradient(135deg, {p}20, {s}20) light tint, colored text, 4 stat tiles white bg",
+            "cta":  f"background linear-gradient(135deg, {p}, {s}), white text, white button color {p}",
+            "footer": "background #0f172a, white text",
+        },
+    ]
+
+    d = DESIGNS[variation_index % 3]
+
     return (
-        "Output ONLY a complete, single-page HTML file. Start with <!DOCTYPE html>. End with </html>.\n"
+        "Output ONLY a complete HTML file. Start with <!DOCTYPE html>. End with </html>.\n"
         "Zero markdown. Zero backticks. Zero explanation.\n"
         "All CSS inside one <style> tag in <head>.\n"
-        "Use Font Awesome 6.5 and Google Fonts only.\n"
-        "CRITICAL: NO background-image URLs. Use ONLY CSS gradients for all backgrounds.\n\n"
-        f"BUSINESS: {name} in {location}\n"
-        f"PRIMARY COLOR: {p}, SECONDARY: {s}\n"
+        f"CRITICAL: Include <base href=\"{request.url_root}\"> inside <head>.\n"
+        "Use Font Awesome 6.5 and Google Fonts Montserrat/Inter/Poppins.\n"
+        "Images must use referrerpolicy=\"no-referrer\" for reliability.\n"
+        "Mobile responsive with @media(max-width:768px).\n\n"
+        f"BUSINESS: {name}\n"
+        f"INDUSTRY: {btype}\n"
+        f"LOCATION: {location}\n"
+        f"PRIMARY COLOR: {p}\n"
+        f"SECONDARY COLOR: {s}\n"
+        f"HERO IMAGE URL: {hero_url}\n"
+        f"ABOUT IMAGE URL: {card_url}\n\n"
+        f"SERVICES: {', '.join(svc_list)}\n\n"
         f"DESIGN STYLE: {d['name']}\n"
-        f"FONT: {d['font']}\n"
+        f"FONT: Load '{d['font']}' from Google Fonts\n"
         f"NAV: {d['nav']}\n"
         f"HERO: {d['hero']}\n"
-        f"SERVICES: {', '.join(svc_list)}\n\n"
-        "BUILD THESE SECTIONS:\n"
-        "1. Fixed Navbar (Services, About, Contact, Get Quote button)\n"
-        "2. Hero Section (with Gradient background, large H1, and CTA)\n"
-        "3. Services Grid (Clean cards with icons)\n"
-        "4. About Us (Two columns, gradient box on left, text on right)\n"
-        "5. Simple Footer\n\n"
-        "Write real marketing copy. No lorem ipsum.\n"
+        "BUILD THESE 8 SECTIONS IN ORDER:\n"
+        f"1. Fixed navigation: logo={name}, links=Services/About/Reviews/Contact, CTA button 'Get Quote'\n"
+        "2. Hero section: with industry-specific copy and background image\n"
+        "3. Services section: grid of cards with icons and descriptions\n"
+        f"4. About Us: two-column layout with image url('{card_url}')\n"
+        "5. Why Choose Us: 4 stat tiles\n"
+        "6. Testimonials: 3 professional reviews with stars\n"
+        f"7. Contact form: full layout with inputs\n"
+        f"8. Footer: with {name} and {location}\n\n"
+        f"Write high-end persuasive marketing copy for a {btype} business. NO lorem ipsum.\n\n"
         "<!DOCTYPE html>"
     )
 
