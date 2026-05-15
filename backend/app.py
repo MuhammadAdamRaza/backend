@@ -35,6 +35,8 @@ def _force_cors_headers(response):
     response.headers["Access-Control-Allow-Methods"] = "GET, HEAD, POST, PUT, DELETE, OPTIONS, PATCH"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept"
     response.headers["Access-Control-Max-Age"] = "86400"
+    # Allow embedding /view-design/* and /s/* in iframes on the marketing site (cross-origin).
+    response.headers.pop("X-Frame-Options", None)
     return response
 
 
@@ -744,8 +746,10 @@ async function pick(slug, idx){
 # ────────────────────────────────────────────────
 
 def html_r(body, status=200):
-    return Response(body.encode('utf-8'), status=status,
+    resp = Response(body.encode('utf-8'), status=status,
                     mimetype='text/html; charset=utf-8')
+    resp.headers['Content-Security-Policy'] = "frame-ancestors *"
+    return resp
 
 @app.route('/')
 def home():
