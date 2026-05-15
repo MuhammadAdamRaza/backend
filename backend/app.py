@@ -3,6 +3,7 @@ import json
 import re
 import random
 import traceback
+from html import escape as html_escape
 import zipfile
 from io import BytesIO
 
@@ -252,6 +253,7 @@ GEMINI_KEY = (
 
 # Short IDs work with google-genai; order is fastest / most available first.
 GEMINI_MODELS = [
+    "gemini-2.5-flash",
     "gemini-2.0-flash",
     "gemini-1.5-flash",
 ]
@@ -274,321 +276,270 @@ else:
     print("WARNING: GEMINI_API_KEY not set in environment variables")
 
 # ────────────────────────────────────────────────
-#  AI PROMPT  — 3 distinct design briefs
+#  PREMIUM TEMPLATES (static HTML — no AI / Gemini)
 # ────────────────────────────────────────────────
 
-def build_prompt(data, variation_index):
-    name     = data.get('businessName') or data.get('business_name', 'My Business')
-    btype    = data.get('businessType') or data.get('business_type', 'business')
-    location = data.get('location', 'London')
-    services = data.get('services', 'Professional Services')
+_PREMIUM_INDUSTRY = {
+    "plumber": {"label": "Plumbing & Heating", "hero": "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=1200&q=80", "team": "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&q=80", "pitch": "Gas-safe minded engineers with fast call-outs, transparent quotes, and trusted workmanship."},
+    "electrician": {"label": "Electrical Services", "hero": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=1200&q=80", "team": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=800&q=80", "pitch": "Qualified electricians for installs, fault finding, rewires, and safety certificates."},
+    "restaurant": {"label": "Restaurant & Café", "hero": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80", "team": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80", "pitch": "Seasonal menus, warm hospitality, and memorable dining experiences."},
+    "law": {"label": "Legal Services", "hero": "https://images.unsplash.com/photo-1589829545855-d10d557cf57f?w=1200&q=80", "team": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&q=80", "pitch": "Clear advice and disciplined case management focused on your outcome."},
+    "consulting": {"label": "Business Consulting", "hero": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&q=80", "team": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80", "pitch": "Strategy and growth programmes for ambitious UK small businesses."},
+    "fitness": {"label": "Gym & Fitness", "hero": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80", "team": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80", "pitch": "Expert coaching and training programmes for every fitness level."},
+    "realestate": {"label": "Real Estate", "hero": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80", "team": "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&q=80", "pitch": "Local insight, honest valuations, and smooth property transactions."},
+    "agency": {"label": "Creative Agency", "hero": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80", "team": "https://images.unsplash.com/photo-1529333166437-7750a6dd4a70?w=800&q=80", "pitch": "Brand, web, and marketing that helps UK businesses win more customers."},
+    "other": {"label": "Professional Services", "hero": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1200&q=80", "team": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80", "pitch": "Dependable expertise with transparent communication throughout."},
+}
 
-    # Force structural variety and high content density
-    styles = [
-        "Modern Glassmorphism with deep blue/purple gradients and floating cards.",
-        "Minimalist Corporate with clean white space, sharp lines, and royal blue accents.",
-        "Creative & Bold with vibrant colors, large typography, and asymmetric layouts."
+_PREMIUM_SERVICE_BLURBS = [
+    "Delivered by qualified specialists with clear timelines and written scope.",
+    "Trusted locally — flexible booking including urgent appointments.",
+    "Full walkthrough, plain-English summary, and follow-up after completion.",
+    "Completed to UK standards with documentation on request.",
+    "Safe, tidy workmanship with respect for your home or business.",
+    "Friendly team — no jargon, no pressure selling.",
+]
+
+_PREMIUM_TESTIMONIALS = [
+    ("James Mitchell", "Homeowner", "Punctual, tidy, and transparent on price from start to finish."),
+    ("Priya Sharma", "Business owner", "Understood our deadlines and delivered exactly as promised."),
+    ("David Hughes", "Property manager", "Reliable across multiple sites — professional every time."),
+]
+
+
+def _premium_parse_services(raw):
+    if isinstance(raw, list):
+        items = [str(s).strip() for s in raw if str(s).strip()]
+    else:
+        items = [s.strip() for s in str(raw or "").split(",") if s.strip()]
+    if not items:
+        items = ["Consultation", "Installation", "Ongoing support"]
+    while len(items) < 3:
+        items.append(items[-1])
+    return items[:6]
+
+
+def _premium_parse_colors(raw):
+    if isinstance(raw, list) and len(raw) >= 2:
+        return (
+            str(raw[0] or "#2563eb").strip(),
+            str(raw[1] or "#7c3aed").strip(),
+            str(raw[2] if len(raw) > 2 else "#f8fafc").strip(),
+        )
+    return "#2563eb", "#7c3aed", "#f8fafc"
+
+
+def build_premium_html(data, variation_index):
+    name_raw = data.get("businessName") or data.get("business_name") or "Your Business"
+    name = html_escape(name_raw)
+    btype = (data.get("businessType") or data.get("business_type") or "other").lower()
+    location = html_escape(data.get("location") or "the UK")
+    ind = _PREMIUM_INDUSTRY.get(btype, _PREMIUM_INDUSTRY["other"])
+    label = html_escape(ind["label"])
+    label_l = label.lower()
+    services = [html_escape(s) for s in _premium_parse_services(data.get("services"))]
+    primary, secondary, surface = _premium_parse_colors(data.get("colors"))
+    vi = int(variation_index) % 3
+
+    if vi == 0:
+        bg, text, card, muted = "#0b1220", "#f1f5f9", "#151f32", "#94a3b8"
+    elif vi == 1:
+        bg, text, card, muted = surface, "#0f172a", "#ffffff", "#64748b"
+    else:
+        bg, text, card, muted = "#1a1033", "#faf5ff", "#261b45", "#c4b5fd"
+
+    pitch = html_escape(ind["pitch"])
+    hero_img, team_img = ind["hero"], ind["team"]
+    email_slug = re.sub(r"[^a-z0-9]", "", name_raw.lower()) or "hello"
+    headlines = [
+        f"Trusted {label_l} specialists in {location}",
+        f"{name} — premium {label_l} you can rely on",
+        f"Expert {label_l} for {location} homes & businesses",
     ]
-    style = styles[variation_index % 3]
+    headline = headlines[vi]
+    overlay = f"linear-gradient(135deg,{primary}dd 0%,{secondary}aa 55%,{bg}ee 100%)"
 
-    prompt = f"""
-Generate a COMPLETELY FINISHED, professional, and full-length landing page for a business.
-Target Business: {name} ({btype})
-Location: {loc}
-Services to highlight: {services}
-Design Style: {style}
+    svc_blocks = []
+    icons = ["bi-stars", "bi-shield-check", "bi-clock-history", "bi-award", "bi-people", "bi-gear"]
+    for i, svc in enumerate(services):
+        svc_blocks.append(
+            f'<div class="col-md-6 col-lg-4"><div class="svc-card h-100">'
+            f'<div class="svc-icon" style="background:{primary}"><i class="bi {icons[i % 6]}"></i></div>'
+            f'<h3 class="h4 fw-bold mb-3">{svc}</h3>'
+            f'<p style="color:{muted}">{html_escape(_PREMIUM_SERVICE_BLURBS[i % len(_PREMIUM_SERVICE_BLURBS)])}</p>'
+            f"</div></div>"
+        )
+    svc_html = "".join(svc_blocks)
 
-CRITICAL STRUCTURAL REQUIREMENTS:
-1.  You MUST include at least 7-8 distinct sections:
-    -   Navigation (Sticky, transparent to solid on scroll)
-    -   Hero (Huge typography, dual buttons, background pattern)
-    -   Features Grid (3-4 cards with icons)
-    -   Detailed Services Section (Deep descriptions, not just titles)
-    -   'How It Works' Process Section (Step 1, 2, 3)
-    -   Testimonials Section (3 realistic reviews)
-    -   FAQ Section (At least 4 questions/answers)
-    -   Pricing or Lead Generation Form Card
-    -   Large, Multi-column Footer
+    testi_blocks = []
+    for person, role, quote in _PREMIUM_TESTIMONIALS:
+        testi_blocks.append(
+            f'<div class="col-md-4"><div class="testi-card h-100">'
+            f'<div class="text-warning mb-3">★★★★★</div><p class="mb-4">"{html_escape(quote)}"</p>'
+            f'<div class="d-flex gap-3 align-items-center"><div class="avatar">{html_escape(person[0])}</div>'
+            f"<div><strong>{html_escape(person)}</strong><br>"
+            f'<small style="color:{muted}">{html_escape(role)} · {location}</small></div>'
+            f"</div></div></div>"
+        )
+    testi_html = "".join(testi_blocks)
 
-2.  CONTENT QUALITY:
-    -   Write LONG, professional copy. Do NOT use short placeholders.
-    -   Explain WHY this business is the best in {loc}.
-    -   Use premium Google Fonts (like 'Plus Jakarta Sans' or 'Inter').
-    -   Include smooth hover effects and CSS animations.
+    price_blocks = []
+    for tier, price, desc, feats, featured in [
+        ("Essential", "From £99", "Straightforward jobs.", ["Site visit", "Written estimate", "Warranty"], False),
+        ("Professional", "From £249", "Most popular package.", ["Priority booking", "Premium parts", "12-mo support"], True),
+        ("Premium", "Custom", "Large or commercial jobs.", ["Account manager", "Flexible billing", "Maintenance"], False),
+    ]:
+        lis = "".join(
+            f'<li><i class="bi bi-check2-circle me-2" style="color:{primary}"></i>{html_escape(f)}</li>'
+            for f in feats
+        )
+        cls = " price-card pricing-featured" if featured else " price-card"
+        price_blocks.append(
+            f'<div class="col-lg-4"><div class="{cls.strip()}" style="border:1px solid {primary}40">'
+            f'<p class="fw-bold text-uppercase small" style="color:{primary}">{html_escape(tier)}</p>'
+            f'<h3 class="display-6 fw-bold">{html_escape(price)}</h3>'
+            f'<p style="color:{muted}">{html_escape(desc)}</p>'
+            f'<ul class="list-unstyled mb-4">{lis}</ul>'
+            f'<a href="#contact" class="btn w-100 btn-brand">Get quote</a></div></div>'
+        )
+    price_html = "".join(price_blocks)
 
-3.  TECHNICAL:
-    -   Return ONLY the raw HTML/CSS code.
-    -   Use Bootstrap 5.3 CDN for the layout.
-    -   Ensure all images use high-quality Unsplash URLs (e.g., https://images.unsplash.com/photo-...).
-    -   Ensure the code is at least 6,000+ characters long.
-    """
-    return prompt
-
-# ────────────────────────────────────────────────
-#  GENERATE HTML via Gemini
-# ────────────────────────────────────────────────
-
-def generate_html(data, variation_index):
-    """Bypasses AI and uses the high-quality professional template system directly."""
-    print(f"  [{variation_index}] Generating Premium Professional Template...")
-    return get_fallback_html(data, variation_index)
-
-def get_fallback_html(data, variation_index):
-    """Generates a premium, full-length professional template with 10+ sections."""
-    name = data.get('businessName') or data.get('business_name') or "Our Business"
-    industry = data.get('businessType') or "Services"
-    location = data.get('location') or "Local Area"
-    services_raw = data.get('services') or ""
-    services = services_raw.split(',') if isinstance(services_raw, str) else ["Quality Service", "Expert Solutions", "24/7 Support"]
-    
-    themes = [
-        {"bg": "#0f172a", "accent": "#3b82f6", "card": "#1e293b", "text": "#fff", "light": "rgba(255,255,255,0.05)"},
-        {"bg": "#ffffff", "accent": "#2563eb", "card": "#f8f9fa", "text": "#1e293b", "light": "#f1f5f9"},
-        {"bg": "#1e1b4b", "accent": "#818cf8", "card": "#312e81", "text": "#fff", "light": "rgba(255,255,255,0.03)"}
+    faq_items = [
+        (f"How fast can you help in {location}?", "We usually reply within 2 hours. Same-day slots often available."),
+        ("Are quotes free?", "Yes — clear written estimates before any work begins."),
+        (f"What areas do you cover?", f"{location} and surrounding postcodes. Message us to confirm."),
+        (f"Why choose {name}?", "Transparent pricing, qualified staff, and tidy, respectful work."),
     ]
-    t = themes[variation_index % 3]
-    
-    return f"""
-<!DOCTYPE html>
-<html lang="en">
+    faq_parts = []
+    for i, (q, a) in enumerate(faq_items):
+        faq_parts.append(
+            f'<div class="accordion-item" style="background:transparent">'
+            f'<h2 class="accordion-header"><button class="accordion-button collapsed" type="button" '
+            f'data-bs-toggle="collapse" data-bs-target="#f{vi}{i}">{q}</button></h2>'
+            f'<div id="f{vi}{i}" class="accordion-collapse collapse" data-bs-parent="#faq{vi}">'
+            f'<div class="accordion-body" style="color:{muted}">{html_escape(a)}</div></div></div>'
+        )
+    faq_html = "".join(faq_parts)
+
+    return f"""<!DOCTYPE html>
+<html lang="en-GB">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{name} | Premium {industry} in {location}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {{ --accent: {t['accent']}; }}
-        body {{ font-family: 'Plus Jakarta Sans', sans-serif; background: {t['bg']}; color: {t['text']}; line-height: 1.7; }}
-        .navbar {{ padding: 20px 0; background: {t['bg']}; }}
-        .hero {{ padding: 140px 0; background: radial-gradient(circle at 80% 20%, var(--accent), transparent 40%); }}
-        .section-padding {{ padding: 100px 0; }}
-        .btn-primary {{ background: var(--accent); border: none; padding: 18px 40px; border-radius: 14px; font-weight: 700; }}
-        .card {{ background: {t['card']}; border: none; border-radius: 24px; padding: 40px; height: 100%; color: inherit; transition: 0.3s; }}
-        .card:hover {{ transform: translateY(-10px); }}
-        .icon-box {{ width: 64px; height: 64px; background: var(--accent); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; margin-bottom: 25px; }}
-        .step-num {{ font-size: 4rem; font-weight: 800; opacity: 0.1; line-height: 1; }}
-        .blog-card {{ background: {t['light']}; border-radius: 20px; overflow: hidden; }}
-        .footer {{ padding: 80px 0; border-top: 1px solid rgba(128,128,128,0.1); }}
-    </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{name} | {label} — {location}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{{--p:{primary};--s:{secondary};--bg:{bg};--text:{text};--card:{card};--muted:{muted}}}
+body{{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);margin:0}}
+.nav-bar{{backdrop-filter:blur(10px);background:color-mix(in srgb,var(--bg) 92%,transparent);border-bottom:1px solid rgba(128,128,128,.12)}}
+.hero{{min-height:88vh;display:flex;align-items:center;position:relative}}
+.hero-img{{position:absolute;inset:0;background:url('{hero_img}') center/cover}}
+.hero-mask{{position:absolute;inset:0;background:{overlay}}}
+.hero-inner{{position:relative;z-index:2}}
+.section{{padding:88px 0}}
+.card-box,.svc-card,.testi-card,.price-card{{background:var(--card);border-radius:20px;padding:28px;border:1px solid rgba(128,128,128,.1)}}
+.svc-card:hover,.testi-card:hover{{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.1);transition:.25s}}
+.svc-icon{{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;margin-bottom:16px}}
+.btn-brand{{background:var(--p);color:#fff!important;padding:14px 28px;border-radius:12px;font-weight:700;text-decoration:none;display:inline-block;border:none}}
+.btn-outline-brand{{border:2px solid var(--p);color:var(--p)!important;padding:12px 26px;border-radius:12px;font-weight:700;text-decoration:none}}
+.stat-num{{font-size:2.2rem;font-weight:800;color:var(--p)}}
+.avatar{{width:44px;height:44px;border-radius:50%;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}}
+.cta-band{{background:linear-gradient(135deg,var(--p),var(--s));color:#fff;border-radius:24px;padding:56px 40px}}
+.pricing-featured{{border:2px solid var(--p)!important}}
+.badge-soft{{background:color-mix(in srgb,var(--p) 20%,transparent);padding:8px 14px;border-radius:999px;font-weight:600}}
+</style>
 </head>
 <body>
-    <nav class="navbar sticky-top">
-        <div class="container">
-            <a class="navbar-brand fw-bold fs-3 text-inherit" href="#">{name.upper()}</a>
-            <button class="btn btn-primary d-none d-md-block">Contact Us</button>
-        </div>
-    </nav>
+<nav class="navbar navbar-expand-lg nav-bar sticky-top py-3">
+<div class="container">
+<a class="navbar-brand fw-bold" href="#" style="color:var(--text)">{name}</a>
+<button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
+<div class="collapse navbar-collapse" id="nav">
+<ul class="navbar-nav ms-auto gap-lg-2 align-items-lg-center">
+<li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
+<li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+<li class="nav-item"><a class="nav-link" href="#reviews">Reviews</a></li>
+<li class="nav-item"><a class="btn btn-brand ms-lg-2" href="#contact">Free quote</a></li>
+</ul></div></div></nav>
+<header class="hero"><div class="hero-img"></div><div class="hero-mask"></div>
+<div class="container hero-inner"><div class="row align-items-center g-5">
+<div class="col-lg-7">
+<span class="badge-soft mb-3 d-inline-block"><i class="bi bi-geo-alt"></i> {location}</span>
+<h1 class="display-3 fw-bold mb-4">{headline}</h1>
+<p class="lead mb-4" style="color:var(--muted);max-width:36rem">{pitch}</p>
+<div class="d-flex flex-wrap gap-3 mb-4">
+<a href="#contact" class="btn-brand btn-lg">Book consultation</a>
+<a href="#services" class="btn-outline-brand btn-lg">Our services</a>
+</div>
+<p class="small" style="color:var(--muted)">✓ Insured &nbsp; ✓ Clear quotes &nbsp; ✓ Local team &nbsp; ✓ 5★ reviews</p>
+</div>
+<div class="col-lg-5 d-none d-lg-block">
+<img src="{hero_img}" class="img-fluid rounded-4 shadow" alt="{name}" style="max-height:420px;width:100%;object-fit:cover">
+</div></div></div></header>
+<section class="section pt-0"><div class="container"><div class="row g-4 text-center card-box">
+<div class="col-6 col-md-3"><div class="stat-num">15+</div><div style="color:var(--muted)">Years exp.</div></div>
+<div class="col-6 col-md-3"><div class="stat-num">2.4k</div><div style="color:var(--muted)">Jobs done</div></div>
+<div class="col-6 col-md-3"><div class="stat-num">98%</div><div style="color:var(--muted)">Recommend</div></div>
+<div class="col-6 col-md-3"><div class="stat-num">24/7</div><div style="color:var(--muted)">Emergency</div></div>
+</div></div></section>
+<section class="section" id="services"><div class="container">
+<h2 class="display-5 fw-bold text-center mb-2">Services in {location}</h2>
+<p class="text-center mb-5" style="color:var(--muted)">{name} — professional {label_l} with clear communication.</p>
+<div class="row g-4">{svc_html}</div></div></section>
+<section class="section" id="about"><div class="container"><div class="row g-5 align-items-center">
+<div class="col-lg-6"><img src="{team_img}" class="img-fluid rounded-4 shadow" alt="Team"></div>
+<div class="col-lg-6">
+<h2 class="display-5 fw-bold mb-4">About {name}</h2>
+<p class="fs-5" style="color:var(--muted)">We are a {label_l} team serving {location}. Honest advice, fair pricing, and work we are proud to put our name on.</p>
+<ul class="list-unstyled fs-5 mt-4">
+<li class="mb-2"><i class="bi bi-check-circle-fill me-2" style="color:var(--p)"></i> Written quotes first</li>
+<li class="mb-2"><i class="bi bi-check-circle-fill me-2" style="color:var(--p)"></i> Tidy, respectful visits</li>
+<li><i class="bi bi-check-circle-fill me-2" style="color:var(--p)"></i> UK-based support</li>
+</ul></div></div></div></section>
+<section class="section" id="reviews"><div class="container">
+<h2 class="display-5 fw-bold text-center mb-5">Customer reviews</h2>
+<div class="row g-4">{testi_html}</div></div></section>
+<section class="section" id="pricing"><div class="container">
+<h2 class="display-5 fw-bold text-center mb-5">Pricing</h2>
+<div class="row g-4">{price_html}</div></div></section>
+<section class="section"><div class="container"><div class="cta-band text-center">
+<h2 class="fw-bold mb-3">Ready to work with {name}?</h2>
+<p class="lead mb-4">Free quote — we respond within hours.</p>
+<a href="#contact" class="btn btn-light btn-lg fw-bold">Get started</a>
+</div></div></section>
+<section class="section pt-0"><div class="container" style="max-width:760px">
+<h2 class="fw-bold text-center mb-4">FAQ</h2>
+<div class="accordion" id="faq{vi}">{faq_html}</div></div></section>
+<section class="section" id="contact"><div class="container"><div class="row g-5">
+<div class="col-lg-5">
+<h2 class="display-6 fw-bold mb-4">Contact us</h2>
+<p style="color:var(--muted)">Phone: 0800 123 4567<br>Email: hello@{email_slug}.co.uk<br>Hours: Mon–Sat 8am–6pm</p>
+</div>
+<div class="col-lg-7"><div class="card-box">
+<form class="row g-3">
+<div class="col-md-6"><input class="form-control" placeholder="Your name"></div>
+<div class="col-md-6"><input class="form-control" placeholder="Phone"></div>
+<div class="col-12"><input type="email" class="form-control" placeholder="Email"></div>
+<div class="col-12"><textarea class="form-control" rows="4" placeholder="Tell us about your project…"></textarea></div>
+<div class="col-12"><button type="button" class="btn-brand w-100">Send enquiry</button></div>
+</form></div></div></div></section>
+<footer class="section pt-0 pb-4 border-top"><div class="container text-center">
+<p class="mb-0 small" style="color:var(--muted)">&copy; 2026 {name}. {label} in {location}.</p>
+</div></footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body></html>"""
 
-    <header class="hero">
-        <div class="container text-center text-lg-start">
-            <div class="row align-items-center">
-                <div class="col-lg-7">
-                    <span class="badge bg-primary px-3 py-2 rounded-pill mb-4">#1 Rated {industry} in {location}</span>
-                    <h1 class="display-1 fw-bolder mb-4">Mastering {industry} for a Better Tomorrow.</h1>
-                    <p class="lead fs-3 mb-5 opacity-75">We provide elite, reliable solutions in {location} that empower your business and simplify your life.</p>
-                    <div class="d-flex gap-3 justify-content-center justify-content-lg-start">
-                        <button class="btn btn-primary btn-lg">Get Started</button>
-                        <button class="btn btn-outline-secondary btn-lg rounded-4">Learn More</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
 
-    <section class="section-padding" style="background: {t['light']};">
-        <div class="container text-center">
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <h2 class="display-4 fw-bold mb-4">The Problem with Traditional {industry}</h2>
-                    <p class="fs-4 opacity-75 mb-5">Most services in {location} are slow, expensive, and unreliable. At {name}, we've built a better way to handle your {industry} needs, focusing on speed and quality above all else.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+def generate_html(data, variation_index):
+    """Premium static templates only — reliable, no Gemini/API errors."""
+    print(f"  [{variation_index}] Building premium template...")
+    return build_premium_html(data, variation_index)
 
-    <section class="section-padding">
-        <div class="container">
-            <h2 class="text-center display-4 fw-bold mb-5">Core Features</h2>
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="icon-box">✓</div>
-                        <h3>Certified Expertise</h3>
-                        <p class="opacity-75">Our team consists of the most highly trained {industry} professionals in {location}.</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="icon-box">⚡</div>
-                        <h3>Rapid Response</h3>
-                        <p class="opacity-75">We value your time. Our workflow is optimized for the fastest turnaround in the industry.</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="icon-box">♥</div>
-                        <h3>Client First</h3>
-                        <p class="opacity-75">Every solution we build at {name} starts with understanding your unique goals.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <section class="section-padding" style="background: {t['light']};">
-        <div class="container">
-            <h2 class="text-center display-4 fw-bold mb-5">How It Works</h2>
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="d-flex gap-3">
-                        <span class="step-num">01</span>
-                        <div><h3>Consultation</h3><p class="opacity-75">We discuss your specific {industry} requirements in {location}.</p></div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="d-flex gap-3">
-                        <span class="step-num">02</span>
-                        <div><h3>Implementation</h3><p class="opacity-75">Our experts deploy the custom solution built specifically for {name}.</p></div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="d-flex gap-3">
-                        <span class="step-num">03</span>
-                        <div><h3>Optimization</h3><p class="opacity-75">We provide ongoing support to ensure long-term success for your project.</p></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+def get_fallback_html(data, variation_index):
+    return build_premium_html(data, variation_index)
 
-    <section class="section-padding">
-        <div class="container text-center">
-            <h2 class="display-4 fw-bold mb-5">What People Say</h2>
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card">
-                        <p class="fs-5 italic opacity-75">"{name} completely changed how we view {industry}. Their team in {location} is second to none!"</p>
-                        <h4 class="mt-4">— John Smith</h4>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <p class="fs-5 italic opacity-75">"Professional, fast, and exactly what we needed. Highly recommend for any {industry} work."</p>
-                        <h4 class="mt-4">— Sarah Johnson</h4>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <p class="fs-5 italic opacity-75">"The attention to detail is amazing. They are truly the leaders in {location}."</p>
-                        <h4 class="mt-4">— Michael Brown</h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="section-padding" style="background: {t['light']};">
-        <div class="container">
-            <div class="row align-items-center g-5">
-                <div class="col-lg-6">
-                    <h2 class="display-3 fw-bold mb-4">Our Mission</h2>
-                    <p class="fs-4 opacity-75 mb-4">At {name}, our "Why" is simple: We believe that high-quality {industry} services should be accessible, transparent, and built on trust.</p>
-                    <p class="fs-5 opacity-50">Since our founding in {location}, we have been humanizing the brand experience by connecting with our clients on a personal level.</p>
-                </div>
-                <div class="col-lg-6">
-                    <div class="card p-0 overflow-hidden">
-                        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80" class="img-fluid" alt="Our Team">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="section-padding">
-        <div class="container">
-            <h2 class="text-center display-4 fw-bold mb-5">Resource Library</h2>
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="blog-card p-4">
-                        <h4 class="mb-3">Mastering {industry} in 2026</h4>
-                        <p class="opacity-75">The latest trends and strategies for success in {location}.</p>
-                        <a href="#" class="text-primary fw-bold">Read More &rarr;</a>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="blog-card p-4">
-                        <h4 class="mb-3">Why {name} Leads the Market</h4>
-                        <p class="opacity-75">A deep dive into our unique workflow and results.</p>
-                        <a href="#" class="text-primary fw-bold">Read More &rarr;</a>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="blog-card p-4">
-                        <h4 class="mb-3">Avoiding Common Pitfalls</h4>
-                        <p class="opacity-75">Expert advice on managing your {industry} projects effectively.</p>
-                        <a href="#" class="text-primary fw-bold">Read More &rarr;</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="section-padding" style="background: {t['light']};">
-        <div class="container">
-            <h2 class="text-center display-4 fw-bold mb-5">FAQ</h2>
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <div class="accordion accordion-flush" id="faqAcc">
-                        <div class="accordion-item bg-transparent text-inherit border-bottom">
-                            <h2 class="accordion-header"><button class="accordion-button bg-transparent text-inherit collapsed py-4 fs-4 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#q1">How fast can you start in {location}?</button></h2>
-                            <div id="q1" class="accordion-collapse collapse" data-bs-parent="#faqAcc"><div class="accordion-body fs-5 opacity-75">We typically begin work within 24-48 hours of your inquiry.</div></div>
-                        </div>
-                        <div class="accordion-item bg-transparent text-inherit border-bottom">
-                            <h2 class="accordion-header"><button class="accordion-button bg-transparent text-inherit collapsed py-4 fs-4 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#q2">What makes {name} different?</button></h2>
-                            <div id="q2" class="accordion-collapse collapse" data-bs-parent="#faqAcc"><div class="accordion-body fs-5 opacity-75">Our focus on innovation, transparent pricing, and deep experience in {industry}.</div></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="section-padding" id="contact">
-        <div class="container">
-            <div class="row align-items-center g-5">
-                <div class="col-lg-6">
-                    <h2 class="display-3 fw-bold mb-4">Ready to elevate your project?</h2>
-                    <p class="fs-4 opacity-75 mb-5">Contact our team in {location} today and let's build something incredible together.</p>
-                </div>
-                <div class="col-lg-6">
-                    <div class="card" style="border: 1px solid rgba(128,128,128,0.2);">
-                        <form>
-                            <div class="mb-4"><input type="text" class="form-control py-3" placeholder="Full Name"></div>
-                            <div class="mb-4"><input type="email" class="form-control py-3" placeholder="Email Address"></div>
-                            <div class="mb-4"><textarea class="form-control" rows="4" placeholder="How can we help?"></textarea></div>
-                            <button class="btn btn-primary w-100 py-3">Send Message</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <footer class="footer">
-        <div class="container text-center">
-            <h2 class="fw-bold mb-4">{name}</h2>
-            <div class="d-flex justify-content-center gap-4 mb-4 opacity-50">
-                <a href="#" class="text-inherit">Twitter</a>
-                <a href="#" class="text-inherit">Instagram</a>
-                <a href="#" class="text-inherit">LinkedIn</a>
-            </div>
-            <p class="opacity-50">&copy; 2026. All rights reserved. Professional {industry} Solutions in {location}.</p>
-        </div>
-    </footer>
-</body>
-</html>
-"""
 
 # ────────────────────────────────────────────────
 #  CONVERSION BANNER
