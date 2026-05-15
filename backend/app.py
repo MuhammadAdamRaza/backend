@@ -327,23 +327,22 @@ def build_prompt(data, variation_index):
         "Output ONLY a complete, professional HTML file. Start with <!DOCTYPE html>. End with </html>.\n"
         "Zero markdown. Zero explanation. No preamble.\n"
         "All CSS in one <style> tag. Mobile responsive.\n"
-        f"Include <base href=\"{request.url_root}\"> in <head>.\n"
-        "Use Font Awesome 6.5 and Google Fonts.\n"
-        "CRITICAL: For every background-image, ALWAYS set a background-color gradient fallback first.\n\n"
+        f"Include <base href=\"https://backend-ten-omega-72.vercel.app/\"> in <head>.\n"
+        "Use Font Awesome 6.5 and Google Fonts.\n\n"
         f"BUSINESS: {name} in {location} ({btype})\n"
         f"COLORS: Primary {p}, Secondary {s}\n"
         f"SERVICES: {', '.join(svc_list)}\n\n"
         f"STYLE: {d['name']} ({d['font']})\n"
         "MANDATORY SECTIONS (BUILD ALL 8 IN ORDER):\n"
         "1. Navbar: logo, links, 'Get Quote' button\n"
-        f"2. Hero: Background gradient {p} to {s} + url('{hero_url}') overlay, huge headline\n"
-        "3. Services: Grid of 3 cards with icons\n"
-        f"4. About: 2-column layout (Img url('{card_url}') + Text)\n"
+        f"2. Hero: Full height, background url('{hero_url}') center/cover, dark overlay, white text, huge headline\n"
+        "3. Services: Grid of cards with icons\n"
+        f"4. About: 2-column layout with image url('{card_url}')\n"
         "5. Why Us: 4 icon-stat tiles\n"
-        "6. Reviews: 3 customer testimonials with stars\n"
-        "7. Contact: Form with inputs and submit button\n"
-        "8. Footer: Copyright 2025\n\n"
-        "Write real marketing copy. Use industry terms. BE CONCISE to ensure fast generation.\n"
+        "6. Reviews: 3 testimonials with stars\n"
+        "7. Contact: Full form section\n"
+        "8. Footer: Simple links and copyright\n\n"
+        f"Write expert marketing copy for a {btype}. NO lorem ipsum.\n"
         "<!DOCTYPE html>"
     )
 
@@ -867,9 +866,10 @@ def generate_one(slug, idx):
 
         base = request.host_url.rstrip('/')
         return jsonify({
-            "success":     True,
+            "success":      True,
             "variation_id": idx,
             "preview_url":  f"{base}/view-design/{slug}/{idx}",
+            "html_content": html,
             "all_done":     idx == 2,
         })
     except Exception as e:
