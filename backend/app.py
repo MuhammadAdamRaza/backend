@@ -335,14 +335,20 @@ def build_prompt(data, variation_index):
         f"COLORS: Primary {p}, Secondary {s}\n"
         f"SERVICES: {', '.join(svc_list)}\n\n"
         f"DESIGN STYLE: {d['name']}\n"
-        "2. Hero section: with industry-specific copy and background image\n"
-        "3. Services section: grid of cards with icons and descriptions\n"
-        f"4. About Us: two-column layout with image url('{card_url}')\n"
-        "5. Why Choose Us: 4 stat tiles\n"
-        "6. Testimonials: 3 professional reviews with stars\n"
-        f"7. Contact form: full layout with inputs\n"
-        f"8. Footer: with {name} and {location}\n\n"
-        f"Write high-end persuasive marketing copy for a {btype} business. NO lorem ipsum.\n\n"
+        f"FONT: {d['font']}\n"
+        f"NAVBAR STYLE: {d['nav']}\n"
+        f"HERO STYLE: {d['hero']}\n"
+        f"ABOUT MEDIA STYLE: {d['about_media']}\n\n"
+        "MANDATORY SECTIONS (BUILD ALL 8 IN ORDER):\n"
+        "1. Fixed Navbar: logo, 4 nav links, and 'Get Quote' button\n"
+        f"2. Hero: full-height with background image url('{hero_url}') and professional headline about {name}\n"
+        "3. Services Grid: 3-column layout with icons and descriptions for: " + ", ".join(svc_list) + "\n"
+        f"4. About Us: 2-column layout with media url('{card_url}') and text about {name} in {location}\n"
+        "5. Why Choose Us: 4 icon-stat tiles (e.g. 24/7 Support, Certified Team, etc.)\n"
+        "6. Testimonials: 3 customer review cards with 5-star ratings\n"
+        "7. Contact: Full section with Name, Email, Phone, Message inputs and Submit button\n"
+        "8. Footer: Copyright and social icon links\n\n"
+        f"Write expert, high-end marketing copy for a professional {btype}. NO lorem ipsum.\n"
         "<!DOCTYPE html>"
     )
 
@@ -409,16 +415,29 @@ def generate_html(data, variation_index):
                 ACTIVE_MODEL = model_name
                 print(f"  [{variation_index}] OK {model_name} ({len(raw):,} chars)")
 
-                if "```html" in raw:
-                    raw = raw.split("```html", 1)[1].split("```", 1)[0].strip()
+                # Robust cleaning: Find the first <!DOCTYPE or <html and last </html>
+                low = raw.lower()
+                start_idx = low.find("<!doctype")
+                if start_idx == -1: start_idx = low.find("<html")
+                end_idx = low.rfind("</html>")
+                
+                if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                    raw = raw[start_idx : end_idx + 7].strip()
                 elif "```" in raw:
-                    raw = raw.split("```", 1)[1].split("```", 1)[0].strip()
+                    if "```html" in raw:
+                        raw = raw.split("```html", 1)[1].split("```", 1)[0].strip()
+                    else:
+                        raw = raw.split("```", 1)[1].split("```", 1)[0].strip()
 
-                if not raw.lower().startswith("<!doctype"):
+                if not raw.lower().startswith("<!doctype") and not raw.lower().startswith("<html"):
                     raw = "<!DOCTYPE html>\n" + raw
 
-                if "<meta charset" not in raw.lower():
+                if "<meta charset" not in raw.lower() and "<head>" in raw.lower():
                     raw = raw.replace("<head>", "<head>\n<meta charset=\"UTF-8\">", 1)
+
+                if len(raw) < 400:
+                    print(f"  [{variation_index}] {model_name} output too short ({len(raw)}), retrying...")
+                    continue
 
                 LAST_AI_ERROR = ""
                 return raw
