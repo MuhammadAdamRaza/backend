@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from werkzeug.utils import secure_filename
+from werkzeug.exceptions import HTTPException
 
 load_dotenv()
 
@@ -37,8 +38,42 @@ def _force_cors_headers(response):
     return response
 
 
-UPLOAD_FOLDER = 'uploads/templates'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+def _corsify(resp):
+    resp.headers.setdefault("Access-Control-Allow-Origin", "*")
+    resp.headers.setdefault(
+        "Access-Control-Allow-Methods",
+        "GET, HEAD, POST, PUT, DELETE, OPTIONS, PATCH",
+    )
+    resp.headers.setdefault(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization, X-Requested-With, Accept",
+    )
+    return resp
+
+
+@app.errorhandler(Exception)
+def _handle_any_exception(exc):
+    """Uncaught errors skip @app.after_request; without CORS the browser reports a misleading CORS failure."""
+    if isinstance(exc, HTTPException):
+        resp = exc.get_response()
+        return _corsify(resp)
+    traceback.print_exc()
+    safe = str(exc) if app.debug else "Server error — see Vercel function logs for details."
+    r = jsonify({"success": False, "message": safe})
+    r.status_code = 500
+    return _corsify(r)
+
+
+# Vercel serverless filesystem is read-only except /tmp — avoid crashing on import.
+_SERVERLESS = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+if _SERVERLESS:
+    UPLOAD_FOLDER = os.path.join("/tmp", "awake_uploads", "templates")
+else:
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads", "templates")
+try:
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+except OSError:
+    pass
 
 # ────────────────────────────────────────────────
 #  CATEGORY IMAGES  (curated Unsplash IDs)
@@ -149,8 +184,44 @@ def init_db():
     except Exception as e:
         print(f"DB init error: {e}")
 
-with app.app_context():
-    init_db()
+
+_init_db_ran = False
+
+
+def _lazy_init_db():
+    global _init_db_ran
+    if _init_db_ran:
+        return
+    _init_db_ran = True
+    with app.app_context():
+        init_db()
+
+
+def _route_needs_migrations(path):
+    if not path:
+        return False
+    base = path.rstrip('/') or '/'
+    if base in ('/health', '/api/health'):
+        return False
+    if path.startswith('/api/'):
+        return True
+    if path.startswith('/view-design/'):
+        return True
+    if path.startswith('/s/'):
+        return True
+    if path.startswith('/download/'):
+        return True
+    return False
+
+
+@app.before_request
+def _run_migrations_once():
+    if request.method == 'OPTIONS':
+        return
+    if not _route_needs_migrations(request.path):
+        return
+    _lazy_init_db()
+
 
 # ────────────────────────────────────────────────
 #  GEMINI AI  (only — no OpenAI)
@@ -683,15 +754,27 @@ def home():
 def build_page():
     return html_r(FORM_HTML)
 
-@app.route('/health')
-def health():
-    return jsonify({
+def _health_payload():
+    return {
         "status": "ok",
         "gemini": bool(gemini_client),
         "active_model": ACTIVE_MODEL,
         "last_error": LAST_AI_ERROR or "none",
         "db": bool(DATABASE_URL),
-    })
+    }
+
+
+@app.route('/health')
+def health():
+    return jsonify(_health_payload())
+
+
+@app.route('/api/health', methods=['GET', 'HEAD', 'OPTIONS'])
+def api_health():
+    if request.method == 'OPTIONS':
+        return '', 204
+    return jsonify(_health_payload())
+
 
 @app.route('/api/debug')
 def debug():
@@ -717,6 +800,11 @@ def list_models():
 def start_generation():
     if request.method == 'OPTIONS':
         return '', 204
+    if not DATABASE_URL:
+        return jsonify({
+            "success": False,
+            "message": "DATABASE_URL is not set on the server. Add it in Vercel → Project → Settings → Environment Variables.",
+        }), 503
     try:
         data = request.get_json()
         if not data or not data.get('businessName'):
