@@ -910,12 +910,19 @@ def select_design():
 def view_variation(slug, idx):
     try:
         conn = get_db()
-        cur  = conn.cursor()
+        cur  = conn.cursor(cursor_factory=RealDictCursor)
         cur.execute("SELECT html_content FROM variations WHERE site_slug=%s AND variation_index=%s",(slug,idx))
         row = cur.fetchone()
+        cur.execute("SELECT * FROM sites WHERE slug=%s", (slug,))
+        site = cur.fetchone()
         conn.close()
-        if row: return html_r(row[0])
-        return html_r("<h1>Not found</h1>", 404)
+        if not row:
+            return html_r("<h1>Not found</h1>", 404)
+        html = row['html_content']
+        if site:
+            base = request.host_url.rstrip('/')
+            html = inject_banner(html, dict(site), slug, base)
+        return html_r(html)
     except Exception as e:
         return html_r(f"<h1>Error: {e}</h1>", 500)
 
