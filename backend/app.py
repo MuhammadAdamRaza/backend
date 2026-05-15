@@ -452,7 +452,8 @@ def generate_html(data, variation_index):
                 eu = str(me).upper()
                 LAST_AI_ERROR = str(me)
                 if any(x in eu for x in ["429", "RESOURCE_EXHAUSTED", "QUOTA"]):
-                    print(f"  [{variation_index}] {model_name} quota — next model")
+                    print(f"  [{variation_index}] {model_name} quota — sleeping 4s then next model")
+                    time.sleep(4)
                     break
                 if any(x in eu for x in ["404", "NOT_FOUND", "NOT FOUND"]):
                     print(f"  [{variation_index}] {model_name} not found — next model")
