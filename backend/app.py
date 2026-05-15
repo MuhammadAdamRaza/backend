@@ -459,6 +459,7 @@ def generate_html(data, variation_index):
 # ────────────────────────────────────────────────
 
 def inject_banner(html, site, slug, base_url):
+    """Optional marketing strip (not used on final save — keeps /s/<slug> a normal page)."""
     name = site.get('business_name', 'Your Business')
     btype = site.get('business_type', 'business')
     _, _, emoji, accent = get_category_info(btype)
@@ -887,16 +888,13 @@ def select_design():
         if not row:
             conn.close()
             return jsonify({"success": False, "message": "Design not found"}), 404
-        cur.execute("SELECT * FROM sites WHERE slug=%s", (slug,))
-        site = cur.fetchone()
-        base = request.host_url.rstrip('/')
-        final = inject_banner(row['html_content'], dict(site), slug, base)
         cur.execute("""INSERT INTO final_sites (site_slug,html_content)
             VALUES (%s,%s) ON CONFLICT (site_slug) DO UPDATE SET html_content=EXCLUDED.html_content""",
-            (slug, final))
+            (slug, row['html_content']))
         cur.execute("UPDATE sites SET status='COMPLETED' WHERE slug=%s", (slug,))
         conn.commit()
         cur.close(); conn.close()
+        base = request.host_url.rstrip('/')
         return jsonify({"success":True,"previewUrl":f"{base}/s/{slug}","downloadUrl":f"{base}/download/{slug}"})
     except Exception as e:
         traceback.print_exc()
