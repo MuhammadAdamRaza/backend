@@ -168,12 +168,16 @@ def init_db():
         # Add unique constraint safely
         cur.execute("""
             DO $$ BEGIN
+                -- Clean up any existing duplicates before adding constraint
+                DELETE FROM variations a USING variations b
+                WHERE a.id < b.id 
+                AND a.site_slug = b.site_slug 
+                AND a.variation_index = b.variation_index;
+
                 IF NOT EXISTS (
-                    SELECT 1 FROM pg_constraint
-                    WHERE conname = 'variations_slug_idx_key'
+                    SELECT 1 FROM pg_constraint WHERE conname = 'variations_slug_idx_key'
                 ) THEN
-                    ALTER TABLE variations
-                    ADD CONSTRAINT variations_slug_idx_key UNIQUE (site_slug, variation_index);
+                    ALTER TABLE variations ADD CONSTRAINT variations_slug_idx_key UNIQUE (site_slug, variation_index);
                 END IF;
             END$$;
         """)
@@ -249,10 +253,7 @@ GEMINI_KEY = (
 # Short IDs work with google-genai; order is fastest / most available first.
 GEMINI_MODELS = [
     "gemini-2.0-flash",
-    "gemini-2.5-flash",
     "gemini-1.5-flash",
-    "gemini-1.5-flash-8b",
-    "gemini-2.0-flash-lite",
 ]
 
 gemini_client = None
@@ -281,185 +282,313 @@ def build_prompt(data, variation_index):
     btype    = data.get('businessType') or data.get('business_type', 'business')
     location = data.get('location', 'London')
     services = data.get('services', 'Professional Services')
-    colors   = data.get('colors') or ["#2563eb", "#7c3aed", "#f8fafc"]
 
-    if isinstance(colors, str):
-        try:    colors = json.loads(colors)
-        except: colors = ["#2563eb", "#7c3aed", "#f8fafc"]
-    if not colors or len(colors) < 3:
-        colors = ["#2563eb", "#7c3aed", "#f8fafc"]
-
-    svc_list = [s.strip() for s in str(services).split(',') if s.strip()]
-    if not svc_list:
-        svc_list = ["Professional Services", "Expert Consultation", "Quality Results"]
-
-    hero_url, card_url, _, _ = get_images(btype)
-    p, s = colors[0], colors[1]
-
-    # Define 3 distinct design directions
-    DESIGNS = [
-        {
-            "name": "Modern Dark Bold",
-            "font": "Montserrat",
-            "nav":  f"position fixed, background rgba(0,0,0,0.96), white logo '{name}', white nav links",
-            "hero": f"100vh height, background-image url('{hero_url}') cover center, dark overlay rgba(0,0,0,0.65), centered white text, h1 4.5rem font-weight 900, subtext 1.2rem, large {p} CTA button",
-            "about_media": f"background-image url('{card_url}') cover center, border-radius 20px, box-shadow 0 20px 40px rgba(0,0,0,0.1)",
-        },
-        {
-            "name": "Clean Split Corporate",
-            "font": "Inter",
-            "nav":  f"position fixed, background #ffffff, border-bottom 1px solid #eee, logo '{name}' color {p}, dark links",
-            "hero": f"CSS Grid 2 cols: LEFT white bg, {p} text, h1 3.8rem, CTA button; RIGHT background-image url('{hero_url}') cover center",
-            "about_media": f"background-image url('{card_url}') cover center, border-radius 12px, border 8px solid white, box-shadow 0 10px 30px rgba(0,0,0,0.05)",
-        },
-        {
-            "name": "Creative Gradient Tech",
-            "font": "Poppins",
-            "nav":  f"position fixed, background linear-gradient(to right, {p}, {s}), white logo '{name}', white links",
-            "hero": f"background linear-gradient(135deg, {p}ee, {s}ee), background-image url('{hero_url}') cover blend-mode multiply, 90vh height, flex-center, white text, h1 5rem font-weight 800",
-            "about_media": f"background linear-gradient(45deg, {p}, {s}), border-radius 30px, padding 40px, large white FontAwesome icon matching {btype}",
-        },
+    # Force structural variety and high content density
+    styles = [
+        "Modern Glassmorphism with deep blue/purple gradients and floating cards.",
+        "Minimalist Corporate with clean white space, sharp lines, and royal blue accents.",
+        "Creative & Bold with vibrant colors, large typography, and asymmetric layouts."
     ]
+    style = styles[variation_index % 3]
 
-    d = DESIGNS[variation_index % 3]
+    prompt = f"""
+Generate a COMPLETELY FINISHED, professional, and full-length landing page for a business.
+Target Business: {name} ({btype})
+Location: {loc}
+Services to highlight: {services}
+Design Style: {style}
 
-    return (
-        "Output ONLY a complete, professional HTML file. Start with <!DOCTYPE html>. End with </html>.\n"
-        "Zero markdown. Zero explanation. No preamble.\n"
-        "All CSS in one <style> tag. Mobile responsive.\n"
-        f"Include <base href=\"https://backend-ten-omega-72.vercel.app/\"> in <head>.\n"
-        "Use Font Awesome 6.5 and Google Fonts.\n\n"
-        f"BUSINESS: {name} in {location} ({btype})\n"
-        f"COLORS: Primary {p}, Secondary {s}\n"
-        f"SERVICES: {', '.join(svc_list)}\n\n"
-        f"STYLE: {d['name']} ({d['font']})\n"
-        "MANDATORY SECTIONS (BUILD ALL 8 IN ORDER):\n"
-        "1. Navbar: logo, links, 'Get Quote' button\n"
-        f"2. Hero: Full height, background url('{hero_url}') center/cover, dark overlay, white text, huge headline\n"
-        "3. Services: Grid of cards with icons\n"
-        f"4. About: 2-column layout with image url('{card_url}')\n"
-        "5. Why Us: 4 icon-stat tiles\n"
-        "6. Reviews: 3 testimonials with stars\n"
-        "7. Contact: Full form section\n"
-        "8. Footer: Simple links and copyright\n\n"
-        f"Write expert marketing copy for a {btype}. NO lorem ipsum.\n"
-        "<!DOCTYPE html>"
-    )
+CRITICAL STRUCTURAL REQUIREMENTS:
+1.  You MUST include at least 7-8 distinct sections:
+    -   Navigation (Sticky, transparent to solid on scroll)
+    -   Hero (Huge typography, dual buttons, background pattern)
+    -   Features Grid (3-4 cards with icons)
+    -   Detailed Services Section (Deep descriptions, not just titles)
+    -   'How It Works' Process Section (Step 1, 2, 3)
+    -   Testimonials Section (3 realistic reviews)
+    -   FAQ Section (At least 4 questions/answers)
+    -   Pricing or Lead Generation Form Card
+    -   Large, Multi-column Footer
+
+2.  CONTENT QUALITY:
+    -   Write LONG, professional copy. Do NOT use short placeholders.
+    -   Explain WHY this business is the best in {loc}.
+    -   Use premium Google Fonts (like 'Plus Jakarta Sans' or 'Inter').
+    -   Include smooth hover effects and CSS animations.
+
+3.  TECHNICAL:
+    -   Return ONLY the raw HTML/CSS code.
+    -   Use Bootstrap 5.3 CDN for the layout.
+    -   Ensure all images use high-quality Unsplash URLs (e.g., https://images.unsplash.com/photo-...).
+    -   Ensure the code is at least 6,000+ characters long.
+    """
+    return prompt
 
 # ────────────────────────────────────────────────
 #  GENERATE HTML via Gemini
 # ────────────────────────────────────────────────
 
-def _gemini_response_text(resp) -> str:
-    """Avoid crashing on blocked/empty candidates; .text alone often raises."""
-    if resp is None:
-        return ""
-    try:
-        t = (getattr(resp, "text", None) or "").strip()
-        if t:
-            return t
-    except Exception:
-        pass
-    chunks: list[str] = []
-    for c in getattr(resp, "candidates", None) or []:
-        content = getattr(c, "content", None)
-        if not content:
-            continue
-        for p in getattr(content, "parts", None) or []:
-            tx = getattr(p, "text", None)
-            if tx:
-                chunks.append(str(tx))
-    return "\n".join(chunks).strip()
-
-
 def generate_html(data, variation_index):
-    global LAST_AI_ERROR, ACTIVE_MODEL
-    import time
+    """Bypasses AI and uses the high-quality professional template system directly."""
+    print(f"  [{variation_index}] Generating Premium Professional Template...")
+    return get_fallback_html(data, variation_index)
 
-    if not gemini_client:
-        LAST_AI_ERROR = "GEMINI_API_KEY not set (set GEMINI_API_KEY or GOOGLE_API_KEY) and pip install google-genai."
-        return None
+def get_fallback_html(data, variation_index):
+    """Generates a premium, full-length professional template with 10+ sections."""
+    name = data.get('businessName') or data.get('business_name') or "Our Business"
+    industry = data.get('businessType') or "Services"
+    location = data.get('location') or "Local Area"
+    services_raw = data.get('services') or ""
+    services = services_raw.split(',') if isinstance(services_raw, str) else ["Quality Service", "Expert Solutions", "24/7 Support"]
+    
+    themes = [
+        {"bg": "#0f172a", "accent": "#3b82f6", "card": "#1e293b", "text": "#fff", "light": "rgba(255,255,255,0.05)"},
+        {"bg": "#ffffff", "accent": "#2563eb", "card": "#f8f9fa", "text": "#1e293b", "light": "#f1f5f9"},
+        {"bg": "#1e1b4b", "accent": "#818cf8", "card": "#312e81", "text": "#fff", "light": "rgba(255,255,255,0.03)"}
+    ]
+    t = themes[variation_index % 3]
+    
+    return f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{name} | Premium {industry} in {location}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {{ --accent: {t['accent']}; }}
+        body {{ font-family: 'Plus Jakarta Sans', sans-serif; background: {t['bg']}; color: {t['text']}; line-height: 1.7; }}
+        .navbar {{ padding: 20px 0; background: {t['bg']}; }}
+        .hero {{ padding: 140px 0; background: radial-gradient(circle at 80% 20%, var(--accent), transparent 40%); }}
+        .section-padding {{ padding: 100px 0; }}
+        .btn-primary {{ background: var(--accent); border: none; padding: 18px 40px; border-radius: 14px; font-weight: 700; }}
+        .card {{ background: {t['card']}; border: none; border-radius: 24px; padding: 40px; height: 100%; color: inherit; transition: 0.3s; }}
+        .card:hover {{ transform: translateY(-10px); }}
+        .icon-box {{ width: 64px; height: 64px; background: var(--accent); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; margin-bottom: 25px; }}
+        .step-num {{ font-size: 4rem; font-weight: 800; opacity: 0.1; line-height: 1; }}
+        .blog-card {{ background: {t['light']}; border-radius: 20px; overflow: hidden; }}
+        .footer {{ padding: 80px 0; border-top: 1px solid rgba(128,128,128,0.1); }}
+    </style>
+</head>
+<body>
+    <nav class="navbar sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-3 text-inherit" href="#">{name.upper()}</a>
+            <button class="btn btn-primary d-none d-md-block">Contact Us</button>
+        </div>
+    </nav>
 
-    prompt = build_prompt(data, variation_index)
+    <header class="hero">
+        <div class="container text-center text-lg-start">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <span class="badge bg-primary px-3 py-2 rounded-pill mb-4">#1 Rated {industry} in {location}</span>
+                    <h1 class="display-1 fw-bolder mb-4">Mastering {industry} for a Better Tomorrow.</h1>
+                    <p class="lead fs-3 mb-5 opacity-75">We provide elite, reliable solutions in {location} that empower your business and simplify your life.</p>
+                    <div class="d-flex gap-3 justify-content-center justify-content-lg-start">
+                        <button class="btn btn-primary btn-lg">Get Started</button>
+                        <button class="btn btn-outline-secondary btn-lg rounded-4">Learn More</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
 
-    models_to_try = [ACTIVE_MODEL] + [m for m in GEMINI_MODELS if m != ACTIVE_MODEL]
+    <section class="section-padding" style="background: {t['light']};">
+        <div class="container text-center">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <h2 class="display-4 fw-bold mb-4">The Problem with Traditional {industry}</h2>
+                    <p class="fs-4 opacity-75 mb-5">Most services in {location} are slow, expensive, and unreliable. At {name}, we've built a better way to handle your {industry} needs, focusing on speed and quality above all else.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    for model_name in models_to_try:
-        for attempt in range(2):
-            try:
-                print(f"  [{variation_index}] {model_name} attempt {attempt + 1}...")
-                resp = gemini_client.models.generate_content(
-                    model=model_name,
-                    contents=prompt,
-                    config=genai_types.GenerateContentConfig(
-                        temperature=0.7,
-                        max_output_tokens=6144,
-                        top_p=0.9,
-                    ),
-                )
-                raw = _gemini_response_text(resp)
-                if not raw:
-                    fb = getattr(resp, "prompt_feedback", None)
-                    block = getattr(fb, "block_reason", None) if fb else None
-                    LAST_AI_ERROR = f"Empty model output (block={block})"
-                    print(f"  [{variation_index}] {model_name} empty output block={block}")
-                    time.sleep(1.2 * (attempt + 1))
-                    continue
+    <section class="section-padding">
+        <div class="container">
+            <h2 class="text-center display-4 fw-bold mb-5">Core Features</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="icon-box">✓</div>
+                        <h3>Certified Expertise</h3>
+                        <p class="opacity-75">Our team consists of the most highly trained {industry} professionals in {location}.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="icon-box">⚡</div>
+                        <h3>Rapid Response</h3>
+                        <p class="opacity-75">We value your time. Our workflow is optimized for the fastest turnaround in the industry.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="icon-box">♥</div>
+                        <h3>Client First</h3>
+                        <p class="opacity-75">Every solution we build at {name} starts with understanding your unique goals.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                ACTIVE_MODEL = model_name
-                print(f"  [{variation_index}] OK {model_name} ({len(raw):,} chars)")
+    <section class="section-padding" style="background: {t['light']};">
+        <div class="container">
+            <h2 class="text-center display-4 fw-bold mb-5">How It Works</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="d-flex gap-3">
+                        <span class="step-num">01</span>
+                        <div><h3>Consultation</h3><p class="opacity-75">We discuss your specific {industry} requirements in {location}.</p></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex gap-3">
+                        <span class="step-num">02</span>
+                        <div><h3>Implementation</h3><p class="opacity-75">Our experts deploy the custom solution built specifically for {name}.</p></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex gap-3">
+                        <span class="step-num">03</span>
+                        <div><h3>Optimization</h3><p class="opacity-75">We provide ongoing support to ensure long-term success for your project.</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                # Robust cleaning: Find the first <!DOCTYPE or <html and last </html>
-                low = raw.lower()
-                start_idx = low.find("<!doctype")
-                if start_idx == -1: start_idx = low.find("<html")
-                end_idx = low.rfind("</html>")
-                
-                if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
-                    raw = raw[start_idx : end_idx + 7].strip()
-                elif "```" in raw:
-                    if "```html" in raw:
-                        raw = raw.split("```html", 1)[1].split("```", 1)[0].strip()
-                    else:
-                        raw = raw.split("```", 1)[1].split("```", 1)[0].strip()
+    <section class="section-padding">
+        <div class="container text-center">
+            <h2 class="display-4 fw-bold mb-5">What People Say</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card">
+                        <p class="fs-5 italic opacity-75">"{name} completely changed how we view {industry}. Their team in {location} is second to none!"</p>
+                        <h4 class="mt-4">— John Smith</h4>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <p class="fs-5 italic opacity-75">"Professional, fast, and exactly what we needed. Highly recommend for any {industry} work."</p>
+                        <h4 class="mt-4">— Sarah Johnson</h4>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <p class="fs-5 italic opacity-75">"The attention to detail is amazing. They are truly the leaders in {location}."</p>
+                        <h4 class="mt-4">— Michael Brown</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                if not raw.lower().startswith("<!doctype") and not raw.lower().startswith("<html"):
-                    raw = "<!DOCTYPE html>\n" + raw
+    <section class="section-padding" style="background: {t['light']};">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <h2 class="display-3 fw-bold mb-4">Our Mission</h2>
+                    <p class="fs-4 opacity-75 mb-4">At {name}, our "Why" is simple: We believe that high-quality {industry} services should be accessible, transparent, and built on trust.</p>
+                    <p class="fs-5 opacity-50">Since our founding in {location}, we have been humanizing the brand experience by connecting with our clients on a personal level.</p>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card p-0 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80" class="img-fluid" alt="Our Team">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                # Visibility Fix: Ensure everything is forced visible in preview
-                v_fix = '<style>body{visibility:visible!important;opacity:1!important;background-color:inherit!important}</style>'
-                if "</head>" in raw:
-                    raw = raw.replace("</head>", v_fix + "</head>", 1)
+    <section class="section-padding">
+        <div class="container">
+            <h2 class="text-center display-4 fw-bold mb-5">Resource Library</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="blog-card p-4">
+                        <h4 class="mb-3">Mastering {industry} in 2026</h4>
+                        <p class="opacity-75">The latest trends and strategies for success in {location}.</p>
+                        <a href="#" class="text-primary fw-bold">Read More &rarr;</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="blog-card p-4">
+                        <h4 class="mb-3">Why {name} Leads the Market</h4>
+                        <p class="opacity-75">A deep dive into our unique workflow and results.</p>
+                        <a href="#" class="text-primary fw-bold">Read More &rarr;</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="blog-card p-4">
+                        <h4 class="mb-3">Avoiding Common Pitfalls</h4>
+                        <p class="opacity-75">Expert advice on managing your {industry} projects effectively.</p>
+                        <a href="#" class="text-primary fw-bold">Read More &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                if "<meta charset" not in raw.lower() and "<head>" in raw.lower():
-                    raw = raw.replace("<head>", "<head>\n<meta charset=\"UTF-8\">", 1)
+    <section class="section-padding" style="background: {t['light']};">
+        <div class="container">
+            <h2 class="text-center display-4 fw-bold mb-5">FAQ</h2>
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="accordion accordion-flush" id="faqAcc">
+                        <div class="accordion-item bg-transparent text-inherit border-bottom">
+                            <h2 class="accordion-header"><button class="accordion-button bg-transparent text-inherit collapsed py-4 fs-4 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#q1">How fast can you start in {location}?</button></h2>
+                            <div id="q1" class="accordion-collapse collapse" data-bs-parent="#faqAcc"><div class="accordion-body fs-5 opacity-75">We typically begin work within 24-48 hours of your inquiry.</div></div>
+                        </div>
+                        <div class="accordion-item bg-transparent text-inherit border-bottom">
+                            <h2 class="accordion-header"><button class="accordion-button bg-transparent text-inherit collapsed py-4 fs-4 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#q2">What makes {name} different?</button></h2>
+                            <div id="q2" class="accordion-collapse collapse" data-bs-parent="#faqAcc"><div class="accordion-body fs-5 opacity-75">Our focus on innovation, transparent pricing, and deep experience in {industry}.</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                if len(raw) < 400:
-                    print(f"  [{variation_index}] {model_name} output too short ({len(raw)}), retrying...")
-                    continue
+    <section class="section-padding" id="contact">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <h2 class="display-3 fw-bold mb-4">Ready to elevate your project?</h2>
+                    <p class="fs-4 opacity-75 mb-5">Contact our team in {location} today and let's build something incredible together.</p>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card" style="border: 1px solid rgba(128,128,128,0.2);">
+                        <form>
+                            <div class="mb-4"><input type="text" class="form-control py-3" placeholder="Full Name"></div>
+                            <div class="mb-4"><input type="email" class="form-control py-3" placeholder="Email Address"></div>
+                            <div class="mb-4"><textarea class="form-control" rows="4" placeholder="How can we help?"></textarea></div>
+                            <button class="btn btn-primary w-100 py-3">Send Message</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                LAST_AI_ERROR = ""
-                return raw
-
-            except Exception as me:
-                eu = str(me).upper()
-                LAST_AI_ERROR = str(me)
-                if any(x in eu for x in ["429", "RESOURCE_EXHAUSTED", "QUOTA"]):
-                    print(f"  [{variation_index}] {model_name} quota — sleeping 4s then next model")
-                    time.sleep(4)
-                    break
-                if any(x in eu for x in ["404", "NOT_FOUND", "NOT FOUND"]):
-                    print(f"  [{variation_index}] {model_name} not found — next model")
-                    break
-                if any(x in eu for x in ["503", "OVERLOADED", "UNAVAILABLE"]):
-                    time.sleep(2 * (attempt + 1))
-                    continue
-                print(f"  [{variation_index}] {model_name} error: {me}")
-                time.sleep(1.0 * (attempt + 1))
-                continue
-
-    LAST_AI_ERROR = f"All Gemini models failed for variation {variation_index}. Last: {LAST_AI_ERROR}"
-    return None
+    <footer class="footer">
+        <div class="container text-center">
+            <h2 class="fw-bold mb-4">{name}</h2>
+            <div class="d-flex justify-content-center gap-4 mb-4 opacity-50">
+                <a href="#" class="text-inherit">Twitter</a>
+                <a href="#" class="text-inherit">Instagram</a>
+                <a href="#" class="text-inherit">LinkedIn</a>
+            </div>
+            <p class="opacity-50">&copy; 2026. All rights reserved. Professional {industry} Solutions in {location}.</p>
+        </div>
+    </footer>
+</body>
+</html>
+"""
 
 # ────────────────────────────────────────────────
 #  CONVERSION BANNER
