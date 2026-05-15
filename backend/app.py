@@ -418,25 +418,25 @@ def _build_services_html(vi, svcs, loc):
     for i, svc in enumerate(svcs):
         blurb = _e(SVC_BLURB[i % len(SVC_BLURB)].format(location=loc))
         icon = SVC_ICONS[i % len(SVC_ICONS)]
+        num = f"{i + 1:02d}"
         if vi == 2:
             rev = "flex-lg-row-reverse" if i % 2 else ""
             parts.append(
-                f'<div class="mb-4"><div class="box d-lg-flex align-items-center gap-4 {rev}">'
+                f'<div class="svc-band box box-sharp d-lg-flex align-items-center gap-4 {rev}">'
                 f'<div class="flex-shrink-0"><div class="icon-pill"><i class="bi {icon}"></i></div></div>'
-                f'<div class="flex-grow-1"><h3 class="h4 fw-bold mb-2">{svc}</h3>'
-                f'<p class="muted mb-0">{blurb}</p></div></div></div>'
+                f'<div class="flex-grow-1"><span class="label-tag">Service {num}</span>'
+                f'<h3 class="h3 fw-bold text-uppercase mb-2">{svc}</h3>'
+                f'<p class="muted mb-0">{blurb}</p></div></div>'
             )
         elif vi == 1:
             parts.append(
-                f'<div class="col-md-6"><div class="box h-100">'
-                f'<div class="d-flex gap-3 align-items-start">'
-                f'<div class="icon-pill flex-shrink-0"><i class="bi {icon}"></i></div>'
-                f'<div><h3 class="h4 fw-bold mb-2">{svc}</h3>'
-                f'<p class="muted mb-0">{blurb}</p></div></div></div></div>'
+                f'<article class="svc-item"><span class="svc-num">{num}</span><div>'
+                f'<h3 class="h2-editorial mb-2">{svc}</h3>'
+                f'<p class="muted mb-0">{blurb}</p></div></article>'
             )
         else:
             parts.append(
-                f'<div class="col-md-6 col-xl-4"><div class="box h-100">'
+                f'<div class="col-md-6 col-xl-4"><div class="box box-round h-100">'
                 f'<div class="icon-pill"><i class="bi {icon}"></i></div>'
                 f'<h3 class="h4 fw-bold mb-3">{svc}</h3>'
                 f'<p class="muted mb-0">{blurb}</p></div></div>'
@@ -444,34 +444,37 @@ def _build_services_html(vi, svcs, loc):
     body = "".join(parts).replace("div", "div")
     if vi == 2:
         return f'<div class="v-services-stack">{body}</div>'
-    return f'<div class="row g-4">{body}</div>'
+    if vi == 1:
+        return f'<div class="svc-editorial">{body}</div>'
+    return f'<div class="row g-4 grid-svc">{body}</div>'
 
 
 def _build_features_html(vi, loc):
     parts = []
     for icon, title, desc in FEATURES[:6]:
-        d, t = _e(desc.format(location=loc)), _e(title)
+        d, tit = _e(desc.format(location=loc)), _e(title)
         if vi == 2:
             parts.append(
-                f'<div class="feat-row d-flex gap-4 align-items-start">'
-                f'<div class="icon-pill flex-shrink-0"><i class="bi {icon}"></i></div>'
-                f'<div><h3 class="h5 fw-bold mb-1">{t}</h3><p class="muted mb-0">{d}</p></div></div>'
+                f'<div class="feat-cell"><div class="icon-pill mb-3"><i class="bi {icon}"></i></div>'
+                f'<h3 class="fw-bold text-uppercase small mb-2">{tit}</h3><p class="muted mb-0 small">{d}</p></div>'
             )
         elif vi == 1:
             parts.append(
-                f'<div class="col-lg-6"><div class="box h-100">'
-                f'<div class="d-flex gap-3"><div class="icon-pill flex-shrink-0"><i class="bi {icon}"></i></div>'
-                f'<div><h3 class="h5 fw-bold">{t}</h3><p class="muted mb-0">{d}</p></div></div></div></div>'
+                f'<div class="col-lg-6"><div class="box box-flat"><div class="d-flex gap-3">'
+                f'<div class="icon-pill flex-shrink-0"><i class="bi {icon}"></i></div>'
+                f'<div><h3 class="h5 fw-semibold">{tit}</h3><p class="muted mb-0">{d}</p></div></div></div></div>'
             )
         else:
             parts.append(
-                f'<div class="col-md-6 col-lg-4"><div class="box h-100">'
+                f'<div class="col-md-6 col-lg-4"><div class="box box-round h-100">'
                 f'<div class="icon-pill"><i class="bi {icon}"></i></div>'
-                f'<h3 class="h5 fw-bold">{t}</h3><p class="muted mb-0">{d}</p></div></div>'
+                f'<h3 class="h5 fw-bold">{tit}</h3><p class="muted mb-0">{d}</p></div></div>'
             )
-    body = "".join(parts).replace("div", "div")
+    body = "".join(parts)
     if vi == 2:
-        return f'<div class="feat-list d-flex flex-column gap-4">{body}</div>'
+        return f'<div class="feat-bento">{body}</div>'
+    if vi == 1:
+        return f'<div class="row g-4 feat-grid-2">{body}</div>'
     return f'<div class="row g-4">{body}</div>'
 
 
@@ -669,7 +672,7 @@ h1,h2,h3,.hero-serif,.h2-brutal,.hero-brutal-title{{font-family:'{font_h}',serif
 .skin-brutal .logo-grid span{display:block;text-align:center;padding:14px;border:2px solid var(--p);font-weight:700;font-size:.75rem;text-transform:uppercase}
 .skin-brutal .stats-brutal{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:3px solid var(--p)}
 .skin-brutal .stats-brutal>div{padding:clamp(20px,3vw,36px);text-align:center;border-right:2px solid var(--p)}
-.skin-brutal .stats-brutal>motion.div:last-child{border-right:none}
+.skin-brutal .stats-brutal>div:last-child{border-right:none}
 .skin-brutal .stat-big{font-size:clamp(2rem,5vw,3.5rem)}
 .skin-brutal .av{width:56px;height:56px;border-radius:0}
 .skin-brutal .svc-band{padding:clamp(32px,5vw,56px);margin-bottom:12px;border-left:8px solid var(--p)}
@@ -682,8 +685,8 @@ h1,h2,h3,.hero-serif,.h2-brutal,.hero-brutal-title{{font-family:'{font_h}',serif
 .skin-brutal .feat-bento .feat-cell{padding:24px;border:2px solid var(--p);min-height:140px}
 .skin-brutal .cta-strip{border-radius:0;border:4px solid var(--p);background:var(--p);color:#fff;padding:3rem}
 .skin-brutal .hero-split-img{border-radius:0;max-height:none!important;height:min(70vh,520px);object-fit:cover;width:100%}
-""".replace("motion.div", "motion.div")
-    brutal = brutal.replace("motion.div", "div")
+""".replace("div", "div")
+    brutal = brutal.replace("div", "div")
     if vi == 0:
         return common + dark
     if vi == 1:
@@ -703,12 +706,12 @@ def _build_pricing_html(vi):
             lis = "".join(f"<li>{_e(f)}</li>" for f in feats)
             fc = " price-row featured" if star else " price-row"
             rows.append(
-                f'<div class="{fc.strip()}"><motion.div><span class="fw-bold text-uppercase small">{_e(tier)}</span>'
+                f'<div class="{fc.strip()}"><div><span class="fw-bold text-uppercase small">{_e(tier)}</span>'
                 f'<h3 class="hero-serif mb-0">{_e(price)}</h3></div><p class="muted mb-2">{_e(desc)}</p>'
                 f'<ul class="small muted mb-3">{lis}</ul>'
                 f'<a href="#contact" class="btn-main btn-main-soft">Select plan</a></div>'
             )
-        return f'<div class="pricing-stack">{"".join(rows)}</motion.div>'.replace("motion.div", "div")
+        return f'<div class="pricing-stack">{"".join(rows)}</div>'
     if vi == 2:
         cards = []
         for tier, price, desc, feats, star in tiers:
@@ -747,7 +750,7 @@ def _build_stats_html(vi, section_alt):
             f'<div><div class="stat-big">{a}</div><p class="muted mb-0 small text-uppercase">{b}</p></div>'
             for a, b in items
         )
-        return f'<section class="sec sec-editorial pt-0"><div class="container container-narrow"><motion.div class="stats-inline">{inner}</div></div></section>'.replace("motion.div", "motion.div")
+        return f'<section class="sec sec-editorial pt-0"><div class="container container-narrow"><div class="stats-inline">{inner}</div></div></section>'.replace("div", "div")
     if vi == 2:
         inner = "".join(
             f'<div><div class="stat-big">{a}</div><p class="muted mb-0 small text-uppercase">{b}</p></div>'
@@ -755,11 +758,11 @@ def _build_stats_html(vi, section_alt):
         )
         return f'<section class="sec sec-brutal sec-band pt-0"><div class="container-fluid px-3 px-lg-5"><div class="stats-brutal">{inner}</div></div></section>'
     cells = "".join(
-        f'<div class="col-6 col-md-3"><div class="box box-round"><div class="stat-big">{a}</motion.div>'
+        f'<div class="col-6 col-md-3"><div class="box box-round"><div class="stat-big">{a}</div>'
         f'<p class="muted mb-0">{b}</p></div></div>'
         for a, b in items
     )
-    return f'<section class="sec sec-pad-lg pt-0" style="{section_alt}"><div class="container"><div class="row g-4 text-center">{cells}</div></div></section>'.replace("motion.div", "div")
+    return f'<section class="sec sec-pad-lg pt-0" style="{section_alt}"><div class="container"><div class="row g-4 text-center">{cells}</div></div></section>'.replace("div", "div")
 
 
 def _build_team_html(vi):
@@ -770,7 +773,7 @@ def _build_team_html(vi):
                 f'<div class="team-person"><div class="av">{_e(person[0])}</div>'
                 f'<h3 class="h6 fw-bold mb-0">{_e(person)}</h3><p class="small muted">{_e(role)}</p></div>'
             )
-        return f'<motion.div class="team-row">{"".join(parts)}</motion.div>'.replace("motion.div", "div")
+        return f'<div class="team-row">{"".join(parts)}</div>'.replace("div", "div")
     if vi == 2:
         parts = []
         for i, (person, role) in enumerate(TEAM):
@@ -784,16 +787,16 @@ def _build_team_html(vi):
     parts = []
     for person, role in TEAM:
         parts.append(
-            f'<motion.div class="col-6 col-md-3"><div class="box box-round text-center h-100">'
+            f'<div class="col-6 col-md-3"><div class="box box-round text-center h-100">'
             f'<div class="av mx-auto mb-3">{_e(person[0])}</div>'
             f'<h3 class="h6 fw-bold mb-1">{_e(person)}</h3><p class="small muted mb-0">{_e(role)}</p></div></div>'
         )
-    return f'<div class="row g-4">{"".join(parts)}</motion.div>'.replace("motion.div", "div")
+    return f'<div class="row g-4">{"".join(parts)}</div>'.replace("div", "div")
 
 
 def _build_logos_html(vi, logos_pills, awards):
     if vi == 1:
-        return '<div class="logo-line">' + "".join(f"<span>{_e(a)}</span>" for a in awards) + "</motion.div>"
+        return '<div class="logo-line">' + "".join(f"<span>{_e(a)}</span>" for a in awards) + "</div>"
     if vi == 2:
         return '<div class="logo-grid">' + "".join(f"<span>{_e(a)}</span>" for a in awards) + "</div>"
     return f"<div>{logos_pills}</div>"
@@ -814,6 +817,8 @@ def build_premium_html(data, variation_index):
     vi = int(variation_index) % 3
     t = _theme(vi, primary, secondary, surface)
     bg, text, card, muted, alt = t["bg"], t["text"], t["card"], t["muted"], t["alt"]
+    skin = _skin(vi)
+    wrap, box_cls, sec_cls, h2c = skin["wrap"], skin["box"], skin["sec"], skin["h2"]
     pitch = _e(ind["pitch"])
     hero_img, team_img, work_img = ind["hero"], ind["team"], ind["work"]
     email_slug = re.sub(r"[^a-z0-9]", "", name_raw.lower()) or "hello"
@@ -827,28 +832,14 @@ def build_premium_html(data, variation_index):
     hlist = headlines.get(style, headlines["modern"])
     headline = hlist[vi]
     overlay = f"linear-gradient(135deg,{primary}dd 0%,{secondary}bb 50%,{bg}ee 100%)"
-    font_heading = "Plus Jakarta Sans" if vi != 2 else "Outfit"
+    font_heading = skin["font_h"]
+    font_body = skin["font_b"]
 
     services_html = _build_services_html(vi, svcs, loc)
     features_html = _build_features_html(vi, loc)
     testi_html = _build_testimonials_html(vi, loc)
 
-    prices = []
-    for tier, price, desc, feats, star in [
-        ("Starter", "From £99", "Straightforward jobs and quick advice.", ["Site visit", "Written estimate", "Standard warranty"], False),
-        ("Professional", "From £249", "Our most popular package for complete peace of mind.", ["Priority scheduling", "Premium materials", "12-month phone support"], True),
-        ("Enterprise", "Custom quote", "Larger projects and commercial contracts.", ["Dedicated manager", "Flexible billing", "Planned maintenance"], False),
-    ]:
-        lis = "".join(f'<li><i class="bi bi-check2-circle me-2"></i>{_e(f)}</li>' for f in feats)
-        cls = " box featured" if star else " box"
-        prices.append(
-            f'<div class="col-lg-4"><div class="{cls.strip()}">'
-            f'<p class="fw-bold text-uppercase small accent">{_e(tier)}</p>'
-            f'<h3 class="display-6 fw-bold">{_e(price)}</h3>'
-            f'<p class="muted">{_e(desc)}</p><ul class="list-unstyled mb-4">{lis}</ul>'
-            f'<a href="#contact" class="btn-main w-100 text-center d-block">Get a quote</a></div></div>'
-        )
-    pricing_html = "".join(prices)
+    pricing_html = _build_pricing_html(vi)
 
     faqs = [
         (f"How quickly can you help in {loc}?", "Most enquiries receive a reply within 2 hours. Emergency and same-day slots are often available — call us for live availability."),
@@ -878,58 +869,51 @@ def build_premium_html(data, variation_index):
             f'<a href="#" class="accent fw-semibold">Read more →</a></div></div></div>'
         )
 
-    team_html = ""
-    for person, role in TEAM:
-        team_html += (
-            f'<div class="col-6 col-md-3"><div class="box text-center h-100">'
-            f'<div class="av mx-auto mb-3">{_e(person[0])}</div>'
-            f'<h3 class="h6 fw-bold mb-1">{_e(person)}</h3><p class="small muted mb-0">{_e(role)}</p></div></div>'
-        )
+    team_html = _build_team_html(vi)
 
-    logos = "".join(f'<span class="logo-pill">{_e(a)}</span>' for a in AWARDS)
+    logos_pills = "".join(f'<span class="logo-pill">{_e(a)}</span>' for a in AWARDS)
+    logos = _build_logos_html(vi, logos_pills, AWARDS)
     nav_extra = "rounded-pill px-4" if vi == 1 else ""
 
 
-    hero_class = "hero hero-a" if vi == 0 else ("hero hero-b" if vi == 1 else "hero hero-c")
+    hero_class = skin["hero_cls"]
     section_alt = f"background:{alt};"
     feat_hdr = "text-center mb-5 mx-auto" if vi != 2 else "mb-5"
     feat_hdr_style = ' style="max-width:720px"' if vi != 2 else ""
 
+    h1c, lc, cta = skin["h1"], skin["lead"], skin["cta_btn"]
     if vi == 1:
         hero_body = f"""<div class="row justify-content-center text-center"><div class="col-lg-10">
-<span class="badge-top d-inline-block mb-3"><i class="bi bi-geo-alt me-1"></i> Serving {loc} &amp; nearby</span>
-<h1 class="display-3 fw-bold mb-4 lh-sm">{headline}</h1>
-<p class="lead mb-4 mx-auto" style="max-width:42rem">{pitch}</p>
+<span class="badge-top d-inline-block mb-3"><i class="bi bi-geo-alt me-1"></i> Serving {loc}</span>
+<h1 class="{h1c}">{headline}</h1>
+<p class="{lc}">{pitch}</p>
 <div class="d-flex flex-wrap gap-3 mb-4 justify-content-center">
-<a href="#contact" class="btn-main btn-lg">Book free consultation</a>
-<a href="#services" class="btn-ghost btn-lg">View all services</a></div>
-<p class="small muted">Trusted locally · Clear written quotes · Qualified team · 5★ reviews</p>
+<a href="#contact" class="{cta}">Book consultation</a>
+<a href="#services" class="btn-ghost btn-lg">Services</a></div>
+<p class="small muted">Trusted in {loc} · Clear quotes · 5★ rated</p>
 </div></div>"""
     elif vi == 2:
-        hero_body = f"""<div class="row align-items-center g-5">
-<div class="col-lg-5 order-lg-1"><img src="{hero_img}" alt="{name}" class="img-fluid rounded-4 shadow-lg" style="max-height:440px;width:100%;object-fit:cover"></div>
-<div class="col-lg-7 order-lg-2">
-<span class="badge-top d-inline-block mb-3"><i class="bi bi-geo-alt me-1"></i> Serving {loc} &amp; nearby</span>
-<h1 class="display-3 fw-bold mb-4 lh-sm">{headline}</h1>
-<p class="lead mb-4">{pitch}</p>
-<div class="d-flex flex-wrap gap-3 mb-4">
-<a href="#contact" class="btn-main btn-lg">Book free consultation</a>
-<a href="#services" class="btn-ghost btn-lg">View all services</a></div>
-<p class="small muted">Trusted locally · Clear written quotes · Qualified team · 5★ reviews</p>
-</div></div>"""
+        hero_body = f"""<div class="row align-items-stretch g-0 min-vh-75">
+<div class="col-lg-6 p-0"><img src="{hero_img}" alt="{name}" class="hero-split-img"></div>
+<div class="col-lg-6 d-flex align-items-center ps-lg-5 py-5">
+<div><span class="label-tag">{loc}</span>
+<h1 class="{h1c}">{headline}</h1>
+<p class="{lc}">{pitch}</p>
+<div class="d-flex flex-wrap gap-3">
+<a href="#contact" class="{cta}">Get quote</a>
+<a href="#services" class="btn-ghost">Services</a></div></div></div></div>"""
     else:
         hero_body = f"""<div class="row align-items-center g-5">
 <div class="col-lg-7">
-<span class="badge-top d-inline-block mb-3"><i class="bi bi-geo-alt me-1"></i> Serving {loc} &amp; nearby</span>
-<h1 class="display-3 fw-bold mb-4 lh-sm">{headline}</h1>
-<p class="lead mb-4" style="max-width:38rem">{pitch}</p>
+<span class="badge-top d-inline-block mb-3"><i class="bi bi-geo-alt me-1"></i> {loc}</span>
+<h1 class="{h1c}">{headline}</h1>
+<p class="{lc}" style="max-width:38rem">{pitch}</p>
 <div class="d-flex flex-wrap gap-3 mb-4">
-<a href="#contact" class="btn-main btn-lg">Book free consultation</a>
-<a href="#services" class="btn-ghost btn-lg">View all services</a></div>
-<p class="small muted">Trusted locally · Clear written quotes · Qualified team · 5★ reviews</p>
+<a href="#contact" class="{cta}">Book consultation</a>
+<a href="#services" class="btn-ghost btn-lg">Services</a></div>
+<p class="small muted">Trusted locally · Insured · 5★ reviews</p>
 </div>
-<div class="col-lg-5 d-none d-lg-block"><img src="{hero_img}" alt="{name}" class="img-fluid rounded-4 shadow-lg" style="max-height:440px;width:100%;object-fit:cover"></div></div>"""
-    hero_body = hero_body.replace("div", "div")
+<div class="col-lg-5 d-none d-lg-block"><img src="{hero_img}" alt="{name}" class="img-fluid rounded-4 shadow-lg" style="max-height:460px;width:100%;object-fit:cover"></div></div>"""
 
     prob_text_col = "col-lg-6 order-lg-2" if vi == 2 else "col-lg-6"
     prob_stats_col = "col-lg-6 order-lg-1" if vi == 2 else "col-lg-6"
@@ -996,6 +980,7 @@ def build_premium_html(data, variation_index):
 </form></div></div></div>"""
     contact_block = contact_block.replace("div", "div")
 
+    stats_html = _build_stats_html(vi, section_alt)
     sec = {
         "hero": f"""<section class="{hero_class}" id="top"><div class="hero-img" style="background-image:url('{hero_img}')"></div><div class="hero-mask"></div><div class="container hero-inner">{hero_body}</div></section>""",
         "logos": f"""<section class="sec pt-0"><div class="container text-center"><p class="text-uppercase fw-bold small muted mb-3">Trusted by homeowners &amp; businesses</p><div>{logos}</div></div></section>""",
@@ -1032,12 +1017,7 @@ def build_premium_html(data, variation_index):
 {services_html}</div></section>""".replace("div", "</div>").replace("</div>", "</div>", 1).replace("div", "div"),
         "how": f"""<section class="sec" id="how"><div class="container"><div class="text-center mb-5">
 <h2 class="display-5 fw-bold">How it works — 3 simple steps</h2><p class="muted">From enquiry to completion.</p></div>{how_block}</div></section>""",
-        "stats": f"""<section class="sec pt-0" style="{section_alt}"><div class="container"><div class="row g-4 text-center">
-<div class="col-6 col-md-3"><div class="box"><div class="stat-big">15+</div><p class="muted mb-0">Years experience</p></div></div>
-<div class="col-6 col-md-3"><div class="box"><div class="stat-big">2,400+</div><p class="muted mb-0">Projects done</p></div></div>
-<div class="col-6 col-md-3"><div class="box"><div class="stat-big">98%</div><p class="muted mb-0">Recommend us</p></div></div>
-<div class="col-6 col-md-3"><div class="box"><div class="stat-big">4.9</div><p class="muted mb-0">Review score</p></div></div>
-</div></div></section>""".replace("div", "div"),
+        "stats": stats_html,
         "case": f"""<section class="sec"><div class="container"><div class="row g-5 align-items-center">
 <div class="col-lg-6"><p class="text-uppercase fw-bold small accent mb-2">Results</p><h2 class="display-5 fw-bold mb-4">Real data. Real growth.</h2>
 <p class="muted fs-5">A client in {loc} reduced repeat call-outs by 40% with our maintenance programme.</p></div>
@@ -1080,7 +1060,7 @@ def build_premium_html(data, variation_index):
     main_body = "".join(sec[k] for k in _PREMIUM_SECTION_ORDER[vi])
 
     return f"""<!DOCTYPE html>
-<html lang="en-GB" class="theme-{vi}">
+<html lang="en-GB" class="theme-{vi} {skin['layout']}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1088,46 +1068,11 @@ def build_premium_html(data, variation_index):
 <meta name="description" content="{name} — {pitch} Serving {loc}.">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
-<style>
-:root{{--p:{primary};--s:{secondary};--surf:{surface};--bg:{bg};--text:{text};--card:{card};--muted:{muted};--alt:{alt}}}
-*{{box-sizing:border-box}}
-body{{font-family:'{font_heading}',system-ui,sans-serif;background:var(--bg);color:var(--text);margin:0;line-height:1.65}}
-.accent{{color:var(--p)}}
-.muted{{color:var(--muted)}}
-.nav-wrap{{backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 90%,transparent);border-bottom:1px solid rgba(128,128,128,.12);position:sticky;top:0;z-index:1000}}
-.nav-wrap .nav-link{{color:var(--text);font-weight:600;font-size:.95rem}}
-.sec{{padding:clamp(64px,8vw,100px) 0}}
-.box{{background:var(--card);border-radius:20px;padding:clamp(24px,3vw,36px);border:1px solid rgba(128,128,128,.12);height:100%;transition:transform .25s,box-shadow .25s}}
-.box:hover{{transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,.12)}}
-.box.featured{{border:2px solid var(--p);box-shadow:0 12px 40px color-mix(in srgb,var(--p) 25%,transparent)}}
-.icon-pill{{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--p),var(--s));color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.25rem;margin-bottom:18px}}
-.btn-main{{background:linear-gradient(135deg,var(--p),var(--s));color:#fff!important;padding:14px 32px;border-radius:12px;font-weight:700;text-decoration:none;display:inline-block;border:none}}
-.btn-ghost{{border:2px solid var(--p);color:var(--p)!important;padding:12px 28px;border-radius:12px;font-weight:700;text-decoration:none;background:transparent}}
-.hero{{position:relative;min-height:min(92vh,900px);display:flex;align-items:center;overflow:hidden}}
-.hero-img{{position:absolute;inset:0;background:center/cover no-repeat}}
-.hero-mask{{position:absolute;inset:0;background:{overlay}}}
-.hero-inner{{position:relative;z-index:2}}
-.hero-b .hero-inner{{text-align:center}}
-.hero-c .hero-inner h1{{font-size:clamp(2.2rem,5vw,3.5rem)}}
-.stat-big{{font-size:clamp(2rem,4vw,3rem);font-weight:800;color:var(--p);line-height:1}}
-.av{{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--s));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}}
-.logo-pill{{display:inline-block;padding:10px 18px;border-radius:10px;background:var(--card);margin:6px;font-weight:600;font-size:.85rem;border:1px solid color-mix(in srgb,var(--p) 30%,transparent)}}
-.cta-strip{{background:linear-gradient(135deg,var(--p),var(--s));color:#fff;border-radius:24px;padding:clamp(40px,6vw,72px)}}
-.blog-thumb{{height:140px;background-size:cover;background-position:center;border-radius:16px 16px 0 0;margin:-36px -36px 20px -36px}}
-.acc-item{{background:transparent!important;border-color:rgba(128,128,128,.15)!important}}
-.acc-item .accordion-button{{background:transparent!important;color:var(--text)!important;box-shadow:none!important;font-weight:600}}
-.steps-v .box{{border-left:4px solid var(--p);border-radius:0 20px 20px 0}}
-.feat-list .feat-row{{padding-bottom:1rem;border-bottom:1px solid rgba(128,128,128,.12)}}
-.v-services-stack .box{{margin-bottom:0}}
-.map-placeholder{{min-height:280px;border-radius:20px;background:var(--alt) center/cover url('https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&q=60');border:1px solid rgba(128,128,128,.15)}}
-.footer-grid a{{color:var(--muted);text-decoration:none}}
-.footer-grid a:hover{{color:var(--p)}}
-.badge-top{{background:color-mix(in srgb,var(--p) 22%,transparent);border:1px solid color-mix(in srgb,var(--s) 40%,transparent);padding:8px 16px;border-radius:999px;font-weight:600;font-size:.9rem}}
-</style>
+<link href="{skin['fonts']}" rel="stylesheet">
+<style>{_design_css(vi, primary, secondary, overlay, skin['font_h'], skin['font_b'])}</style>
 </head>
 <body>
-<header class="nav-wrap">
+<header class="{skin['nav']}">
 <nav class="navbar navbar-expand-lg py-3">
 <div class="container">
 <a class="navbar-brand fw-bold fs-4" href="#" style="color:var(--text)">{name}</a>
@@ -1300,7 +1245,7 @@ textarea{resize:vertical;min-height:100px}
       </div>
     </div>
     <div style="margin-bottom:20px">
-      <label>Services (comma separated) *</label>
+      <label>Services *</label>
       <textarea id="sv" placeholder="e.g. Emergency repairs, Boiler installation, Drainage, Gas checks" required></textarea>
     </div>
     <div class="row">
