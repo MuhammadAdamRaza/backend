@@ -30,13 +30,21 @@ CORS(
 
 @app.after_request
 def _force_cors_headers(response):
-    """Ensure every response (including errors) carries CORS headers for cross-origin fetch."""
+    """Ensure every response carries CORS headers and no iframe-blocking headers."""
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "GET, HEAD, POST, PUT, DELETE, OPTIONS, PATCH"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept"
     response.headers["Access-Control-Max-Age"] = "86400"
-    # Allow embedding /view-design/* and /s/* in iframes on the marketing site (cross-origin).
+    # Remove ALL framing restrictions so iframes work from any origin (including file://).
     response.headers.pop("X-Frame-Options", None)
+    # Strip frame-ancestors from CSP — file:// is not a network scheme so '*' blocks it.
+    csp = response.headers.get("Content-Security-Policy", "")
+    if "frame-ancestors" in csp:
+        parts = [p.strip() for p in csp.split(";") if p.strip() and "frame-ancestors" not in p]
+        if parts:
+            response.headers["Content-Security-Policy"] = "; ".join(parts)
+        else:
+            response.headers.pop("Content-Security-Policy", None)
     return response
 
 
@@ -751,7 +759,8 @@ async function pick(slug, idx){
 def html_r(body, status=200):
     resp = Response(body.encode('utf-8'), status=status,
                     mimetype='text/html; charset=utf-8')
-    resp.headers['Content-Security-Policy'] = "frame-ancestors *"
+    # No frame-ancestors here — @app.after_request already strips it.
+    # X-Frame-Options is also removed there. Iframes work from any origin.
     return resp
 
 @app.route('/')
