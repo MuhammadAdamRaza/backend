@@ -121,9 +121,12 @@ def get_images(business_type):
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_db():
+    """Connect to Postgres. The Neon URL already contains sslmode and channel_binding;
+    psycopg2 must NOT receive them as extra kwargs — doing so raises a conflict error."""
     if not DATABASE_URL:
         raise ValueError("DATABASE_URL not set")
-    return psycopg2.connect(DATABASE_URL, sslmode='require')
+    # psycopg2 parses the full DSN including sslmode from the URL — no extra kwargs needed.
+    return psycopg2.connect(DATABASE_URL)
 
 def init_db():
     if not DATABASE_URL:
