@@ -1,10 +1,9 @@
 flask
 gunicorn
-psycopg2-binary
-
-openai
+psycopg2-binary>=2.9.5
 google-genai>=1.0.0
 python-dotenv
 flask-cors
 jinja2
 requests
+werkzeug
