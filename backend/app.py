@@ -17,6 +17,7 @@ from werkzeug.exceptions import HTTPException
 load_dotenv()
 
 app = Flask(__name__)
+# Wide CORS: Live Server, localhost, production HTML on other hosts, and null/file origins when allowed by browser.
 CORS(
     app,
     resources={r"/*": {"origins": "*"}},
@@ -29,11 +30,14 @@ CORS(
 
 @app.after_request
 def _force_cors_headers(response):
+    """Ensure every response carries CORS headers and no iframe-blocking headers."""
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "GET, HEAD, POST, PUT, DELETE, OPTIONS, PATCH"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept"
     response.headers["Access-Control-Max-Age"] = "86400"
+    # Remove ALL framing restrictions so iframes work from any origin (including file://).
     response.headers.pop("X-Frame-Options", None)
+    # Strip frame-ancestors from CSP — file:// is not a network scheme so '*' blocks it.
     csp = response.headers.get("Content-Security-Policy", "")
     if "frame-ancestors" in csp:
         parts = [p.strip() for p in csp.split(";") if p.strip() and "frame-ancestors" not in p]
@@ -46,23 +50,31 @@ def _force_cors_headers(response):
 
 def _corsify(resp):
     resp.headers.setdefault("Access-Control-Allow-Origin", "*")
-    resp.headers.setdefault("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, OPTIONS, PATCH")
-    resp.headers.setdefault("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept")
+    resp.headers.setdefault(
+        "Access-Control-Allow-Methods",
+        "GET, HEAD, POST, PUT, DELETE, OPTIONS, PATCH",
+    )
+    resp.headers.setdefault(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization, X-Requested-With, Accept",
+    )
     return resp
 
 
 @app.errorhandler(Exception)
 def _handle_any_exception(exc):
+    """Uncaught errors skip @app.after_request; without CORS the browser reports a misleading CORS failure."""
     if isinstance(exc, HTTPException):
         resp = exc.get_response()
         return _corsify(resp)
     traceback.print_exc()
-    safe = str(exc) if app.debug else "Server error — see logs."
+    safe = str(exc) if app.debug else "Server error — see Vercel function logs for details."
     r = jsonify({"success": False, "message": safe})
     r.status_code = 500
     return _corsify(r)
 
 
+# Vercel serverless filesystem is read-only except /tmp — avoid crashing on import.
 _SERVERLESS = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
 if _SERVERLESS:
     UPLOAD_FOLDER = os.path.join("/tmp", "awake_uploads", "templates")
@@ -72,6 +84,10 @@ try:
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 except OSError:
     pass
+
+# ────────────────────────────────────────────────
+#  CATEGORY IMAGES  (curated Unsplash IDs)
+# ────────────────────────────────────────────────
 
 CATEGORY_IMAGES = {
     "plumber":      ("1504328345596-d9e5b6f2e9fc", "1558618666-fcd25c85cd64", "💧", "#0ea5e9"),
@@ -106,11 +122,18 @@ def get_images(business_type):
     card = f"https://images.unsplash.com/photo-{card_id}?w=800&q=80&fit=crop&auto=format"
     return hero, card, emoji, accent
 
+# ────────────────────────────────────────────────
+#  DATABASE
+# ────────────────────────────────────────────────
+
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_db():
+    """Connect to Postgres. The Neon URL already contains sslmode and channel_binding;
+    psycopg2 must NOT receive them as extra kwargs — doing so raises a conflict error."""
     if not DATABASE_URL:
         raise ValueError("DATABASE_URL not set")
+    # psycopg2 parses the full DSN including sslmode from the URL — no extra kwargs needed.
     return psycopg2.connect(DATABASE_URL)
 
 def init_db():
@@ -142,29 +165,41 @@ def init_db():
                 html_content TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
+        # Add unique constraint safely
         cur.execute("""
             DO $$ BEGIN
                 IF NOT EXISTS (
-                    SELECT 1 FROM pg_constraint WHERE conname = 'variations_slug_idx_key'
+                    SELECT 1 FROM pg_constraint
+                    WHERE conname = 'variations_slug_idx_key'
                 ) THEN
-                    ALTER TABLE variations ADD CONSTRAINT variations_slug_idx_key UNIQUE (site_slug, variation_index);
+                    ALTER TABLE variations
+                    ADD CONSTRAINT variations_slug_idx_key UNIQUE (site_slug, variation_index);
                 END IF;
             END$$;
         """)
         cur.execute("""
             CREATE TABLE IF NOT EXISTS template_submissions (
-                id SERIAL PRIMARY KEY, name TEXT, email TEXT, template_name TEXT,
-                category TEXT, preview_url TEXT, file_path TEXT, description TEXT,
+                id SERIAL PRIMARY KEY,
+                name TEXT,
+                email TEXT,
+                template_name TEXT,
+                category TEXT,
+                preview_url TEXT,
+                file_path TEXT,
+                description TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
         conn.commit()
-        cur.close(); conn.close()
+        cur.close()
+        conn.close()
         print("DB ready")
     except Exception as e:
         print(f"DB init error: {e}")
 
+
 _init_db_ran = False
+
 
 def _lazy_init_db():
     global _init_db_ran
@@ -173,6 +208,7 @@ def _lazy_init_db():
     _init_db_ran = True
     with app.app_context():
         init_db()
+
 
 def _route_needs_migrations(path):
     if not path:
@@ -190,6 +226,7 @@ def _route_needs_migrations(path):
         return True
     return False
 
+
 @app.before_request
 def _run_migrations_once():
     if request.method == 'OPTIONS':
@@ -198,12 +235,18 @@ def _run_migrations_once():
         return
     _lazy_init_db()
 
+
+# ────────────────────────────────────────────────
+#  GEMINI AI  (only — no OpenAI)
+# ────────────────────────────────────────────────
+
 GEMINI_KEY = (
     os.getenv("GEMINI_API_KEY") or
     os.getenv("GOOGLE_API_KEY") or
     os.getenv("GOOGLE_GEMINI_KEY") or ""
 )
 
+# Short IDs work with google-genai; order is fastest / most available first.
 GEMINI_MODELS = [
     "gemini-2.0-flash",
     "gemini-2.5-flash",
@@ -227,10 +270,13 @@ if GEMINI_KEY:
     except Exception as e:
         print(f"Gemini error: {e}")
 else:
-    print("WARNING: GEMINI_API_KEY not set")
+    print("WARNING: GEMINI_API_KEY not set in environment variables")
 
+# ────────────────────────────────────────────────
+#  AI PROMPT  — 3 distinct design briefs
+# ────────────────────────────────────────────────
 
-def build_prompt(data, variation_index, base_url=""):
+def build_prompt(data, variation_index):
     name     = data.get('businessName') or data.get('business_name', 'My Business')
     btype    = data.get('businessType') or data.get('business_type', 'business')
     location = data.get('location', 'London')
@@ -250,6 +296,7 @@ def build_prompt(data, variation_index, base_url=""):
     hero_url, card_url, _, _ = get_images(btype)
     p, s = colors[0], colors[1]
 
+    # Define 3 distinct design directions
     DESIGNS = [
         {
             "name": "Modern Dark Bold",
@@ -275,39 +322,36 @@ def build_prompt(data, variation_index, base_url=""):
     ]
 
     d = DESIGNS[variation_index % 3]
-    base_tag = f'<base href="{base_url}">' if base_url else ""
 
     return (
         "Output ONLY a complete, professional HTML file. Start with <!DOCTYPE html>. End with </html>.\n"
-        "Zero markdown. Zero backticks. Zero explanation. No preamble.\n"
-        "All CSS inside one <style> tag in <head>.\n"
-        f"{base_tag}\n"
-        "Use Font Awesome 6.5 CDN and Google Fonts.\n"
-        "Images MUST use referrerpolicy=\"no-referrer\" attribute.\n\n"
-        f"BUSINESS: {name} in {location}\n"
-        f"INDUSTRY: {btype}\n"
+        "Zero markdown. Zero explanation. No preamble.\n"
+        "All CSS in one <style> tag. Mobile responsive.\n"
+        f"Include <base href=\"https://backend-ten-omega-72.vercel.app/\"> in <head>.\n"
+        "Use Font Awesome 6.5 and Google Fonts.\n\n"
+        f"BUSINESS: {name} in {location} ({btype})\n"
         f"COLORS: Primary {p}, Secondary {s}\n"
         f"SERVICES: {', '.join(svc_list)}\n\n"
-        f"DESIGN STYLE: {d['name']}\n"
-        f"FONT: {d['font']}\n"
-        f"NAVBAR: {d['nav']}\n"
-        f"HERO: {d['hero']}\n"
-        f"ABOUT MEDIA: {d['about_media']}\n\n"
-        "MANDATORY SECTIONS (ALL 8):\n"
-        "1. Fixed Navbar: logo, 4 links, 'Get Quote' button\n"
-        f"2. Hero: full-height background-image url('{hero_url}'), headline about {name}\n"
-        "3. Services: 3-column grid with icons for: " + ", ".join(svc_list) + "\n"
-        f"4. About: 2-column with image url('{card_url}') and text about {name} in {location}\n"
-        "5. Why Choose Us: 4 icon-stat tiles\n"
-        "6. Testimonials: 3 review cards with 5-star ratings\n"
-        "7. Contact: Name, Email, Phone, Message fields + Submit button\n"
-        "8. Footer: Copyright + social icons\n\n"
-        f"Write expert marketing copy for a professional {btype} business. NO lorem ipsum.\n"
+        f"STYLE: {d['name']} ({d['font']})\n"
+        "MANDATORY SECTIONS (BUILD ALL 8 IN ORDER):\n"
+        "1. Navbar: logo, links, 'Get Quote' button\n"
+        f"2. Hero: Full height, background url('{hero_url}') center/cover, dark overlay, white text, huge headline\n"
+        "3. Services: Grid of cards with icons\n"
+        f"4. About: 2-column layout with image url('{card_url}')\n"
+        "5. Why Us: 4 icon-stat tiles\n"
+        "6. Reviews: 3 testimonials with stars\n"
+        "7. Contact: Full form section\n"
+        "8. Footer: Simple links and copyright\n\n"
+        f"Write expert marketing copy for a {btype}. NO lorem ipsum.\n"
         "<!DOCTYPE html>"
     )
 
+# ────────────────────────────────────────────────
+#  GENERATE HTML via Gemini
+# ────────────────────────────────────────────────
 
 def _gemini_response_text(resp) -> str:
+    """Avoid crashing on blocked/empty candidates; .text alone often raises."""
     if resp is None:
         return ""
     try:
@@ -328,16 +372,15 @@ def _gemini_response_text(resp) -> str:
     return "\n".join(chunks).strip()
 
 
-def generate_html(data, variation_index, base_url=""):
+def generate_html(data, variation_index):
     global LAST_AI_ERROR, ACTIVE_MODEL
     import time
 
     if not gemini_client:
-        LAST_AI_ERROR = "GEMINI_API_KEY not set. pip install google-genai."
+        LAST_AI_ERROR = "GEMINI_API_KEY not set (set GEMINI_API_KEY or GOOGLE_API_KEY) and pip install google-genai."
         return None
 
-    # FIX: pass base_url into build_prompt — no longer relies on request context
-    prompt = build_prompt(data, variation_index, base_url)
+    prompt = build_prompt(data, variation_index)
 
     models_to_try = [ACTIVE_MODEL] + [m for m in GEMINI_MODELS if m != ACTIVE_MODEL]
 
@@ -349,30 +392,31 @@ def generate_html(data, variation_index, base_url=""):
                     model=model_name,
                     contents=prompt,
                     config=genai_types.GenerateContentConfig(
-                        temperature=0.82,
+                        temperature=0.7,
                         max_output_tokens=6144,
-                        top_p=0.95,
+                        top_p=0.9,
                     ),
                 )
                 raw = _gemini_response_text(resp)
                 if not raw:
                     fb = getattr(resp, "prompt_feedback", None)
                     block = getattr(fb, "block_reason", None) if fb else None
-                    LAST_AI_ERROR = f"Empty output (block={block})"
+                    LAST_AI_ERROR = f"Empty model output (block={block})"
+                    print(f"  [{variation_index}] {model_name} empty output block={block}")
                     time.sleep(1.2 * (attempt + 1))
                     continue
 
                 ACTIVE_MODEL = model_name
+                print(f"  [{variation_index}] OK {model_name} ({len(raw):,} chars)")
 
-                # Robust HTML extraction
+                # Robust cleaning: Find the first <!DOCTYPE or <html and last </html>
                 low = raw.lower()
                 start_idx = low.find("<!doctype")
-                if start_idx == -1:
-                    start_idx = low.find("<html")
+                if start_idx == -1: start_idx = low.find("<html")
                 end_idx = low.rfind("</html>")
-
+                
                 if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
-                    raw = raw[start_idx: end_idx + 7].strip()
+                    raw = raw[start_idx : end_idx + 7].strip()
                 elif "```" in raw:
                     if "```html" in raw:
                         raw = raw.split("```html", 1)[1].split("```", 1)[0].strip()
@@ -382,73 +426,95 @@ def generate_html(data, variation_index, base_url=""):
                 if not raw.lower().startswith("<!doctype") and not raw.lower().startswith("<html"):
                     raw = "<!DOCTYPE html>\n" + raw
 
+                # Visibility Fix: Ensure everything is forced visible in preview
+                v_fix = '<style>body{visibility:visible!important;opacity:1!important;background-color:inherit!important}</style>'
+                if "</head>" in raw:
+                    raw = raw.replace("</head>", v_fix + "</head>", 1)
+
                 if "<meta charset" not in raw.lower() and "<head>" in raw.lower():
-                    raw = raw.replace("<head>", '<head>\n<meta charset="UTF-8">', 1)
+                    raw = raw.replace("<head>", "<head>\n<meta charset=\"UTF-8\">", 1)
 
                 if len(raw) < 400:
+                    print(f"  [{variation_index}] {model_name} output too short ({len(raw)}), retrying...")
                     continue
 
                 LAST_AI_ERROR = ""
-                print(f"  [{variation_index}] OK — {len(raw):,} chars")
                 return raw
 
             except Exception as me:
                 eu = str(me).upper()
                 LAST_AI_ERROR = str(me)
                 if any(x in eu for x in ["429", "RESOURCE_EXHAUSTED", "QUOTA"]):
+                    print(f"  [{variation_index}] {model_name} quota — sleeping 4s then next model")
                     time.sleep(4)
                     break
-                if any(x in eu for x in ["404", "NOT_FOUND"]):
+                if any(x in eu for x in ["404", "NOT_FOUND", "NOT FOUND"]):
+                    print(f"  [{variation_index}] {model_name} not found — next model")
                     break
                 if any(x in eu for x in ["503", "OVERLOADED", "UNAVAILABLE"]):
                     time.sleep(2 * (attempt + 1))
                     continue
+                print(f"  [{variation_index}] {model_name} error: {me}")
                 time.sleep(1.0 * (attempt + 1))
                 continue
 
-    LAST_AI_ERROR = f"All models failed for variation {variation_index}. Last: {LAST_AI_ERROR}"
+    LAST_AI_ERROR = f"All Gemini models failed for variation {variation_index}. Last: {LAST_AI_ERROR}"
     return None
 
+# ────────────────────────────────────────────────
+#  CONVERSION BANNER
+# ────────────────────────────────────────────────
 
 def inject_banner(html, site, slug, base_url):
+    """Optional marketing strip (not used on final save — keeps /s/<slug> a normal page)."""
     name = site.get('business_name', 'Your Business')
     btype = site.get('business_type', 'business')
     _, _, emoji, accent = get_category_info(btype)
     dl  = f"{base_url}/download/{slug}"
     wa  = "https://wa.me/447700000000?text=I+want+to+launch+my+AI+website"
+
     banner = (
-        "<style>#_ab{position:fixed;bottom:0;left:0;right:0;z-index:999999;"
-        "background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:14px 24px;"
-        "display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;"
-        "box-shadow:0 -6px 32px rgba(0,0,0,.4);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px}"
+        "<style>"
+        "#_ab{position:fixed;bottom:0;left:0;right:0;z-index:999999;"
+        "background:linear-gradient(135deg,#0f172a,#1e293b);"
+        "color:#fff;padding:14px 24px;display:flex;align-items:center;"
+        "justify-content:space-between;gap:12px;flex-wrap:wrap;"
+        "box-shadow:0 -6px 32px rgba(0,0,0,.4);"
+        "font-family:'Segoe UI',system-ui,sans-serif;font-size:14px}"
         "#_ab .l{display:flex;align-items:center;gap:10px}"
         f"#_ab .bg{{background:{accent};color:#fff;padding:3px 10px;border-radius:20px;"
         "font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase}"
+        "#_ab .t{line-height:1.4}"
         "#_ab .t strong{font-size:15px;display:block}"
         "#_ab .r{display:flex;gap:8px;flex-wrap:wrap;align-items:center}"
         "#_ab a,#_ab button{padding:10px 18px;border-radius:30px;font-weight:700;"
         "font-size:13px;cursor:pointer;border:none;text-decoration:none;"
         "display:inline-flex;align-items:center;gap:5px;transition:.2s}"
+        "#_ab a:hover,#_ab button:hover{transform:translateY(-2px)}"
         "#_ab .g{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}"
         "#_ab .d{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)!important}"
         "#_ab .x{background:transparent;color:rgba(255,255,255,.4);font-size:18px;padding:4px 8px}"
-        "body{padding-bottom:78px!important}</style>"
-        f'<div id="_ab"><div class="l"><span class="bg">AI Preview</span>'
-        f'<div class="t"><strong>{name} — Your website is ready!</strong>'
-        f'Free launch with our team</div></div>'
-        f'<div class="r"><a href="{wa}" target="_blank" class="g">🚀 Launch Free</a>'
-        f'<a href="{dl}" class="d">⬇ Download</a>'
-        f'<button class="x" onclick="document.getElementById(\'_ab\').remove();document.body.style.paddingBottom=0">✕</button>'
+        "body{padding-bottom:78px!important}"
+        "</style>"
+        f'<div id="_ab">'
+        f'<div class="l"><span class="bg">AI Preview</span>'
+        f'<div class="t"><strong>{name} &mdash; Your website is ready!</strong>'
+        f'Our team will finalise &amp; launch it &mdash; <strong style="color:#4ade80;display:inline">completely free</strong></div></div>'
+        f'<div class="r">'
+        f'<a href="{wa}" target="_blank" class="g">&#128640; Launch My Site Free</a>'
+        f'<a href="{dl}" class="d">&#11015; Download HTML</a>'
+        f'<button class="x" onclick="document.getElementById(\'_ab\').remove();document.body.style.paddingBottom=0">&#x2715;</button>'
         f'</div></div>'
     )
+
     if '<meta charset' not in html.lower():
         html = html.replace('<head>', '<head>\n<meta charset="UTF-8">', 1)
+
     return html.replace("</body>", f"{banner}\n</body>", 1) if "</body>" in html else html + banner
 
-
-# ─────────────────────────────────────────────────────────
-#  FORM HTML  — FIXED: proper iframe preview scaling
-# ─────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────
+#  FORM PAGE  (served from backend — no file:// issues)
+# ────────────────────────────────────────────────
 
 FORM_HTML = """<!DOCTYPE html>
 <html lang="en">
@@ -462,83 +528,34 @@ FORM_HTML = """<!DOCTYPE html>
 body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#f0f4ff 0%,#faf5ff 100%);min-height:100vh;padding:40px 20px}
 .wrap{max-width:860px;margin:0 auto}
 .card{background:rgba(255,255,255,0.85);backdrop-filter:blur(20px);border-radius:32px;box-shadow:0 32px 80px rgba(0,0,0,0.1);border:1px solid rgba(255,255,255,0.5);padding:56px 52px}
-h1{font-size:2.2rem;font-weight:800;color:#0f172a;margin-bottom:8px}
+h1{font-size:2.2rem;font-weight:800;color:#0f172a;margin-bottom:8px;letter-spacing:-0.5px}
 h1 span{background:linear-gradient(135deg,#6e8efb,#a777e3);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .sub{color:#64748b;font-size:1rem;margin-bottom:40px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
 label{display:block;font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:8px}
-input,select,textarea{width:100%;padding:14px 18px;border:2px solid #e5e7eb;border-radius:14px;font-size:0.95rem;font-family:'Inter',sans-serif;color:#111;background:#fff;transition:all 0.3s;outline:none}
-input:focus,select:focus,textarea:focus{border-color:#6e8efb;box-shadow:0 0 0 4px rgba(110,142,251,0.15)}
+input,select,textarea{width:100%;padding:14px 18px;border:2px solid #e5e7eb;border-radius:14px;font-size:0.95rem;font-family:'Inter',sans-serif;color:#111;background:rgba(255,255,255,0.8);transition:all 0.3s;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#6e8efb;box-shadow:0 0 0 4px rgba(110,142,251,0.15);transform:translateY(-1px)}
 textarea{resize:vertical;min-height:100px}
 .color-row{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:20px}
 .color-item{display:flex;flex-direction:column;align-items:center;gap:6px}
 .color-item input[type=color]{width:80px;height:44px;border-radius:10px;border:2px solid #e5e7eb;cursor:pointer;padding:3px}
 .color-item span{font-size:11px;color:#64748b;font-weight:600}
-.btn{width:100%;padding:20px;background:linear-gradient(135deg,#6e8efb,#a777e3);border:none;border-radius:18px;color:white;font-size:1.05rem;font-weight:800;text-transform:uppercase;cursor:pointer;margin-top:28px;transition:all 0.3s}
-.btn:hover{transform:translateY(-3px);box-shadow:0 20px 40px rgba(110,142,251,0.4)}
-/* Loading */
+.btn{width:100%;padding:20px;background:linear-gradient(135deg,#6e8efb,#a777e3,#6e8efb);background-size:200% auto;border:none;border-radius:18px;color:white;font-size:1.05rem;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;margin-top:28px;transition:all 0.5s}
+.btn:hover{background-position:right center;transform:translateY(-3px);box-shadow:0 20px 40px rgba(110,142,251,0.4)}
 .loading{display:none;position:fixed;inset:0;background:#fff;z-index:9999;flex-direction:column;align-items:center;justify-content:center}
 .spinner{width:72px;height:72px;border:4px solid #f0f0f0;border-top:4px solid #6e8efb;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:28px}
 @keyframes spin{to{transform:rotate(360deg)}}
-#lt{font-size:1.8rem;font-weight:800;color:#0f172a;margin-bottom:8px;text-align:center}
-#ls{color:#64748b;font-size:0.95rem;text-align:center}
+#lt{font-size:1.8rem;font-weight:800;color:#0f172a;margin-bottom:8px}
 .prog-wrap{width:100%;max-width:460px;height:8px;background:#f0f0f0;border-radius:99px;overflow:hidden;margin-top:28px}
 .prog-fill{height:100%;background:linear-gradient(90deg,#6e8efb,#a777e3);border-radius:99px;transition:width 0.6s ease;width:0%}
-/* Selection overlay */
-.sel-overlay{display:none;position:fixed;inset:0;background:#f4f6fb;z-index:10000;overflow-y:auto;padding:50px 24px 80px}
-.sel-header{text-align:center;margin-bottom:40px}
-.sel-header h2{font-size:2rem;font-weight:800;color:#0f172a;margin-bottom:6px}
-.sel-header p{color:#64748b;font-size:0.95rem}
-.sel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1300px;margin:0 auto}
-@media(max-width:900px){.sel-grid{grid-template-columns:1fr}}
-/* Design card */
-.d-card{background:white;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);transition:transform 0.2s,box-shadow 0.2s}
-.d-card:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,0.14)}
-/* IFRAME PREVIEW — the key fix:
-   Render iframe at full 1440px desktop width, then scale down.
-   Container clips to visible area. No sandbox. No cross-origin. Uses blob:// URL. */
-.preview-shell{
-  position:relative;
-  width:100%;
-  height:280px;   /* visible height of the preview */
-  overflow:hidden;
-  background:#eef0f5;
-}
-.preview-shell iframe{
-  position:absolute;
-  top:0; left:0;
-  width:1440px;            /* full desktop render width */
-  height:940px;            /* full desktop render height */
-  border:none;
-  transform:scale(0.295);  /* 1440 * 0.295 ≈ 425px, clips to card */
-  transform-origin:top left;
-  pointer-events:none;
-  opacity:0;
-  transition:opacity 0.4s;
-}
-.preview-shell iframe.loaded{opacity:1}
-/* Spinner shown while iframe renders */
-.prev-spin{
-  position:absolute;inset:0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:10px;
-  background:#eef0f5;color:#6e8efb;font-size:0.85rem;font-weight:600;
-  transition:opacity 0.3s;
-}
-.prev-spin.hide{opacity:0;pointer-events:none}
-.prev-spin .ms{
-  width:32px;height:32px;border:3px solid #dde1f0;
-  border-top-color:#6e8efb;border-radius:50%;
-  animation:spin 0.7s linear infinite;
-}
-/* Card footer */
-.d-foot{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f0f0f5}
-.d-foot-left strong{font-size:0.9rem;color:#0f172a}
-.d-foot-left small{color:#94a3b8;font-size:0.78rem;display:block}
-.d-foot-btns{display:flex;gap:8px;align-items:center}
-.btn-open{padding:8px 14px;border-radius:8px;border:1.5px solid #d1d5db;background:white;color:#374151;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none}
-.btn-open:hover{border-color:#6e8efb;color:#6e8efb}
-.btn-build{padding:9px 20px;border-radius:8px;border:none;background:linear-gradient(135deg,#6e8efb,#a777e3);color:white;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all 0.2s}
-.btn-build:hover{transform:scale(1.05);box-shadow:0 4px 16px rgba(110,142,251,0.4)}
+.sel-overlay{display:none;position:fixed;inset:0;background:#f8f9fa;z-index:10000;overflow-y:auto;padding:60px 20px}
+.sel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:28px;max-width:1200px;margin:40px auto}
+.d-card{background:white;border-radius:20px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.08);transition:all 0.3s;cursor:pointer}
+.d-card:hover{transform:translateY(-8px);box-shadow:0 28px 60px rgba(0,0,0,0.14)}
+.d-preview{height:460px;width:100%;border:none;transform:scale(0.94);transform-origin:top center;pointer-events:none}
+.d-info{padding:18px 22px;display:flex;justify-content:space-between;align-items:center;background:white}
+.btn-sel{background:linear-gradient(135deg,#6e8efb,#a777e3);color:white;border:none;padding:12px 26px;border-radius:50px;font-weight:700;cursor:pointer;transition:all 0.3s}
+.btn-sel:hover{transform:scale(1.05)}
 @media(max-width:600px){.card{padding:32px 24px}.row{grid-template-columns:1fr}}
 </style>
 </head>
@@ -575,7 +592,7 @@ textarea{resize:vertical;min-height:100px}
     </div>
     <div style="margin-bottom:20px">
       <label>Services (comma separated) *</label>
-      <textarea id="sv" placeholder="e.g. Emergency repairs, Boiler installation, Drainage" required></textarea>
+      <textarea id="sv" placeholder="e.g. Emergency repairs, Boiler installation, Drainage, Gas checks" required></textarea>
     </div>
     <div class="row">
       <div><label>City / Location *</label><input id="loc" placeholder="e.g. Manchester, Lahore, Dubai" required></div>
@@ -594,31 +611,35 @@ textarea{resize:vertical;min-height:100px}
       <div class="color-item"><input type="color" id="c2" value="#7c3aed"><span>Secondary</span></div>
       <div class="color-item"><input type="color" id="c3" value="#f8fafc"><span>Background</span></div>
     </div>
-    <button type="submit" class="btn">&#10024; Generate 3 Unique AI Designs</button>
+    <button type="submit" class="btn">Generate 3 Unique AI Designs &rarr;</button>
   </form>
 </div>
 </div>
 
+<!-- Loading -->
 <div class="loading" id="ld">
   <div class="spinner"></div>
   <div id="lt">Analysing your business...</div>
-  <div id="ls" style="margin-top:8px">Building 3 unique designs</div>
+  <div style="color:#64748b;font-size:0.95rem" id="ls">Building 3 unique designs for you</div>
   <div class="prog-wrap"><div class="prog-fill" id="pf"></div></div>
 </div>
 
+<!-- Selection -->
 <div class="sel-overlay" id="so">
-  <div class="sel-header">
-    <h2>Choose Your Favorite Design</h2>
-    <p>Three unique AI-generated variations — pick the one you love most</p>
+  <div style="text-align:center;margin-bottom:40px">
+    <h2 style="font-size:2rem;font-weight:800;color:#0f172a;margin-bottom:8px">Choose Your Design</h2>
+    <p style="color:#64748b">3 unique AI layouts — pick the one you love</p>
   </div>
   <div class="sel-grid" id="sg"></div>
 </div>
 
 <script>
 const BASE = window.location.origin;
+const MSGS = ['Analysing your business...','Designing Layout 1 of 3...','Building your homepage...','Designing Layout 2 of 3...','Adding colours and fonts...','Designing Layout 3 of 3...','Almost ready...'];
 
 document.getElementById('aiform').addEventListener('submit', async e => {
   e.preventDefault();
+
   const fd = {
     businessName: document.getElementById('bn').value.trim(),
     businessType: document.getElementById('bt').value,
@@ -634,139 +655,106 @@ document.getElementById('aiform').addEventListener('submit', async e => {
   const pf = document.getElementById('pf');
   ld.style.display = 'flex';
 
-  const MSGS = ['Analysing your business...','Crafting Layout 1 of 3...','Building your sections...','Crafting Layout 2 of 3...','Adding colours and fonts...','Crafting Layout 3 of 3...','Almost done...'];
   let mi = 0;
-  const tick = setInterval(() => { lt.textContent = MSGS[++mi % MSGS.length]; }, 5000);
-  const done = () => clearInterval(tick);
-  const fail = msg => { done(); alert('Error: ' + msg); ld.style.display = 'none'; };
+  const mi_int = setInterval(() => { mi=(mi+1)%MSGS.length; lt.textContent=MSGS[mi]; }, 5000);
+
+  function done(){ clearInterval(mi_int); }
+  function fail(msg){ done(); alert('Error: '+msg); ld.style.display='none'; }
 
   try {
-    /* Step 1 — register */
+    // Register
     const r1 = await fetch(`${BASE}/api/generate-site`, {
-      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(fd)
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(fd)
     });
     const d1 = await r1.json();
-    if (!d1.success) { fail(d1.message || 'Registration failed'); return; }
+    if(!d1.success){ fail(d1.message||'Registration failed'); return; }
     const slug = d1.slug;
+
     const vars = [];
 
-    /* Step 2 — generate each design, get HTML directly in response */
-    for (let i = 0; i < 3; i++) {
-      lt.textContent = `Crafting Design ${i+1} of 3...`;
-      ls.textContent = 'AI is writing your full website — ~20 seconds per design';
-      pf.style.width = (10 + i * 25) + '%';
+    // Generate each design sequentially — one request each, well within timeout
+    for(let i = 0; i < 3; i++){
+      lt.textContent = `Designing Layout ${i+1} of 3...`;
+      ls.textContent = `This usually takes 20-30 seconds...`;
+      pf.style.width = (15 + i*25)+'%';
+
       try {
         const r2 = await fetch(`${BASE}/api/generate-one/${slug}/${i}`);
         const d2 = await r2.json();
-        if (d2.success && d2.html_content) {
-          /* Convert HTML string → blob URL → no CORS, no sandbox, guaranteed render */
-          const blob    = new Blob([d2.html_content], {type:'text/html'});
-          const blobUrl = URL.createObjectURL(blob);
-          vars.push({id: i, blobUrl, openUrl: d2.preview_url});
-          pf.style.width = (30 + i * 22) + '%';
+        if(d2.success){
+          vars.push({id:i, url:d2.preview_url});
+          pf.style.width = (35 + i*20)+'%';
         } else {
-          console.warn('Design ' + i + ' failed:', d2.message);
+          console.warn('Design '+i+' failed:', d2.message);
         }
-      } catch(err) { console.warn('Design ' + i + ' error:', err); }
+      } catch(err) {
+        console.warn('Design '+i+' fetch error:', err);
+      }
     }
 
     done();
-    if (vars.length === 0) { fail('All designs failed. Check GEMINI_API_KEY and try again.'); return; }
+
+    if(vars.length === 0){ fail('All designs failed. Please try again.'); return; }
 
     pf.style.width = '100%';
-    lt.textContent = vars.length + ' Designs Ready!';
-    ls.textContent = 'Choose your favourite below...';
+    lt.textContent  = vars.length+' Designs Ready!';
+    ls.textContent  = 'Choose your favourite below...';
 
-    setTimeout(() => { ld.style.display = 'none'; showDesigns(slug, vars); }, 500);
+    setTimeout(() => {
+      ld.style.display = 'none';
+      showDesigns(slug, vars);
+    }, 700);
 
-  } catch(err) { fail(err.message); }
+  } catch(err){ fail(err.message); }
 });
 
-function showDesigns(slug, vars) {
+function showDesigns(slug, vars){
   const grid = document.getElementById('sg');
   grid.innerHTML = '';
-
   vars.forEach(v => {
-    const card = document.createElement('div');
-    card.className = 'd-card';
-    card.innerHTML = `
-      <div class="preview-shell" id="shell-${v.id}">
-        <div class="prev-spin" id="spin-${v.id}">
-          <div class="ms"></div><span>Loading preview...</span>
-        </div>
-        <iframe id="fr-${v.id}" scrolling="no" title="Design ${v.id+1}"></iframe>
-      </div>
-      <div class="d-foot">
-        <div class="d-foot-left">
-          <strong>Design ${v.id+1}</strong>
-          <small>AI Custom Layout</small>
-        </div>
-        <div class="d-foot-btns">
-          <a class="btn-open" href="${v.openUrl}" target="_blank">Open tab</a>
-          <button class="btn-build" onclick="pick('${slug}',${v.id})">BUILD</button>
-        </div>
+    const c = document.createElement('div');
+    c.className = 'd-card';
+    c.innerHTML = `
+      <iframe src="${v.url}" class="d-preview" loading="lazy"></iframe>
+      <div class="d-info">
+        <div><strong style="font-size:0.95rem">Design ${v.id+1}</strong><br><small style="color:#64748b">AI Custom Layout</small></div>
+        <button class="btn-sel" onclick="pick('${slug}',${v.id})">Select This</button>
       </div>`;
-    grid.appendChild(card);
-
-    /* Set iframe src AFTER element is in DOM using requestAnimationFrame.
-       Using blob:// URL — no X-Frame-Options, no CSP, no sandbox paradox. */
-    requestAnimationFrame(() => {
-      const fr   = document.getElementById(`fr-${v.id}`);
-      const spin = document.getElementById(`spin-${v.id}`);
-      if (!fr) return;
-      fr.addEventListener('load', () => {
-        fr.classList.add('loaded');
-        if (spin) spin.classList.add('hide');
-      });
-      fr.src = v.blobUrl;
-    });
+    grid.appendChild(c);
   });
-
-  document.getElementById('so').style.display = 'block';
-  document.body.style.overflow = 'hidden';
+  document.getElementById('so').style.display='block';
+  document.body.style.overflow='hidden';
 }
 
-async function pick(slug, idx) {
-  document.getElementById('so').style.display = 'none';
-  document.body.style.overflow = 'auto';
+async function pick(slug, idx){
+  document.getElementById('so').style.display='none';
   const ld = document.getElementById('ld');
   const lt = document.getElementById('lt');
-  const pf = document.getElementById('pf');
-  ld.style.display = 'flex';
-  lt.textContent = 'Finalising your website...';
-  pf.style.width = '70%';
-  try {
-    const r = await fetch(`${BASE}/api/select-design`, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({slug, designIndex: idx})
+  ld.style.display='flex';
+  lt.textContent='Finalising your website...';
+  try{
+    const r = await fetch(`${BASE}/api/select-design`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({slug,designIndex:idx})
     });
     const d = await r.json();
-    pf.style.width = '100%';
-    if (d.success) {
-      window.location.href = d.previewUrl;
-    } else {
-      alert('Error: ' + (d.message || 'Unknown'));
-      ld.style.display = 'none';
-      document.getElementById('so').style.display = 'block';
-      document.body.style.overflow = 'hidden';
-    }
-  } catch(e) {
-    alert('Error: ' + e.message);
-    ld.style.display = 'none';
-    document.getElementById('so').style.display = 'block';
-    document.body.style.overflow = 'hidden';
-  }
+    if(d.success){ window.location = d.previewUrl; }
+    else{ alert('Error: '+(d.message||'Unknown')); ld.style.display='none'; document.body.style.overflow='auto'; }
+  }catch(e){ alert('Error: '+e.message); ld.style.display='none'; document.body.style.overflow='auto'; }
 }
 </script>
 </body>
 </html>"""
 
-# ─────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────
 #  ROUTES
-# ─────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────
 
 def html_r(body, status=200):
-    resp = Response(body.encode('utf-8'), status=status, mimetype='text/html; charset=utf-8')
+    resp = Response(body.encode('utf-8'), status=status,
+                    mimetype='text/html; charset=utf-8')
+    # No frame-ancestors here — @app.after_request already strips it.
+    # X-Frame-Options is also removed there. Iframes work from any origin.
     return resp
 
 @app.route('/')
@@ -775,6 +763,7 @@ def home():
 
 @app.route('/build-with-ai')
 def build_page():
+    """Standalone builder on API host only; marketing site uses static build-with-ai.html."""
     return html_r(FORM_HTML)
 
 def _health_payload():
@@ -786,15 +775,18 @@ def _health_payload():
         "db": bool(DATABASE_URL),
     }
 
+
 @app.route('/health')
 def health():
     return jsonify(_health_payload())
+
 
 @app.route('/api/health', methods=['GET', 'HEAD', 'OPTIONS'])
 def api_health():
     if request.method == 'OPTIONS':
         return '', 204
     return jsonify(_health_payload())
+
 
 @app.route('/api/debug')
 def debug():
@@ -815,6 +807,7 @@ def list_models():
     except Exception as e:
         return jsonify({"error": str(e)})
 
+# ── Register job ──────────────────────────────────────────────────────────────
 @app.route('/api/generate-site', methods=['POST', 'OPTIONS'])
 def start_generation():
     if request.method == 'OPTIONS':
@@ -822,7 +815,7 @@ def start_generation():
     if not DATABASE_URL:
         return jsonify({
             "success": False,
-            "message": "DATABASE_URL is not set. Add it in Vercel → Settings → Environment Variables.",
+            "message": "DATABASE_URL is not set on the server. Add it in Vercel → Project → Settings → Environment Variables.",
         }), 503
     try:
         data = request.get_json()
@@ -836,9 +829,9 @@ def start_generation():
             INSERT INTO sites (slug,business_name,business_type,location,services,style,colors,status,message)
             VALUES (%s,%s,%s,%s,%s,%s,%s,'STARTING','Ready')
             ON CONFLICT (slug) DO NOTHING
-        """, (slug, data.get('businessName'), data.get('businessType', 'other'),
-              data.get('location', ''), data.get('services', ''),
-              data.get('style', 'modern'), data.get('colors', [])))
+        """, (slug, data.get('businessName'), data.get('businessType','other'),
+              data.get('location',''), data.get('services',''),
+              data.get('style','modern'), data.get('colors',[])))
         conn.commit()
         cur.close(); conn.close()
         return jsonify({"success": True, "slug": slug})
@@ -846,6 +839,7 @@ def start_generation():
         traceback.print_exc()
         return jsonify({"success": False, "message": str(e)}), 500
 
+# ── Generate ONE design (safe per Vercel 60s limit) ───────────────────────────
 @app.route('/api/generate-one/<slug>/<int:idx>', methods=['GET', 'HEAD', 'OPTIONS'])
 def generate_one(slug, idx):
     if request.method == 'OPTIONS':
@@ -861,10 +855,7 @@ def generate_one(slug, idx):
         if idx not in (0, 1, 2):
             return jsonify({"success": False, "message": "idx must be 0, 1 or 2"}), 400
 
-        # FIX: pass base_url explicitly so build_prompt() doesn't rely on request context internally
-        base_url = request.host_url.rstrip('/')
-        html = generate_html(dict(site), idx, base_url=base_url)
-
+        html = generate_html(dict(site), idx)
         if not html:
             return jsonify({"success": False, "message": LAST_AI_ERROR or "Generation failed"})
 
@@ -878,17 +869,19 @@ def generate_one(slug, idx):
         conn2.commit()
         cur2.close(); conn2.close()
 
+        base = request.host_url.rstrip('/')
         return jsonify({
             "success":      True,
             "variation_id": idx,
-            "preview_url":  f"{base_url}/view-design/{slug}/{idx}",
-            "html_content": html,   # Send HTML directly — no second round-trip needed
+            "preview_url":  f"{base}/view-design/{slug}/{idx}",
+            "html_content": html,
             "all_done":     idx == 2,
         })
     except Exception as e:
         traceback.print_exc()
         return jsonify({"success": False, "message": str(e)}), 500
 
+# ── Select design ─────────────────────────────────────────────────────────────
 @app.route('/api/select-design', methods=['POST', 'OPTIONS'])
 def select_design():
     if request.method == 'OPTIONS':
@@ -914,14 +907,15 @@ def select_design():
         conn.commit()
         cur.close(); conn.close()
         base = request.host_url.rstrip('/')
-        return jsonify({"success": True, "previewUrl": f"{base}/s/{slug}", "downloadUrl": f"{base}/download/{slug}"})
+        return jsonify({"success":True,"previewUrl":f"{base}/s/{slug}","downloadUrl":f"{base}/download/{slug}"})
     except Exception as e:
         traceback.print_exc()
         return jsonify({"success": False, "message": str(e)}), 500
 
+# ── View variation ────────────────────────────────────────────────────────────
 @app.route('/view-design/<slug>/<int:idx>')
 def view_variation(slug, idx):
-    """Return raw generated HTML for preview inside iframe — NO banner."""
+    """Return the raw generated HTML for a design variation — NO banner, clean preview."""
     try:
         conn = get_db()
         cur  = conn.cursor()
@@ -929,37 +923,37 @@ def view_variation(slug, idx):
         row = cur.fetchone()
         conn.close()
         if not row:
-            return html_r("<h1 style='font-family:sans-serif;padding:40px;color:#dc2626'>Design not found</h1>", 404)
+            return html_r("<h1>Not found</h1>", 404)
         return html_r(row[0])
     except Exception as e:
-        return html_r(f"<h1 style='font-family:sans-serif;padding:40px;color:#dc2626'>DB Error: {e}</h1>", 500)
+        return html_r(f"<h1>Error: {e}</h1>", 500)
 
+# ── Final site ────────────────────────────────────────────────────────────────
 @app.route('/s/<slug>')
 def show_site(slug):
     try:
         conn = get_db()
         cur  = conn.cursor()
-        cur.execute("SELECT html_content FROM final_sites WHERE site_slug=%s", (slug,))
+        cur.execute("SELECT html_content FROM final_sites WHERE site_slug=%s",(slug,))
         row = cur.fetchone()
         conn.close()
-        if row:
-            return html_r(row[0])
-        return html_r("<h1 style='font-family:sans-serif;padding:40px'>Site not found</h1>", 404)
+        if row: return html_r(row[0])
+        return html_r("<h1>Not found</h1>", 404)
     except Exception as e:
-        return html_r(f"<h1 style='font-family:sans-serif;padding:40px;color:red'>Error: {e}</h1>", 500)
+        return html_r(f"<h1>Error: {e}</h1>", 500)
 
+# ── Download ZIP ──────────────────────────────────────────────────────────────
 @app.route('/download/<slug>')
 def download(slug):
     try:
         conn = get_db()
         cur  = conn.cursor()
-        cur.execute("SELECT html_content FROM final_sites WHERE site_slug=%s", (slug,))
+        cur.execute("SELECT html_content FROM final_sites WHERE site_slug=%s",(slug,))
         row = cur.fetchone()
         conn.close()
-        if not row:
-            return html_r("<h1>Not found</h1>", 404)
+        if not row: return html_r("<h1>Not found</h1>", 404)
         buf = BytesIO()
-        with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+        with zipfile.ZipFile(buf,'w',zipfile.ZIP_DEFLATED) as zf:
             zf.writestr("index.html", row[0].encode('utf-8'))
         buf.seek(0)
         return send_file(buf, mimetype='application/zip', as_attachment=True,
@@ -972,39 +966,56 @@ def submit_template():
     if request.method == 'OPTIONS':
         return '', 204
     try:
+        # Check if the post request has the file part
         if 'file' not in request.files:
             return jsonify({"success": False, "message": "No file part"}), 400
+        
         file = request.files['file']
         if file.filename == '':
             return jsonify({"success": False, "message": "No selected file"}), 400
+        
         if file and file.filename.lower().endswith('.zip'):
-            name          = request.form.get('name')
-            email         = request.form.get('email')
+            name = request.form.get('name')
+            email = request.form.get('email')
             template_name = request.form.get('template_name')
-            category      = request.form.get('category')
-            preview_url   = request.form.get('preview_url')
-            description   = request.form.get('description')
+            category = request.form.get('category')
+            preview_url = request.form.get('preview_url')
+            description = request.form.get('description')
+
             if not template_name or not name or not email:
                 return jsonify({"success": False, "message": "Missing required fields"}), 400
+            
+            # Save file with timestamp prefix to prevent collisions
             import time
             timestamp = int(time.time())
-            filename  = secure_filename(f"{timestamp}_{secure_filename(template_name)}_{file.filename}")
-            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+            safe_tmpl_name = secure_filename(template_name)
+            filename = secure_filename(f"{timestamp}_{safe_tmpl_name}_{file.filename}")
+            
+            if not os.path.exists(UPLOAD_FOLDER):
+                os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+                
             file_path = os.path.join(UPLOAD_FOLDER, filename)
             file.save(file_path)
+            
+            # Save to DB
             conn = get_db()
             cur  = conn.cursor()
             cur.execute("""
-                INSERT INTO template_submissions (name,email,template_name,category,preview_url,file_path,description)
-                VALUES (%s,%s,%s,%s,%s,%s,%s)
+                INSERT INTO template_submissions 
+                (name, email, template_name, category, preview_url, file_path, description)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (name, email, template_name, category, preview_url, file_path, description))
             conn.commit()
             cur.close(); conn.close()
+            
             return jsonify({"success": True, "message": "Template submitted successfully!"})
         else:
             return jsonify({"success": False, "message": "Only .zip files are allowed"}), 400
+            
     except Exception as e:
         traceback.print_exc()
+        if "permission denied" in str(e).lower():
+            return jsonify({"success": False, "message": "Server storage permission error"}), 500
         return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
 
 if __name__ == '__main__':
