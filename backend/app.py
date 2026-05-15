@@ -911,21 +911,16 @@ def select_design():
 # ── View variation ────────────────────────────────────────────────────────────
 @app.route('/view-design/<slug>/<int:idx>')
 def view_variation(slug, idx):
+    """Return the raw generated HTML for a design variation — NO banner, clean preview."""
     try:
         conn = get_db()
-        cur  = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute("SELECT html_content FROM variations WHERE site_slug=%s AND variation_index=%s",(slug,idx))
+        cur  = conn.cursor()
+        cur.execute("SELECT html_content FROM variations WHERE site_slug=%s AND variation_index=%s", (slug, idx))
         row = cur.fetchone()
-        cur.execute("SELECT * FROM sites WHERE slug=%s", (slug,))
-        site = cur.fetchone()
         conn.close()
         if not row:
             return html_r("<h1>Not found</h1>", 404)
-        html = row['html_content']
-        if site:
-            base = request.host_url.rstrip('/')
-            html = inject_banner(html, dict(site), slug, base)
-        return html_r(html)
+        return html_r(row[0])
     except Exception as e:
         return html_r(f"<h1>Error: {e}</h1>", 500)
 
