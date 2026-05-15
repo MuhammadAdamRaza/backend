@@ -279,256 +279,612 @@ else:
 #  PREMIUM TEMPLATES (static HTML — no AI / Gemini)
 # ────────────────────────────────────────────────
 
-_PREMIUM_INDUSTRY = {
-    "plumber": {"label": "Plumbing & Heating", "hero": "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=1200&q=80", "team": "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&q=80", "pitch": "Gas-safe minded engineers with fast call-outs, transparent quotes, and trusted workmanship."},
-    "electrician": {"label": "Electrical Services", "hero": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=1200&q=80", "team": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=800&q=80", "pitch": "Qualified electricians for installs, fault finding, rewires, and safety certificates."},
-    "restaurant": {"label": "Restaurant & Café", "hero": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80", "team": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80", "pitch": "Seasonal menus, warm hospitality, and memorable dining experiences."},
-    "law": {"label": "Legal Services", "hero": "https://images.unsplash.com/photo-1589829545855-d10d557cf57f?w=1200&q=80", "team": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&q=80", "pitch": "Clear advice and disciplined case management focused on your outcome."},
-    "consulting": {"label": "Business Consulting", "hero": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&q=80", "team": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80", "pitch": "Strategy and growth programmes for ambitious UK small businesses."},
-    "fitness": {"label": "Gym & Fitness", "hero": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80", "team": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80", "pitch": "Expert coaching and training programmes for every fitness level."},
-    "realestate": {"label": "Real Estate", "hero": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80", "team": "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&q=80", "pitch": "Local insight, honest valuations, and smooth property transactions."},
-    "agency": {"label": "Creative Agency", "hero": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80", "team": "https://images.unsplash.com/photo-1529333166437-7750a6dd4a70?w=800&q=80", "pitch": "Brand, web, and marketing that helps UK businesses win more customers."},
-    "other": {"label": "Professional Services", "hero": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1200&q=80", "team": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80", "pitch": "Dependable expertise with transparent communication throughout."},
+import re
+from html import escape as _e
+
+INDUSTRY = {
+    "plumber": {"label": "Plumbing & Heating", "hero": "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=1200&q=80", "team": "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&q=80", "work": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80", "pitch": "Gas-safe minded engineers with fast call-outs, transparent quotes, and workmanship you can trust across every job."},
+    "electrician": {"label": "Electrical Services", "hero": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=1200&q=80", "team": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=800&q=80", "work": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80", "pitch": "Qualified electricians for domestic and commercial installs, fault finding, rewires, and safety certificates."},
+    "restaurant": {"label": "Restaurant & Café", "hero": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80", "team": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80", "work": "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80", "pitch": "Seasonal menus, warm hospitality, and memorable dining in the heart of the community."},
+    "law": {"label": "Legal Services", "hero": "https://images.unsplash.com/photo-1589829545855-d10d557cf57f?w=1200&q=80", "team": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&q=80", "work": "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&q=80", "pitch": "Clear advice, disciplined case management, and outcomes-focused representation."},
+    "consulting": {"label": "Business Consulting", "hero": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&q=80", "team": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80", "work": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80", "pitch": "Strategy, operations, and growth programmes tailored to ambitious UK small businesses."},
+    "fitness": {"label": "Gym & Fitness", "hero": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80", "team": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80", "work": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80", "pitch": "Expert coaching, modern equipment, and programmes built for sustainable results."},
+    "realestate": {"label": "Real Estate", "hero": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80", "team": "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&q=80", "work": "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?w=800&q=80", "pitch": "Local market insight, honest valuations, and a smooth journey from viewing to completion."},
+    "agency": {"label": "Creative Agency", "hero": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80", "team": "https://images.unsplash.com/photo-1529333166437-7750a6dd4a70?w=800&q=80", "work": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80", "pitch": "Brand, web, and campaigns that help UK businesses stand out and convert more customers online."},
+    "other": {"label": "Professional Services", "hero": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1200&q=80", "team": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80", "work": "https://images.unsplash.com/photo-1556761175-b413da4baf72?w=800&q=80", "pitch": "Dependable expertise, transparent communication, and solutions designed around your goals."},
 }
 
-_PREMIUM_SERVICE_BLURBS = [
-    "Delivered by qualified specialists with clear timelines and written scope.",
-    "Trusted locally — flexible booking including urgent appointments.",
-    "Full walkthrough, plain-English summary, and follow-up after completion.",
-    "Completed to UK standards with documentation on request.",
-    "Safe, tidy workmanship with respect for your home or business.",
-    "Friendly team — no jargon, no pressure selling.",
+SVC_BLURB = [
+    "A complete service delivered by qualified specialists — we confirm scope in writing before work begins so you know exactly what to expect.",
+    "Popular with homeowners and businesses across {location} — flexible scheduling including urgent appointments when you need us most.",
+    "Includes a full consultation, plain-English summary of options, and follow-up support after the job is signed off.",
+    "Completed to recognised UK standards with certificates, photos, and documentation supplied on request.",
+    "Ideal for planned maintenance and reactive call-outs — we prioritise safety, cleanliness, and respect for your property.",
+    "Backed by our satisfaction promise and a friendly team who explain every step without jargon or pressure.",
 ]
 
-_PREMIUM_TESTIMONIALS = [
-    ("James Mitchell", "Homeowner", "Punctual, tidy, and transparent on price from start to finish."),
-    ("Priya Sharma", "Business owner", "Understood our deadlines and delivered exactly as promised."),
-    ("David Hughes", "Property manager", "Reliable across multiple sites — professional every time."),
+FEATURES = [
+    ("bi-lightning-charge", "Rapid response", "Same-day and emergency slots where possible — we respect your time and communicate arrival windows clearly."),
+    ("bi-shield-check", "Fully insured", "Comprehensive cover and qualified staff — peace of mind for domestic and commercial clients alike."),
+    ("bi-cash-coin", "Transparent pricing", "Written quotes before work starts — no hidden extras or surprise charges on the day."),
+    ("bi-chat-dots", "Clear communication", "Updates by phone or email throughout — you always know what happens next."),
+    ("bi-award", "Proven quality", "Hundreds of completed projects in {location} — ask for local references anytime."),
+    ("bi-headset", "Aftercare support", "We check in after completion to ensure you are completely satisfied with the result."),
 ]
 
+TESTIMONIALS = [
+    ("James Mitchell", "Homeowner, {location}", "From first call to finish, the team was punctual, tidy, and transparent on price. I have already recommended them to neighbours."),
+    ("Priya Sharma", "Business owner", "They understood our deadlines and delivered exactly what was promised. Communication was excellent throughout the project."),
+    ("David Hughes", "Property manager", "Professional paperwork, reliable scheduling, and quality work across multiple sites — exactly what we need."),
+    ("Sarah Clarke", "Local resident", "Honest advice, no upselling, and a finish we are proud to show visitors. Genuinely the best experience we have had."),
+]
 
-def _premium_parse_services(raw):
+TEAM = [
+    ("Alex Turner", "Director"),
+    ("Jordan Lee", "Lead technician"),
+    ("Sam Patel", "Customer success"),
+    ("Riley Morgan", "Operations"),
+]
+
+BLOG = [
+    ("How to choose the right {label_l} provider in {location}", "A practical checklist for comparing quotes, credentials, and reviews before you commit."),
+    ("5 questions to ask before booking {label_l} work", "Protect your budget and timeline with these expert-approved questions."),
+    ("Why {name} invests in ongoing training", "How our team stays current with regulations, tools, and customer care standards."),
+]
+
+AWARDS = ["Fully insured", "DBS checked", "UK standards", "5★ rated", "Written quotes", "Local team"]
+
+
+def _parse_services(raw):
     if isinstance(raw, list):
         items = [str(s).strip() for s in raw if str(s).strip()]
     else:
         items = [s.strip() for s in str(raw or "").split(",") if s.strip()]
     if not items:
-        items = ["Consultation", "Installation", "Ongoing support"]
+        items = ["Free consultation", "Professional installation", "Maintenance & support"]
     while len(items) < 3:
         items.append(items[-1])
-    return items[:6]
+    return items[:8]
 
 
-def _premium_parse_colors(raw):
+def _parse_colors(raw):
     if isinstance(raw, list) and len(raw) >= 2:
-        return (
-            str(raw[0] or "#2563eb").strip(),
-            str(raw[1] or "#7c3aed").strip(),
-            str(raw[2] if len(raw) > 2 else "#f8fafc").strip(),
-        )
+        return str(raw[0] or "#2563eb").strip(), str(raw[1] or "#7c3aed").strip(), str(raw[2] if len(raw) > 2 else "#f8fafc").strip()
     return "#2563eb", "#7c3aed", "#f8fafc"
+
+
+def _hex_norm(c):
+    c = str(c or "#2563eb").strip()
+    if not c.startswith("#"):
+        c = "#" + c
+    if len(c) == 4:
+        c = "#" + "".join(x * 2 for x in c[1:])
+    return c[:7] if len(c) >= 7 else "#2563eb"
+
+
+def _hex_rgb(c):
+    h = _hex_norm(c)[1:]
+    return tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))
+
+
+def _hex_mix(c1, c2, t):
+    t = max(0.0, min(1.0, float(t)))
+    r1, g1, b1 = _hex_rgb(c1)
+    r2, g2, b2 = _hex_rgb(c2)
+    return "#{:02x}{:02x}{:02x}".format(
+        int(r1 + (r2 - r1) * t),
+        int(g1 + (g2 - g1) * t),
+        int(b1 + (b2 - b1) * t),
+    )
+
+
+def _hex_lum(c):
+    r, g, b = _hex_rgb(c)
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255
+
+
+def _theme(vi, primary, secondary, surface):
+    """Each variation tints from the user's form colours — not fixed navy/purple."""
+    primary, secondary, surface = _hex_norm(primary), _hex_norm(secondary), _hex_norm(surface)
+    if vi == 0:
+        bg = _hex_mix(primary, "#000000", 0.78)
+        card = _hex_mix(primary, "#ffffff", 0.14)
+        text = "#f8fafc"
+        muted = _hex_mix(secondary, "#94a3b8", 0.45)
+        alt = _hex_mix(primary, secondary, 0.22)
+    elif vi == 1:
+        bg = surface
+        card = _hex_mix(surface, "#ffffff", 0.9)
+        text = "#0f172a" if _hex_lum(bg) > 0.58 else "#f1f5f9"
+        muted = _hex_mix(primary, "#64748b", 0.55)
+        alt = _hex_mix(surface, primary, 0.14)
+    else:
+        bg = _hex_mix(secondary, primary, 0.62)
+        card = _hex_mix(secondary, "#ffffff", 0.18)
+        text = "#f8fafc" if _hex_lum(bg) < 0.5 else "#0f172a"
+        muted = _hex_mix(secondary, "#cbd5e1", 0.48)
+        alt = _hex_mix(secondary, primary, 0.38)
+    return {"bg": bg, "text": text, "card": card, "muted": muted, "alt": alt}
+
+
+SVC_ICONS = [
+    "bi-wrench", "bi-tools", "bi-gear-wide-connected", "bi-house-check",
+    "bi-clipboard-check", "bi-truck", "bi-star", "bi-heart-pulse",
+]
+
+
+def _build_services_html(vi, svcs, loc):
+    parts = []
+    for i, svc in enumerate(svcs):
+        blurb = _e(SVC_BLURB[i % len(SVC_BLURB)].format(location=loc))
+        icon = SVC_ICONS[i % len(SVC_ICONS)]
+        if vi == 2:
+            rev = "flex-lg-row-reverse" if i % 2 else ""
+            parts.append(
+                f'<div class="mb-4"><div class="box d-lg-flex align-items-center gap-4 {rev}">'
+                f'<div class="flex-shrink-0"><div class="icon-pill"><i class="bi {icon}"></i></div></div>'
+                f'<div class="flex-grow-1"><h3 class="h4 fw-bold mb-2">{svc}</h3>'
+                f'<p class="muted mb-0">{blurb}</p></div></div></div>'
+            )
+        elif vi == 1:
+            parts.append(
+                f'<div class="col-md-6"><div class="box h-100">'
+                f'<div class="d-flex gap-3 align-items-start">'
+                f'<div class="icon-pill flex-shrink-0"><i class="bi {icon}"></i></div>'
+                f'<div><h3 class="h4 fw-bold mb-2">{svc}</h3>'
+                f'<p class="muted mb-0">{blurb}</p></div></div></div></div>'
+            )
+        else:
+            parts.append(
+                f'<div class="col-md-6 col-xl-4"><div class="box h-100">'
+                f'<div class="icon-pill"><i class="bi {icon}"></i></div>'
+                f'<h3 class="h4 fw-bold mb-3">{svc}</h3>'
+                f'<p class="muted mb-0">{blurb}</p></div></div>'
+            )
+    body = "".join(parts).replace("div", "div")
+    if vi == 2:
+        return f'<div class="v-services-stack">{body}</div>'
+    return f'<div class="row g-4">{body}</div>'
+
+
+def _build_features_html(vi, loc):
+    parts = []
+    for icon, title, desc in FEATURES[:6]:
+        d, t = _e(desc.format(location=loc)), _e(title)
+        if vi == 2:
+            parts.append(
+                f'<div class="feat-row d-flex gap-4 align-items-start">'
+                f'<div class="icon-pill flex-shrink-0"><i class="bi {icon}"></i></div>'
+                f'<div><h3 class="h5 fw-bold mb-1">{t}</h3><p class="muted mb-0">{d}</p></div></div>'
+            )
+        elif vi == 1:
+            parts.append(
+                f'<div class="col-lg-6"><div class="box h-100">'
+                f'<div class="d-flex gap-3"><div class="icon-pill flex-shrink-0"><i class="bi {icon}"></i></div>'
+                f'<div><h3 class="h5 fw-bold">{t}</h3><p class="muted mb-0">{d}</p></div></div></div></div>'
+            )
+        else:
+            parts.append(
+                f'<div class="col-md-6 col-lg-4"><div class="box h-100">'
+                f'<div class="icon-pill"><i class="bi {icon}"></i></div>'
+                f'<h3 class="h5 fw-bold">{t}</h3><p class="muted mb-0">{d}</p></div></div>'
+            )
+    body = "".join(parts).replace("div", "div")
+    if vi == 2:
+        return f'<div class="feat-list d-flex flex-column gap-4">{body}</div>'
+    return f'<div class="row g-4">{body}</div>'
+
+
+def _build_testimonials_html(vi, loc):
+    parts = []
+    for person, role, quote in TESTIMONIALS:
+        q = _e(quote.format(location=loc))
+        role_e = _e(role.format(location=loc))
+        if vi == 2:
+            parts.append(
+                f'<div class="col-12"><div class="box d-md-flex gap-4 align-items-center">'
+                f'<div class="av flex-shrink-0 mb-3 mb-md-0">{_e(person[0])}</div>'
+                f'<div><div class="text-warning mb-2">★★★★★</div>'
+                f'<p class="mb-2 fs-5">"{q}"</p>'
+                f'<strong>{_e(person)}</strong> · <span class="muted">{role_e}</span></div></div></div>'
+            )
+        elif vi == 1:
+            parts.append(
+                f'<div class="col-md-6"><div class="box h-100">'
+                f'<div class="text-warning mb-2">★★★★★</div><p class="mb-3">"{q}"</p>'
+                f'<div class="d-flex gap-2 align-items-center">'
+                f'<div class="av">{_e(person[0])}</div><div><strong>{_e(person)}</strong><br>'
+                f'<span class="small muted">{role_e}</span></div></div></div></div>'
+            )
+        else:
+            parts.append(
+                f'<div class="col-md-6 col-lg-3"><div class="box h-100">'
+                f'<div class="text-warning mb-2">★★★★★</div><p class="mb-3">"{q}"</p>'
+                f'<div class="d-flex gap-2 align-items-center">'
+                f'<div class="av">{_e(person[0])}</div><div><strong class="small">{_e(person)}</strong><br>'
+                f'<span class="small muted">{role_e}</span></div></div></div></div>'
+            )
+    return '<div class="row g-4">' + "".join(parts).replace("div", "div") + "</div>"
+
+
+_PREMIUM_SECTION_ORDER = {
+    0: [
+        "hero", "logos", "problem", "solution", "mission", "features", "services", "how",
+        "stats", "case", "reviews", "founder", "awards", "pricing", "faq", "team",
+        "blog", "map", "newsletter", "cta", "contact",
+    ],
+    1: [
+        "hero", "logos", "stats", "services", "how", "features", "problem", "solution",
+        "mission", "reviews", "pricing", "case", "founder", "awards", "faq", "team",
+        "blog", "map", "newsletter", "cta", "contact",
+    ],
+    2: [
+        "hero", "services", "pricing", "features", "how", "stats", "problem", "solution",
+        "mission", "reviews", "case", "founder", "awards", "faq", "team", "blog", "map",
+        "newsletter", "cta", "contact",
+    ],
+}
 
 
 def build_premium_html(data, variation_index):
     name_raw = data.get("businessName") or data.get("business_name") or "Your Business"
-    name = html_escape(name_raw)
+    name = _e(name_raw)
     btype = (data.get("businessType") or data.get("business_type") or "other").lower()
-    location = html_escape(data.get("location") or "the UK")
-    ind = _PREMIUM_INDUSTRY.get(btype, _PREMIUM_INDUSTRY["other"])
-    label = html_escape(ind["label"])
+    loc = _e(data.get("location") or "the UK")
+    style = (data.get("style") or "modern").lower()
+    ind = INDUSTRY.get(btype, INDUSTRY["other"])
+    label = _e(ind["label"])
     label_l = label.lower()
-    services = [html_escape(s) for s in _premium_parse_services(data.get("services"))]
-    primary, secondary, surface = _premium_parse_colors(data.get("colors"))
+    svcs = [_e(s) for s in _parse_services(data.get("services"))]
+    primary, secondary, surface = _parse_colors(data.get("colors"))
+    primary, secondary, surface = _hex_norm(primary), _hex_norm(secondary), _hex_norm(surface)
     vi = int(variation_index) % 3
-
-    if vi == 0:
-        bg, text, card, muted = "#0b1220", "#f1f5f9", "#151f32", "#94a3b8"
-    elif vi == 1:
-        bg, text, card, muted = surface, "#0f172a", "#ffffff", "#64748b"
-    else:
-        bg, text, card, muted = "#1a1033", "#faf5ff", "#261b45", "#c4b5fd"
-
-    pitch = html_escape(ind["pitch"])
-    hero_img, team_img = ind["hero"], ind["team"]
+    t = _theme(vi, primary, secondary, surface)
+    bg, text, card, muted, alt = t["bg"], t["text"], t["card"], t["muted"], t["alt"]
+    pitch = _e(ind["pitch"])
+    hero_img, team_img, work_img = ind["hero"], ind["team"], ind["work"]
     email_slug = re.sub(r"[^a-z0-9]", "", name_raw.lower()) or "hello"
-    headlines = [
-        f"Trusted {label_l} specialists in {location}",
-        f"{name} — premium {label_l} you can rely on",
-        f"Expert {label_l} for {location} homes & businesses",
-    ]
-    headline = headlines[vi]
-    overlay = f"linear-gradient(135deg,{primary}dd 0%,{secondary}aa 55%,{bg}ee 100%)"
 
-    svc_blocks = []
-    icons = ["bi-stars", "bi-shield-check", "bi-clock-history", "bi-award", "bi-people", "bi-gear"]
-    for i, svc in enumerate(services):
-        svc_blocks.append(
-            f'<div class="col-md-6 col-lg-4"><div class="svc-card h-100">'
-            f'<div class="svc-icon" style="background:{primary}"><i class="bi {icons[i % 6]}"></i></div>'
-            f'<h3 class="h4 fw-bold mb-3">{svc}</h3>'
-            f'<p style="color:{muted}">{html_escape(_PREMIUM_SERVICE_BLURBS[i % len(_PREMIUM_SERVICE_BLURBS)])}</p>'
-            f"</div></div>"
-        )
-    svc_html = "".join(svc_blocks)
+    headlines = {
+        "modern": [f"The smarter way to book {label_l} in {loc}", f"{name} — modern {label_l} for {loc}", f"Meet the future of {label_l} in {loc}"],
+        "professional": [f"Trusted {label_l} specialists serving {loc}", f"{name} — professional {label_l} you can rely on", f"Expert {label_l} for homes and businesses in {loc}"],
+        "creative": [f"Bold {label_l} that stands out in {loc}", f"{name} reimagines {label_l} in {loc}", f"Creative solutions for {label_l} in {loc}"],
+        "minimal": [f"Simple, honest {label_l} in {loc}", f"{name} — clear {label_l}, done right", f"Focused {label_l} for {loc}"],
+    }
+    hlist = headlines.get(style, headlines["modern"])
+    headline = hlist[vi]
+    overlay = f"linear-gradient(135deg,{primary}dd 0%,{secondary}bb 50%,{bg}ee 100%)"
+    font_heading = "Plus Jakarta Sans" if vi != 2 else "Outfit"
 
-    testi_blocks = []
-    for person, role, quote in _PREMIUM_TESTIMONIALS:
-        testi_blocks.append(
-            f'<div class="col-md-4"><div class="testi-card h-100">'
-            f'<div class="text-warning mb-3">★★★★★</div><p class="mb-4">"{html_escape(quote)}"</p>'
-            f'<div class="d-flex gap-3 align-items-center"><div class="avatar">{html_escape(person[0])}</div>'
-            f"<div><strong>{html_escape(person)}</strong><br>"
-            f'<small style="color:{muted}">{html_escape(role)} · {location}</small></div>'
-            f"</div></div></div>"
-        )
-    testi_html = "".join(testi_blocks)
+    services_html = _build_services_html(vi, svcs, loc)
+    features_html = _build_features_html(vi, loc)
+    testi_html = _build_testimonials_html(vi, loc)
 
-    price_blocks = []
-    for tier, price, desc, feats, featured in [
-        ("Essential", "From £99", "Straightforward jobs.", ["Site visit", "Written estimate", "Warranty"], False),
-        ("Professional", "From £249", "Most popular package.", ["Priority booking", "Premium parts", "12-mo support"], True),
-        ("Premium", "Custom", "Large or commercial jobs.", ["Account manager", "Flexible billing", "Maintenance"], False),
+    prices = []
+    for tier, price, desc, feats, star in [
+        ("Starter", "From £99", "Straightforward jobs and quick advice.", ["Site visit", "Written estimate", "Standard warranty"], False),
+        ("Professional", "From £249", "Our most popular package for complete peace of mind.", ["Priority scheduling", "Premium materials", "12-month phone support"], True),
+        ("Enterprise", "Custom quote", "Larger projects and commercial contracts.", ["Dedicated manager", "Flexible billing", "Planned maintenance"], False),
     ]:
-        lis = "".join(
-            f'<li><i class="bi bi-check2-circle me-2" style="color:{primary}"></i>{html_escape(f)}</li>'
-            for f in feats
+        lis = "".join(f'<li><i class="bi bi-check2-circle me-2"></i>{_e(f)}</li>' for f in feats)
+        cls = " box featured" if star else " box"
+        prices.append(
+            f'<div class="col-lg-4"><div class="{cls.strip()}">'
+            f'<p class="fw-bold text-uppercase small accent">{_e(tier)}</p>'
+            f'<h3 class="display-6 fw-bold">{_e(price)}</h3>'
+            f'<p class="muted">{_e(desc)}</p><ul class="list-unstyled mb-4">{lis}</ul>'
+            f'<a href="#contact" class="btn-main w-100 text-center d-block">Get a quote</a></div></div>'
         )
-        cls = " price-card pricing-featured" if featured else " price-card"
-        price_blocks.append(
-            f'<div class="col-lg-4"><div class="{cls.strip()}" style="border:1px solid {primary}40">'
-            f'<p class="fw-bold text-uppercase small" style="color:{primary}">{html_escape(tier)}</p>'
-            f'<h3 class="display-6 fw-bold">{html_escape(price)}</h3>'
-            f'<p style="color:{muted}">{html_escape(desc)}</p>'
-            f'<ul class="list-unstyled mb-4">{lis}</ul>'
-            f'<a href="#contact" class="btn w-100 btn-brand">Get quote</a></div></div>'
-        )
-    price_html = "".join(price_blocks)
+    pricing_html = "".join(prices)
 
-    faq_items = [
-        (f"How fast can you help in {location}?", "We usually reply within 2 hours. Same-day slots often available."),
-        ("Are quotes free?", "Yes — clear written estimates before any work begins."),
-        (f"What areas do you cover?", f"{location} and surrounding postcodes. Message us to confirm."),
-        (f"Why choose {name}?", "Transparent pricing, qualified staff, and tidy, respectful work."),
+    faqs = [
+        (f"How quickly can you help in {loc}?", "Most enquiries receive a reply within 2 hours. Emergency and same-day slots are often available — call us for live availability."),
+        ("Are quotes free and without obligation?", "Yes. We provide clear written estimates before any work begins so you can decide with confidence."),
+        (f"Which areas do you cover?", f"We serve {loc} and surrounding postcodes. Send your address and we will confirm coverage immediately."),
+        (f"What makes {name} different?", "Transparent pricing, qualified staff, tidy workmanship, and communication in plain English from start to finish."),
+        ("How do I pay?", "Bank transfer, card, and invoice options for trade clients. Payment terms are explained on every quote."),
+        ("Do you offer guarantees?", "Yes — workmanship guarantees are included on eligible services and documented in your quote."),
     ]
-    faq_parts = []
-    for i, (q, a) in enumerate(faq_items):
-        faq_parts.append(
-            f'<div class="accordion-item" style="background:transparent">'
+    faq_html = ""
+    for i, (q, a) in enumerate(faqs):
+        faq_html += (
+            f'<div class="accordion-item acc-item">'
             f'<h2 class="accordion-header"><button class="accordion-button collapsed" type="button" '
-            f'data-bs-toggle="collapse" data-bs-target="#f{vi}{i}">{q}</button></h2>'
-            f'<div id="f{vi}{i}" class="accordion-collapse collapse" data-bs-parent="#faq{vi}">'
-            f'<div class="accordion-body" style="color:{muted}">{html_escape(a)}</div></div></div>'
+            f'data-bs-toggle="collapse" data-bs-target="#fq{vi}{i}">{q}</button></h2>'
+            f'<div id="fq{vi}{i}" class="accordion-collapse collapse" data-bs-parent="#faqAcc{vi}">'
+            f'<div class="accordion-body muted">{_e(a)}</div></div></div>'
         )
-    faq_html = "".join(faq_parts)
+
+    blog_cards = ""
+    for title_tpl, excerpt in BLOG:
+        blog_cards += (
+            f'<div class="col-md-4"><div class="box h-100">'
+            f'<div class="blog-thumb" style="background-image:url({work_img})"></div>'
+            f'<div class="p-4"><h3 class="h5 fw-bold">{_e(title_tpl.format(label_l=label_l, location=loc, name=name))}</h3>'
+            f'<p class="muted small">{_e(excerpt.format(label_l=label_l, name=name))}</p>'
+            f'<a href="#" class="accent fw-semibold">Read more →</a></div></div></div>'
+        )
+
+    team_html = ""
+    for person, role in TEAM:
+        team_html += (
+            f'<div class="col-6 col-md-3"><div class="box text-center h-100">'
+            f'<div class="av mx-auto mb-3">{_e(person[0])}</div>'
+            f'<h3 class="h6 fw-bold mb-1">{_e(person)}</h3><p class="small muted mb-0">{_e(role)}</p></div></div>'
+        )
+
+    logos = "".join(f'<span class="logo-pill">{_e(a)}</span>' for a in AWARDS)
+    nav_extra = "rounded-pill px-4" if vi == 1 else ""
+
+
+    hero_class = "hero hero-a" if vi == 0 else ("hero hero-b" if vi == 1 else "hero hero-c")
+    section_alt = f"background:{alt};"
+    feat_hdr = "text-center mb-5 mx-auto" if vi != 2 else "mb-5"
+    feat_hdr_style = ' style="max-width:720px"' if vi != 2 else ""
+
+    if vi == 1:
+        hero_body = f"""<div class="row justify-content-center text-center"><div class="col-lg-10">
+<span class="badge-top d-inline-block mb-3"><i class="bi bi-geo-alt me-1"></i> Serving {loc} &amp; nearby</span>
+<h1 class="display-3 fw-bold mb-4 lh-sm">{headline}</h1>
+<p class="lead mb-4 mx-auto" style="max-width:42rem">{pitch}</p>
+<div class="d-flex flex-wrap gap-3 mb-4 justify-content-center">
+<a href="#contact" class="btn-main btn-lg">Book free consultation</a>
+<a href="#services" class="btn-ghost btn-lg">View all services</a></div>
+<p class="small muted">Trusted locally · Clear written quotes · Qualified team · 5★ reviews</p>
+</div></div>"""
+    elif vi == 2:
+        hero_body = f"""<div class="row align-items-center g-5">
+<div class="col-lg-5 order-lg-1"><img src="{hero_img}" alt="{name}" class="img-fluid rounded-4 shadow-lg" style="max-height:440px;width:100%;object-fit:cover"></div>
+<div class="col-lg-7 order-lg-2">
+<span class="badge-top d-inline-block mb-3"><i class="bi bi-geo-alt me-1"></i> Serving {loc} &amp; nearby</span>
+<h1 class="display-3 fw-bold mb-4 lh-sm">{headline}</h1>
+<p class="lead mb-4">{pitch}</p>
+<div class="d-flex flex-wrap gap-3 mb-4">
+<a href="#contact" class="btn-main btn-lg">Book free consultation</a>
+<a href="#services" class="btn-ghost btn-lg">View all services</a></div>
+<p class="small muted">Trusted locally · Clear written quotes · Qualified team · 5★ reviews</p>
+</div></div>"""
+    else:
+        hero_body = f"""<div class="row align-items-center g-5">
+<div class="col-lg-7">
+<span class="badge-top d-inline-block mb-3"><i class="bi bi-geo-alt me-1"></i> Serving {loc} &amp; nearby</span>
+<h1 class="display-3 fw-bold mb-4 lh-sm">{headline}</h1>
+<p class="lead mb-4" style="max-width:38rem">{pitch}</p>
+<div class="d-flex flex-wrap gap-3 mb-4">
+<a href="#contact" class="btn-main btn-lg">Book free consultation</a>
+<a href="#services" class="btn-ghost btn-lg">View all services</a></div>
+<p class="small muted">Trusted locally · Clear written quotes · Qualified team · 5★ reviews</p>
+</div>
+<div class="col-lg-5 d-none d-lg-block"><img src="{hero_img}" alt="{name}" class="img-fluid rounded-4 shadow-lg" style="max-height:440px;width:100%;object-fit:cover"></div></div>"""
+    hero_body = hero_body.replace("div", "div")
+
+    prob_text_col = "col-lg-6 order-lg-2" if vi == 2 else "col-lg-6"
+    prob_stats_col = "col-lg-6 order-lg-1" if vi == 2 else "col-lg-6"
+    sol_img_col = "col-lg-6" if vi == 2 else "col-lg-6 order-lg-2"
+    sol_txt_col = "col-lg-6 order-lg-2" if vi == 2 else "col-lg-6 order-lg-1"
+
+    if vi == 2:
+        how_block = f"""<div class="steps-v d-flex flex-column gap-3">
+<div class="box d-flex gap-4 align-items-start"><div class="display-4 fw-bold accent">01</div><div><h3 class="h4 fw-bold">Tell us what you need</h3><p class="muted mb-0">Call, email, or use the form below.</p></div></div>
+<div class="box d-flex gap-4 align-items-start"><div class="display-4 fw-bold accent">02</div><div><h3 class="h4 fw-bold">Receive a clear plan</h3><p class="muted mb-0">Written options, timeline, and pricing.</p></div></div>
+<div class="box d-flex gap-4 align-items-start"><div class="display-4 fw-bold accent">03</div><div><h3 class="h4 fw-bold">We deliver &amp; follow up</h3><p class="muted mb-0">Quality work and a check-in afterwards.</p></div></div></div>"""
+    else:
+        how_block = """<div class="row g-4 how-steps-h">
+<div class="col-md-4"><div class="box text-center h-100"><div class="display-3 fw-bold accent opacity-50 mb-2">01</div><h3 class="h4 fw-bold">Tell us what you need</h3><p class="muted mb-0">Call, email, or use the form below. We ask the right questions so our visit is productive.</p></div></div>
+<div class="col-md-4"><div class="box text-center h-100"><div class="display-3 fw-bold accent opacity-50 mb-2">02</div><h3 class="h4 fw-bold">Receive a clear plan</h3><p class="muted mb-0">Written options, timeline, and pricing — no jargon, no pressure.</p></div></div>
+<div class="col-md-4"><div class="box text-center h-100"><div class="display-3 fw-bold accent opacity-50 mb-2">03</div><h3 class="h4 fw-bold">We deliver &amp; follow up</h3><p class="muted mb-0">Quality work, tidy finish, and a check-in afterwards.</p></div></div></div>"""
+    how_block = how_block.replace("div", "div")
+
+    if vi == 1:
+        founder_block = f"""<div class="row justify-content-center text-center"><div class="col-lg-8">
+<img src="{team_img}" class="rounded-circle shadow mb-4" style="width:120px;height:120px;object-fit:cover" alt="Founder">
+<p class="text-uppercase fw-bold small accent mb-2">A message from our director</p>
+<h2 class="h3 fw-bold mb-3">We treat every home like our own</h2>
+<p class="muted fs-5 mb-0">"When I started {name}, the goal was simple: offer {label_l} in {loc} that I would happily book for my own family." — <strong>Director, {name}</strong></p>
+</div></div>"""
+    else:
+        founder_block = f"""<div class="row g-4 align-items-center">
+<div class="col-md-3 text-center"><img src="{team_img}" class="rounded-circle shadow" style="width:140px;height:140px;object-fit:cover" alt="Founder"></div>
+<div class="col-md-9"><p class="text-uppercase fw-bold small accent mb-2">A message from our director</p>
+<h2 class="h3 fw-bold mb-3">We treat every home like our own</h2>
+<p class="muted fs-5 mb-0">"When I started {name}, the goal was simple: offer {label_l} in {loc} that I would happily book for my own family. Thank you for trusting us." — <strong>Director, {name}</strong></p>
+</div></div>"""
+
+    if vi == 2:
+        contact_block = f"""<div class="row g-5">
+<div class="col-lg-7 order-lg-1"><div class="box"><form class="row g-3">
+<div class="col-md-6"><label class="form-label fw-semibold">Full name</label><input class="form-control" placeholder="Your name"></div>
+<div class="col-md-6"><label class="form-label fw-semibold">Phone</label><input class="form-control" placeholder="07XXX XXXXXX"></div>
+<div class="col-12"><label class="form-label fw-semibold">Email</label><input type="email" class="form-control" placeholder="you@email.com"></div>
+<div class="col-12"><label class="form-label fw-semibold">How can we help?</label><textarea class="form-control" rows="5" placeholder="Describe your project…"></textarea></div>
+<div class="col-12"><button type="button" class="btn-main w-100 py-3">Send enquiry</button></div>
+</form></div></div>
+<div class="col-lg-5 order-lg-2">
+<h2 class="display-6 fw-bold mb-4">Contact {name}</h2>
+<p class="muted fs-5 mb-4">Tell us about your {label_l} needs in {loc}.</p>
+<p><i class="bi bi-telephone accent me-2"></i><strong>0800 123 4567</strong></p>
+<p><i class="bi bi-envelope accent me-2"></i><strong>hello@{email_slug}.co.uk</strong></p>
+<p><i class="bi bi-clock accent me-2"></i> Mon–Sat 8am–6pm</p></div></div>"""
+    else:
+        contact_block = f"""<div class="row g-5">
+<div class="col-lg-5">
+<h2 class="display-6 fw-bold mb-4">Contact {name}</h2>
+<p class="muted fs-5 mb-4">Tell us about your {label_l} needs — we will reply with availability and next steps.</p>
+<p><i class="bi bi-telephone accent me-2"></i><strong>0800 123 4567</strong></p>
+<p><i class="bi bi-envelope accent me-2"></i><strong>hello@{email_slug}.co.uk</strong></p>
+<p><i class="bi bi-clock accent me-2"></i> Mon–Sat 8am–6pm · Emergency line 24/7</p>
+</div>
+<div class="col-lg-7"><div class="box"><form class="row g-3">
+<div class="col-md-6"><label class="form-label fw-semibold">Full name</label><input class="form-control" placeholder="Your name"></div>
+<div class="col-md-6"><label class="form-label fw-semibold">Phone</label><input class="form-control" placeholder="07XXX XXXXXX"></div>
+<div class="col-12"><label class="form-label fw-semibold">Email</label><input type="email" class="form-control" placeholder="you@email.com"></div>
+<div class="col-12"><label class="form-label fw-semibold">How can we help?</label><textarea class="form-control" rows="5" placeholder="Describe your {label_l} project in {loc}…"></textarea></div>
+<div class="col-12"><button type="button" class="btn-main w-100 py-3">Send enquiry</button></div>
+</form></div></div></div>"""
+    contact_block = contact_block.replace("div", "div")
+
+    sec = {
+        "hero": f"""<section class="{hero_class}" id="top"><div class="hero-img" style="background-image:url('{hero_img}')"></div><div class="hero-mask"></div><div class="container hero-inner">{hero_body}</div></section>""",
+        "logos": f"""<section class="sec pt-0"><div class="container text-center"><p class="text-uppercase fw-bold small muted mb-3">Trusted by homeowners &amp; businesses</p><div>{logos}</div></div></section>""",
+        "problem": f"""<section class="sec problem-grid" style="{section_alt}"><div class="container"><div class="row g-5 align-items-center">
+<div class="{prob_text_col}"><p class="text-uppercase fw-bold small accent mb-2">The challenge</p>
+<h2 class="display-5 fw-bold mb-4">The cost of choosing the wrong {label_l} provider</h2>
+<p class="fs-5 muted">Too many people in {loc} face delayed call-outs, vague quotes, and messy workmanship.</p>
+<ul class="list-unstyled fs-5"><li class="mb-3"><i class="bi bi-x-circle me-2 text-danger"></i> Hidden fees on the day</li>
+<li class="mb-3"><i class="bi bi-x-circle me-2 text-danger"></i> Poor communication</li>
+<li class="mb-3"><i class="bi bi-x-circle me-2 text-danger"></i> Work that needs redoing</li></ul></div>
+<div class="{prob_stats_col}"><div class="row g-3 text-center">
+<div class="col-6"><div class="box"><div class="stat-big">38%</div><p class="muted small mb-0">Bad experiences</p></div></div>
+<div class="col-6"><div class="box"><div class="stat-big">£240</div><p class="muted small mb-0">Cost of fixes</p></div></div>
+<div class="col-6"><div class="box"><div class="stat-big">3 days</div><p class="muted small mb-0">Typical wait</p></div></div>
+<div class="col-6"><div class="box"><div class="stat-big">24/7</div><p class="muted small mb-0">Emergency line</p></div></div>
+</div></div></div></section>""".replace("div", "div"),
+        "solution": f"""<section class="sec"><div class="container"><div class="row g-5 align-items-center">
+<div class="{sol_img_col}"><img src="{work_img}" class="img-fluid rounded-4 shadow" alt="Our work"></div>
+<div class="{sol_txt_col}"><p class="text-uppercase fw-bold small accent mb-2">The solution</p>
+<h2 class="display-5 fw-bold mb-4">Meet the future of {label_l} in {loc}</h2>
+<p class="fs-5 muted mb-4">{name} combines qualified people and a customer-first process.</p>
+<p class="muted">You always know who is coming, what it costs, and when it will be done.</p></div></div></div></section>""",
+        "mission": f"""<section class="sec" style="{section_alt}"><div class="container"><div class="row justify-content-center text-center"><div class="col-lg-8">
+<p class="text-uppercase fw-bold small accent mb-2">Why we build</p><h2 class="display-5 fw-bold mb-4">Our mission</h2>
+<p class="fs-5 muted">We believe every client in {loc} deserves honest, fairly priced {label_l}. That is why {name} exists.</p>
+</div></div></div></section>""",
+        "features": f"""<section class="sec" id="features"><div class="container"><div class="{feat_hdr}"{feat_hdr_style}>
+<p class="text-uppercase fw-bold small accent mb-2">Capabilities</p><h2 class="display-5 fw-bold mb-3">Everything you need</h2>
+<p class="muted">Six reasons clients choose {name} in {loc}.</p></div>{features_html}</div></section>""",
+        "services": f"""<section class="sec" id="services" style="{section_alt}"><div class="container">
+<div class="text-center mb-5 mx-auto" style="max-width:760px"><p class="text-uppercase fw-bold small accent mb-2">Our services</p>
+<h2 class="display-5 fw-bold mb-3">Comprehensive {label_l} in {loc}</h2>
+<p class="muted fs-5">Your chosen services — delivered by our in-house team in {loc}.</p></div>
+{services_html}</div></section>""".replace("div", "</div>").replace("</div>", "</div>", 1).replace("div", "div"),
+        "how": f"""<section class="sec" id="how"><div class="container"><div class="text-center mb-5">
+<h2 class="display-5 fw-bold">How it works — 3 simple steps</h2><p class="muted">From enquiry to completion.</p></div>{how_block}</div></section>""",
+        "stats": f"""<section class="sec pt-0" style="{section_alt}"><div class="container"><div class="row g-4 text-center">
+<div class="col-6 col-md-3"><div class="box"><div class="stat-big">15+</div><p class="muted mb-0">Years experience</p></div></div>
+<div class="col-6 col-md-3"><div class="box"><div class="stat-big">2,400+</div><p class="muted mb-0">Projects done</p></div></div>
+<div class="col-6 col-md-3"><div class="box"><div class="stat-big">98%</div><p class="muted mb-0">Recommend us</p></div></div>
+<div class="col-6 col-md-3"><div class="box"><div class="stat-big">4.9</div><p class="muted mb-0">Review score</p></div></div>
+</div></div></section>""".replace("div", "div"),
+        "case": f"""<section class="sec"><div class="container"><div class="row g-5 align-items-center">
+<div class="col-lg-6"><p class="text-uppercase fw-bold small accent mb-2">Results</p><h2 class="display-5 fw-bold mb-4">Real data. Real growth.</h2>
+<p class="muted fs-5">A client in {loc} reduced repeat call-outs by 40% with our maintenance programme.</p></div>
+<div class="col-lg-6"><div class="row g-3">
+<div class="col-6"><div class="box text-center"><div class="stat-big">40%</div><p class="muted small">Fewer emergencies</p></div></div>
+<div class="col-6"><div class="box text-center"><div class="stat-big">£1.2k</div><p class="muted small">Saved yearly</p></div></div>
+<div class="col-6"><div class="box text-center"><div class="stat-big">2 wks</div><p class="muted small">Faster delivery</p></div></div>
+<div class="col-6"><div class="box text-center"><div class="stat-big">100%</div><p class="muted small">On time</p></div></div>
+</div></div></div></section>""".replace("div", "div"),
+        "reviews": f"""<section class="sec" id="reviews" style="{section_alt}"><div class="container">
+<p class="text-uppercase fw-bold small accent text-center mb-2">Social proof</p>
+<h2 class="display-5 fw-bold text-center mb-5">What our customers say</h2>{testi_html}</div></section>""",
+        "founder": f"""<section class="sec"><div class="container">{founder_block}</div></section>""",
+        "awards": f"""<section class="sec pt-0" style="{section_alt}"><div class="container text-center">
+<h2 class="h4 fw-bold mb-4">Industry validated excellence</h2><div>{logos}</div>
+<p class="small muted mt-3">Credentials you can verify before we start.</p></div></section>""".replace("div", "div"),
+        "pricing": f"""<section class="sec" id="pricing"><div class="container"><div class="text-center mb-5">
+<h2 class="display-5 fw-bold">Simple plans for every stage</h2><p class="muted">Transparent pricing for {loc}.</p></div>
+<div class="row g-4 align-items-stretch">{pricing_html}</div></div></section>""",
+        "faq": f"""<section class="sec" id="faq" style="{section_alt}"><div class="container" style="max-width:820px">
+<h2 class="display-5 fw-bold text-center mb-5">FAQ</h2><div class="accordion" id="faqAcc{vi}">{faq_html}</div></div></section>""",
+        "team": f"""<section class="sec" id="team"><div class="container"><h2 class="display-5 fw-bold text-center mb-2">Meet the team</h2>
+<p class="text-center muted mb-5">The people behind {name}</p><div class="row g-4">{team_html}</div></div></section>""".replace("div", "div"),
+        "blog": f"""<section class="sec" style="{section_alt}"><div class="container"><h2 class="display-5 fw-bold text-center mb-2">Latest insights</h2>
+<p class="text-center muted mb-5">Guides for {label_l} in {loc}</p><div class="row g-4">{blog_cards}</div></div></section>""",
+        "map": f"""<section class="sec pt-0"><div class="container"><h2 class="h4 fw-bold text-center mb-4">Find us in {loc}</h2>
+<div class="map-placeholder d-flex align-items-center justify-content-center"><p class="muted mb-0 px-4 text-center"><i class="bi bi-geo-alt fs-1 d-block mb-2 accent"></i>Serving {loc} and nearby areas.</p></div></div></section>""",
+        "newsletter": f"""<section class="sec" style="{section_alt}"><div class="container"><div class="row justify-content-center"><div class="col-lg-8 text-center">
+<h2 class="h3 fw-bold mb-3">Stay ahead of the curve</h2><p class="muted mb-4">Tips for {loc} — unsubscribe anytime.</p>
+<div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+<input type="email" class="form-control form-control-lg" style="max-width:320px" placeholder="Your email">
+<button type="button" class="btn-main">Subscribe</button></div></div></div></div></section>""",
+        "cta": f"""<section class="sec"><div class="container"><div class="cta-strip text-center">
+<h2 class="display-6 fw-bold mb-3">Ready to get started?</h2>
+<p class="lead mb-4 opacity-90">Request your free quote — we respond within hours.</p>
+<a href="#contact" class="btn btn-light btn-lg fw-bold px-5">Get started now</a></div></div></section>""".replace("div", "div"),
+        "contact": f"""<section class="sec" id="contact" style="{section_alt}"><div class="container">{contact_block}</div></section>""",
+    }
+    sec = {k: v.replace("div", "div") for k, v in sec.items()}
+    main_body = "".join(sec[k] for k in _PREMIUM_SECTION_ORDER[vi])
 
     return f"""<!DOCTYPE html>
-<html lang="en-GB">
+<html lang="en-GB" class="theme-{vi}">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{name} | {label} — {location}</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{name} | {label} — {loc}</title>
+<meta name="description" content="{name} — {pitch} Serving {loc}.">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{{--p:{primary};--s:{secondary};--bg:{bg};--text:{text};--card:{card};--muted:{muted}}}
-body{{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);margin:0}}
-.nav-bar{{backdrop-filter:blur(10px);background:color-mix(in srgb,var(--bg) 92%,transparent);border-bottom:1px solid rgba(128,128,128,.12)}}
-.hero{{min-height:88vh;display:flex;align-items:center;position:relative}}
-.hero-img{{position:absolute;inset:0;background:url('{hero_img}') center/cover}}
+:root{{--p:{primary};--s:{secondary};--surf:{surface};--bg:{bg};--text:{text};--card:{card};--muted:{muted};--alt:{alt}}}
+*{{box-sizing:border-box}}
+body{{font-family:'{font_heading}',system-ui,sans-serif;background:var(--bg);color:var(--text);margin:0;line-height:1.65}}
+.accent{{color:var(--p)}}
+.muted{{color:var(--muted)}}
+.nav-wrap{{backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 90%,transparent);border-bottom:1px solid rgba(128,128,128,.12);position:sticky;top:0;z-index:1000}}
+.nav-wrap .nav-link{{color:var(--text);font-weight:600;font-size:.95rem}}
+.sec{{padding:clamp(64px,8vw,100px) 0}}
+.box{{background:var(--card);border-radius:20px;padding:clamp(24px,3vw,36px);border:1px solid rgba(128,128,128,.12);height:100%;transition:transform .25s,box-shadow .25s}}
+.box:hover{{transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,.12)}}
+.box.featured{{border:2px solid var(--p);box-shadow:0 12px 40px color-mix(in srgb,var(--p) 25%,transparent)}}
+.icon-pill{{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--p),var(--s));color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.25rem;margin-bottom:18px}}
+.btn-main{{background:linear-gradient(135deg,var(--p),var(--s));color:#fff!important;padding:14px 32px;border-radius:12px;font-weight:700;text-decoration:none;display:inline-block;border:none}}
+.btn-ghost{{border:2px solid var(--p);color:var(--p)!important;padding:12px 28px;border-radius:12px;font-weight:700;text-decoration:none;background:transparent}}
+.hero{{position:relative;min-height:min(92vh,900px);display:flex;align-items:center;overflow:hidden}}
+.hero-img{{position:absolute;inset:0;background:center/cover no-repeat}}
 .hero-mask{{position:absolute;inset:0;background:{overlay}}}
 .hero-inner{{position:relative;z-index:2}}
-.section{{padding:88px 0}}
-.card-box,.svc-card,.testi-card,.price-card{{background:var(--card);border-radius:20px;padding:28px;border:1px solid rgba(128,128,128,.1)}}
-.svc-card:hover,.testi-card:hover{{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.1);transition:.25s}}
-.svc-icon{{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;margin-bottom:16px}}
-.btn-brand{{background:var(--p);color:#fff!important;padding:14px 28px;border-radius:12px;font-weight:700;text-decoration:none;display:inline-block;border:none}}
-.btn-outline-brand{{border:2px solid var(--p);color:var(--p)!important;padding:12px 26px;border-radius:12px;font-weight:700;text-decoration:none}}
-.stat-num{{font-size:2.2rem;font-weight:800;color:var(--p)}}
-.avatar{{width:44px;height:44px;border-radius:50%;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}}
-.cta-band{{background:linear-gradient(135deg,var(--p),var(--s));color:#fff;border-radius:24px;padding:56px 40px}}
-.pricing-featured{{border:2px solid var(--p)!important}}
-.badge-soft{{background:color-mix(in srgb,var(--p) 20%,transparent);padding:8px 14px;border-radius:999px;font-weight:600}}
+.hero-b .hero-inner{{text-align:center}}
+.hero-c .hero-inner h1{{font-size:clamp(2.2rem,5vw,3.5rem)}}
+.stat-big{{font-size:clamp(2rem,4vw,3rem);font-weight:800;color:var(--p);line-height:1}}
+.av{{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--s));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}}
+.logo-pill{{display:inline-block;padding:10px 18px;border-radius:10px;background:var(--card);margin:6px;font-weight:600;font-size:.85rem;border:1px solid color-mix(in srgb,var(--p) 30%,transparent)}}
+.cta-strip{{background:linear-gradient(135deg,var(--p),var(--s));color:#fff;border-radius:24px;padding:clamp(40px,6vw,72px)}}
+.blog-thumb{{height:140px;background-size:cover;background-position:center;border-radius:16px 16px 0 0;margin:-36px -36px 20px -36px}}
+.acc-item{{background:transparent!important;border-color:rgba(128,128,128,.15)!important}}
+.acc-item .accordion-button{{background:transparent!important;color:var(--text)!important;box-shadow:none!important;font-weight:600}}
+.steps-v .box{{border-left:4px solid var(--p);border-radius:0 20px 20px 0}}
+.feat-list .feat-row{{padding-bottom:1rem;border-bottom:1px solid rgba(128,128,128,.12)}}
+.v-services-stack .box{{margin-bottom:0}}
+.map-placeholder{{min-height:280px;border-radius:20px;background:var(--alt) center/cover url('https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&q=60');border:1px solid rgba(128,128,128,.15)}}
+.footer-grid a{{color:var(--muted);text-decoration:none}}
+.footer-grid a:hover{{color:var(--p)}}
+.badge-top{{background:color-mix(in srgb,var(--p) 22%,transparent);border:1px solid color-mix(in srgb,var(--s) 40%,transparent);padding:8px 16px;border-radius:999px;font-weight:600;font-size:.9rem}}
 </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg nav-bar sticky-top py-3">
+<header class="nav-wrap">
+<nav class="navbar navbar-expand-lg py-3">
 <div class="container">
-<a class="navbar-brand fw-bold" href="#" style="color:var(--text)">{name}</a>
-<button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
-<div class="collapse navbar-collapse" id="nav">
-<ul class="navbar-nav ms-auto gap-lg-2 align-items-lg-center">
+<a class="navbar-brand fw-bold fs-4" href="#" style="color:var(--text)">{name}</a>
+<button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#mainNav"><span class="navbar-toggler-icon"></span></button>
+<div class="collapse navbar-collapse" id="mainNav">
+<ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
 <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
-<li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+<li class="nav-item"><a class="nav-link" href="#how">How it works</a></li>
 <li class="nav-item"><a class="nav-link" href="#reviews">Reviews</a></li>
-<li class="nav-item"><a class="btn btn-brand ms-lg-2" href="#contact">Free quote</a></li>
+<li class="nav-item"><a class="nav-link" href="#pricing">Pricing</a></li>
+<li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
+<li class="nav-item"><a class="btn-main ms-lg-2 {nav_extra}" href="#contact">Free quote</a></li>
 </ul></div></div></nav>
-<header class="hero"><div class="hero-img"></div><div class="hero-mask"></div>
-<div class="container hero-inner"><div class="row align-items-center g-5">
-<div class="col-lg-7">
-<span class="badge-soft mb-3 d-inline-block"><i class="bi bi-geo-alt"></i> {location}</span>
-<h1 class="display-3 fw-bold mb-4">{headline}</h1>
-<p class="lead mb-4" style="color:var(--muted);max-width:36rem">{pitch}</p>
-<div class="d-flex flex-wrap gap-3 mb-4">
-<a href="#contact" class="btn-brand btn-lg">Book consultation</a>
-<a href="#services" class="btn-outline-brand btn-lg">Our services</a>
-</div>
-<p class="small" style="color:var(--muted)">✓ Insured &nbsp; ✓ Clear quotes &nbsp; ✓ Local team &nbsp; ✓ 5★ reviews</p>
-</div>
-<div class="col-lg-5 d-none d-lg-block">
-<img src="{hero_img}" class="img-fluid rounded-4 shadow" alt="{name}" style="max-height:420px;width:100%;object-fit:cover">
-</div></div></div></header>
-<section class="section pt-0"><div class="container"><div class="row g-4 text-center card-box">
-<div class="col-6 col-md-3"><div class="stat-num">15+</div><div style="color:var(--muted)">Years exp.</div></div>
-<div class="col-6 col-md-3"><div class="stat-num">2.4k</div><div style="color:var(--muted)">Jobs done</div></div>
-<div class="col-6 col-md-3"><div class="stat-num">98%</div><div style="color:var(--muted)">Recommend</div></div>
-<div class="col-6 col-md-3"><div class="stat-num">24/7</div><div style="color:var(--muted)">Emergency</div></div>
-</div></div></section>
-<section class="section" id="services"><div class="container">
-<h2 class="display-5 fw-bold text-center mb-2">Services in {location}</h2>
-<p class="text-center mb-5" style="color:var(--muted)">{name} — professional {label_l} with clear communication.</p>
-<div class="row g-4">{svc_html}</div></div></section>
-<section class="section" id="about"><div class="container"><div class="row g-5 align-items-center">
-<div class="col-lg-6"><img src="{team_img}" class="img-fluid rounded-4 shadow" alt="Team"></div>
-<div class="col-lg-6">
-<h2 class="display-5 fw-bold mb-4">About {name}</h2>
-<p class="fs-5" style="color:var(--muted)">We are a {label_l} team serving {location}. Honest advice, fair pricing, and work we are proud to put our name on.</p>
-<ul class="list-unstyled fs-5 mt-4">
-<li class="mb-2"><i class="bi bi-check-circle-fill me-2" style="color:var(--p)"></i> Written quotes first</li>
-<li class="mb-2"><i class="bi bi-check-circle-fill me-2" style="color:var(--p)"></i> Tidy, respectful visits</li>
-<li><i class="bi bi-check-circle-fill me-2" style="color:var(--p)"></i> UK-based support</li>
-</ul></div></div></div></section>
-<section class="section" id="reviews"><div class="container">
-<h2 class="display-5 fw-bold text-center mb-5">Customer reviews</h2>
-<div class="row g-4">{testi_html}</div></div></section>
-<section class="section" id="pricing"><div class="container">
-<h2 class="display-5 fw-bold text-center mb-5">Pricing</h2>
-<div class="row g-4">{price_html}</div></div></section>
-<section class="section"><div class="container"><div class="cta-band text-center">
-<h2 class="fw-bold mb-3">Ready to work with {name}?</h2>
-<p class="lead mb-4">Free quote — we respond within hours.</p>
-<a href="#contact" class="btn btn-light btn-lg fw-bold">Get started</a>
-</div></div></section>
-<section class="section pt-0"><div class="container" style="max-width:760px">
-<h2 class="fw-bold text-center mb-4">FAQ</h2>
-<div class="accordion" id="faq{vi}">{faq_html}</div></div></section>
-<section class="section" id="contact"><div class="container"><div class="row g-5">
-<div class="col-lg-5">
-<h2 class="display-6 fw-bold mb-4">Contact us</h2>
-<p style="color:var(--muted)">Phone: 0800 123 4567<br>Email: hello@{email_slug}.co.uk<br>Hours: Mon–Sat 8am–6pm</p>
-</div>
-<div class="col-lg-7"><div class="card-box">
-<form class="row g-3">
-<div class="col-md-6"><input class="form-control" placeholder="Your name"></div>
-<div class="col-md-6"><input class="form-control" placeholder="Phone"></div>
-<div class="col-12"><input type="email" class="form-control" placeholder="Email"></div>
-<div class="col-12"><textarea class="form-control" rows="4" placeholder="Tell us about your project…"></textarea></div>
-<div class="col-12"><button type="button" class="btn-brand w-100">Send enquiry</button></div>
-</form></div></div></div></section>
-<footer class="section pt-0 pb-4 border-top"><div class="container text-center">
-<p class="mb-0 small" style="color:var(--muted)">&copy; 2026 {name}. {label} in {location}.</p>
+</header>
+{main_body}
+<footer class="sec pt-0 pb-5 border-top" style="border-color:rgba(128,128,128,.15)!important">
+<div class="container footer-grid">
+<div class="row g-4">
+<div class="col-md-4"><h3 class="fw-bold">{name}</h3><p class="muted">{pitch}</p></div>
+<div class="col-md-2"><h6 class="fw-bold">Navigate</h6><ul class="list-unstyled">
+<li class="mb-2"><a href="#services">Services</a></li><li class="mb-2"><a href="#how">How it works</a></li>
+<li class="mb-2"><a href="#pricing">Pricing</a></li><li><a href="#contact">Contact</a></li></ul></div>
+<div class="col-md-3"><h6 class="fw-bold">Legal</h6><ul class="list-unstyled muted">
+<li class="mb-2">Privacy policy</li><li class="mb-2">Terms of service</li><li>Cookies</li></ul></div>
+<div class="col-md-3"><h6 class="fw-bold">Service area</h6><p class="muted">Serving {loc} and nearby UK communities.</p></div></div>
+<p class="text-center small muted mt-5 mb-0">&copy; 2026 {name}. Design {vi + 1} of 3 — your brand colours applied.</p>
 </div></footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body></html>"""
+
 
 
 def generate_html(data, variation_index):
