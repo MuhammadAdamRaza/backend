@@ -295,109 +295,46 @@ def build_prompt(data, variation_index):
 
     hero_url, card_url, _, _ = get_images(btype)
     p, s = colors[0], colors[1]
-    svc_lines = "\n".join(f"  - {sv}" for sv in svc_list)
 
+    # Define 3 distinct design directions
     DESIGNS = [
         {
-            "name": "Dark Bold Hero",
+            "name": "Modern Dark Bold",
             "font": "Montserrat",
             "nav":  f"position fixed, background rgba(0,0,0,0.96), white logo '{name}', white nav links",
-            "hero": f"100vh height, background linear-gradient(135deg, #0a0a1a 0%, {p}dd 60%, {s}99 100%), centered white text, h1 font-size 4.5rem font-weight 900 Montserrat, subheading 1.2rem opacity 0.85, CTA button background {p} color white border-radius 50px padding 18px 48px",
-            "services_bg": "#ffffff",
-            "card": f"white bg, box-shadow 0 4px 24px rgba(0,0,0,0.09), border-radius 12px, padding 32px, Font Awesome icon color {p} font-size 2rem, h3 font-weight 800, hover translateY(-6px)",
-            "why":  f"background {p}, white text, 4 tiles with stats (500+ Clients, 10 Yrs Experience, 4.9 Star Rating, 24/7 Support)",
-            "cta":  f"background linear-gradient(135deg, {p}, {s}), white text, white button",
-            "footer": "background #0a0a0a, white text",
-            "about_left": f"background linear-gradient(135deg, {p}, {s}), border-radius 16px, display flex align-items center justify-content center, min-height 320px, large white icon fa-building font-size 5rem",
+            "hero": f"100vh height, background-image url('{hero_url}') cover center, dark overlay rgba(0,0,0,0.65), centered white text, h1 4.5rem font-weight 900, subtext 1.2rem, large {p} CTA button",
+            "about_media": f"background-image url('{card_url}') cover center, border-radius 20px, box-shadow 0 20px 40px rgba(0,0,0,0.1)",
         },
         {
-            "name": "Clean Corporate Split",
+            "name": "Clean Split Corporate",
             "font": "Inter",
-            "nav":  f"position fixed, background white, border-bottom 2px solid #f1f5f9, logo '{name}' color {p} font-weight 800",
-            "hero": f"CSS grid 2 columns NO top padding full height: LEFT column background {p} padding 80px 60px white text h1 3.5rem font-weight 800 subtext CTA button white color {p} border-radius 8px; RIGHT column background linear-gradient(135deg, {p}44 0%, {s}88 100%) min-height 100vh flex center large decorative circle shape",
-            "services_bg": "#f8fafc",
-            "card": f"white bg, border 1px solid #e2e8f0, border-radius 10px, padding 28px, icon color {p}, h3 font-weight 700 color {p}, hover box-shadow increase",
-            "why":  "background #1e293b (dark navy), white text, 4 stat tiles",
-            "cta":  "background #111827, white text, gradient button",
-            "footer": "background #1f2937, white text",
-            "about_left": f"background linear-gradient(135deg, {p}22, {s}22), border-radius 12px, display flex align-items center justify-content center, min-height 320px, large colored icon fa-handshake color {p} font-size 5rem",
+            "nav":  f"position fixed, background #ffffff, border-bottom 1px solid #eee, logo '{name}' color {p}, dark links",
+            "hero": f"CSS Grid 2 cols: LEFT white bg, {p} text, h1 3.8rem, CTA button; RIGHT background-image url('{hero_url}') cover center",
+            "about_media": f"background-image url('{card_url}') cover center, border-radius 12px, border 8px solid white, box-shadow 0 10px 30px rgba(0,0,0,0.05)",
         },
         {
-            "name": "Vibrant Gradient Creative",
+            "name": "Creative Gradient Tech",
             "font": "Poppins",
-            "nav":  f"position fixed, background linear-gradient(135deg, {p}, {s}), white logo '{name}' font-weight 900, white links",
-            "hero": f"background linear-gradient(135deg, {p} 0%, {s} 100%), min-height 92vh, flex center, h1 white font-size 5rem font-weight 900 letter-spacing -3px line-height 1.0, TWO buttons: (1) solid white color {p} border-radius 50px padding 18px 44px, (2) outline white transparent",
-            "services_bg": "#ffffff",
-            "card": f"white bg, border-top 4px solid {p}, border-radius 16px, padding 32px, icon inside circle background {p} color white, h3 font-weight 700, hover translateY(-6px) box-shadow increase",
-            "why":  f"background linear-gradient(135deg, {p}15, {s}15) light tint, colored text, 4 stat tiles white bg",
-            "cta":  f"background linear-gradient(135deg, {p}, {s}), white text, white button color {p}",
-            "footer": "background #0f172a, white text",
-            "about_left": f"background linear-gradient(135deg, {p}, {s}), border-radius 20px, display flex align-items center justify-content center, min-height 320px, large white icon fa-star font-size 5rem",
-        },
-    ]
-
-    d = DESIGNS[variation_index % 3]
-
-    DESIGNS = [
-        {
-            "name": "Dark Bold Hero",
-            "font": "Montserrat",
-            "nav":  f"position fixed, background rgba(0,0,0,0.96), white logo '{name}', white nav links",
-            "hero": f"100vh height, background-image url('{hero_url}') cover with dark overlay rgba(0,0,0,0.6), centered white text, h1 font-size 4.5rem font-weight 900 Montserrat, subheading 1.2rem, CTA button background {p} color white border-radius 50px padding 18px 48px",
-            "services_bg": "#ffffff",
-            "card": f"white bg, box-shadow 0 4px 24px rgba(0,0,0,0.09), border-radius 12px, padding 32px, Font Awesome icon color {p} font-size 2rem, h3 font-weight 800, hover translateY(-6px)",
-            "why":  f"background {p}, white text, 4 tiles with stats (500+ Clients, 10 Yrs Experience, 4.9 Star Rating, 24/7 Support)",
-            "cta":  f"background linear-gradient(135deg, {p}, {s}), white text, white button",
-            "footer": "background #0a0a0a, white text",
-        },
-        {
-            "name": "Clean Corporate Split",
-            "font": "Inter",
-            "nav":  f"position fixed, background white, border-bottom 2px solid #f1f5f9, logo '{name}' color {p} font-weight 800",
-            "hero": f"CSS grid 2 columns, NO top padding, full height: LEFT column background {p} padding 80px 60px white text h1 3.5rem font-weight 800 subtext CTA button white color {p} border-radius 8px; RIGHT column background-image url('{hero_url}') cover center min-height 100vh",
-            "services_bg": "#f8fafc",
-            "card": f"white bg, border 1px solid #e2e8f0, border-radius 10px, padding 28px, icon color {p}, h3 font-weight 700 color {p}, hover box-shadow increase",
-            "why":  "background #1e293b (dark navy), white text, 4 stat tiles",
-            "cta":  "background #111827, white text, gradient button",
-            "footer": "background #1f2937, white text",
-        },
-        {
-            "name": "Vibrant Gradient Creative",
-            "font": "Poppins",
-            "nav":  f"position fixed, background linear-gradient(135deg, {p}, {s}), white logo '{name}' font-weight 900, white links",
-            "hero": f"background linear-gradient(135deg, {p} 0%, {s} 100%), min-height 92vh, flex center, h1 white font-size 5rem font-weight 900 letter-spacing -3px line-height 1.0, TWO buttons: (1) solid white color {p} border-radius 50px padding 18px 44px, (2) outline white transparent",
-            "services_bg": "#ffffff",
-            "card": f"white bg, border-top 4px solid {p}, border-radius 16px, padding 32px, icon inside circle background {p} color white, h3 font-weight 700, hover translateY(-6px) box-shadow increase",
-            "why":  f"background linear-gradient(135deg, {p}20, {s}20) light tint, colored text, 4 stat tiles white bg",
-            "cta":  f"background linear-gradient(135deg, {p}, {s}), white text, white button color {p}",
-            "footer": "background #0f172a, white text",
+            "nav":  f"position fixed, background linear-gradient(to right, {p}, {s}), white logo '{name}', white links",
+            "hero": f"background linear-gradient(135deg, {p}ee, {s}ee), background-image url('{hero_url}') cover blend-mode multiply, 90vh height, flex-center, white text, h1 5rem font-weight 800",
+            "about_media": f"background linear-gradient(45deg, {p}, {s}), border-radius 30px, padding 40px, large white FontAwesome icon matching {btype}",
         },
     ]
 
     d = DESIGNS[variation_index % 3]
 
     return (
-        "Output ONLY a complete HTML file. Start with <!DOCTYPE html>. End with </html>.\n"
-        "Zero markdown. Zero backticks. Zero explanation.\n"
+        "Output ONLY a complete, professional HTML file. Start with <!DOCTYPE html>. End with </html>.\n"
+        "Zero markdown. Zero backticks. Zero explanation. No preamble.\n"
         "All CSS inside one <style> tag in <head>.\n"
-        f"CRITICAL: Include <base href=\"{request.url_root}\"> inside <head>.\n"
-        "Use Font Awesome 6.5 and Google Fonts Montserrat/Inter/Poppins.\n"
-        "Images must use referrerpolicy=\"no-referrer\" for reliability.\n"
-        "Mobile responsive with @media(max-width:768px).\n\n"
-        f"BUSINESS: {name}\n"
+        f"Include <base href=\"{request.url_root}\"> in <head>.\n"
+        "Use Font Awesome 6.5 and Google Fonts (load specifically for this design).\n"
+        "Images MUST use referrerpolicy=\"no-referrer\" to bypass browser blocks.\n\n"
+        f"BUSINESS: {name} in {location}\n"
         f"INDUSTRY: {btype}\n"
-        f"LOCATION: {location}\n"
-        f"PRIMARY COLOR: {p}\n"
-        f"SECONDARY COLOR: {s}\n"
-        f"HERO IMAGE URL: {hero_url}\n"
-        f"ABOUT IMAGE URL: {card_url}\n\n"
+        f"COLORS: Primary {p}, Secondary {s}\n"
         f"SERVICES: {', '.join(svc_list)}\n\n"
         f"DESIGN STYLE: {d['name']}\n"
-        f"FONT: Load '{d['font']}' from Google Fonts\n"
-        f"NAV: {d['nav']}\n"
-        f"HERO: {d['hero']}\n"
-        "BUILD THESE 8 SECTIONS IN ORDER:\n"
-        f"1. Fixed navigation: logo={name}, links=Services/About/Reviews/Contact, CTA button 'Get Quote'\n"
         "2. Hero section: with industry-specific copy and background image\n"
         "3. Services section: grid of cards with icons and descriptions\n"
         f"4. About Us: two-column layout with image url('{card_url}')\n"
