@@ -293,7 +293,6 @@ def build_prompt(data, variation_index):
     if not svc_list:
         svc_list = ["Professional Services", "Expert Consultation", "Quality Results"]
 
-    hero_url, card_url, _, _ = get_images(btype)
     p, s = colors[0], colors[1]
     svc_lines = "\n".join(f"  - {sv}" for sv in svc_list)
 
@@ -302,23 +301,25 @@ def build_prompt(data, variation_index):
             "name": "Dark Bold Hero",
             "font": "Montserrat",
             "nav":  f"position fixed, background rgba(0,0,0,0.96), white logo '{name}', white nav links",
-            "hero": f"100vh height, background-image url('{hero_url}') cover with dark overlay rgba(0,0,0,0.6), centered white text, h1 font-size 4.5rem font-weight 900 Montserrat, subheading 1.2rem, CTA button background {p} color white border-radius 50px padding 18px 48px",
+            "hero": f"100vh height, background linear-gradient(135deg, #0a0a1a 0%, {p}dd 60%, {s}99 100%), centered white text, h1 font-size 4.5rem font-weight 900 Montserrat, subheading 1.2rem opacity 0.85, CTA button background {p} color white border-radius 50px padding 18px 48px",
             "services_bg": "#ffffff",
             "card": f"white bg, box-shadow 0 4px 24px rgba(0,0,0,0.09), border-radius 12px, padding 32px, Font Awesome icon color {p} font-size 2rem, h3 font-weight 800, hover translateY(-6px)",
             "why":  f"background {p}, white text, 4 tiles with stats (500+ Clients, 10 Yrs Experience, 4.9 Star Rating, 24/7 Support)",
             "cta":  f"background linear-gradient(135deg, {p}, {s}), white text, white button",
             "footer": "background #0a0a0a, white text",
+            "about_left": f"background linear-gradient(135deg, {p}, {s}), border-radius 16px, display flex align-items center justify-content center, min-height 320px, large white icon fa-building font-size 5rem",
         },
         {
             "name": "Clean Corporate Split",
             "font": "Inter",
             "nav":  f"position fixed, background white, border-bottom 2px solid #f1f5f9, logo '{name}' color {p} font-weight 800",
-            "hero": f"CSS grid 2 columns, NO top padding, full height: LEFT column background {p} padding 80px 60px white text h1 3.5rem font-weight 800 subtext CTA button white color {p} border-radius 8px; RIGHT column background-image url('{hero_url}') cover center min-height 100vh",
+            "hero": f"CSS grid 2 columns NO top padding full height: LEFT column background {p} padding 80px 60px white text h1 3.5rem font-weight 800 subtext CTA button white color {p} border-radius 8px; RIGHT column background linear-gradient(135deg, {p}44 0%, {s}88 100%) min-height 100vh flex center large decorative circle shape",
             "services_bg": "#f8fafc",
             "card": f"white bg, border 1px solid #e2e8f0, border-radius 10px, padding 28px, icon color {p}, h3 font-weight 700 color {p}, hover box-shadow increase",
             "why":  "background #1e293b (dark navy), white text, 4 stat tiles",
             "cta":  "background #111827, white text, gradient button",
             "footer": "background #1f2937, white text",
+            "about_left": f"background linear-gradient(135deg, {p}22, {s}22), border-radius 12px, display flex align-items center justify-content center, min-height 320px, large colored icon fa-handshake color {p} font-size 5rem",
         },
         {
             "name": "Vibrant Gradient Creative",
@@ -327,9 +328,10 @@ def build_prompt(data, variation_index):
             "hero": f"background linear-gradient(135deg, {p} 0%, {s} 100%), min-height 92vh, flex center, h1 white font-size 5rem font-weight 900 letter-spacing -3px line-height 1.0, TWO buttons: (1) solid white color {p} border-radius 50px padding 18px 44px, (2) outline white transparent",
             "services_bg": "#ffffff",
             "card": f"white bg, border-top 4px solid {p}, border-radius 16px, padding 32px, icon inside circle background {p} color white, h3 font-weight 700, hover translateY(-6px) box-shadow increase",
-            "why":  f"background linear-gradient(135deg, {p}20, {s}20) light tint, colored text, 4 stat tiles white bg",
+            "why":  f"background linear-gradient(135deg, {p}15, {s}15) light tint, colored text, 4 stat tiles white bg",
             "cta":  f"background linear-gradient(135deg, {p}, {s}), white text, white button color {p}",
             "footer": "background #0f172a, white text",
+            "about_left": f"background linear-gradient(135deg, {p}, {s}), border-radius 20px, display flex align-items center justify-content center, min-height 320px, large white icon fa-star font-size 5rem",
         },
     ]
 
@@ -340,14 +342,13 @@ def build_prompt(data, variation_index):
         "Zero markdown. Zero backticks. Zero explanation.\n"
         "All CSS inside one <style> tag in <head>.\n"
         "Only Google Fonts and Font Awesome 6.5 from cdnjs CDN. No other external resources.\n"
+        "CRITICAL: Do NOT use background-image with any URL anywhere. Use CSS gradients only for all backgrounds.\n"
         "No Bootstrap, No Tailwind. Mobile responsive with @media(max-width:768px).\n\n"
         f"BUSINESS: {name}\n"
         f"INDUSTRY: {btype}\n"
         f"LOCATION: {location}\n"
         f"PRIMARY COLOR: {p}\n"
         f"SECONDARY COLOR: {s}\n"
-        f"HERO IMAGE URL: {hero_url}\n"
-        f"ABOUT IMAGE URL: {card_url}\n\n"
         f"SERVICES (create ONE card for EACH, use the EXACT service name as the card title):\n{svc_lines}\n\n"
         f"DESIGN STYLE: {d['name']}\n"
         f"FONT: Load '{d['font']}' from Google Fonts\n"
@@ -362,7 +363,7 @@ def build_prompt(data, variation_index):
         f"1. Fixed navigation: logo={name}, links=Services/About/Reviews/Contact, CTA button 'Get Quote'\n"
         "2. Hero section exactly as described above\n"
         "3. Services section: grid of cards, one per service above with Font Awesome icon + exact service name + 2-sentence description\n"
-        f"4. About Us: two-column layout, left image url('{card_url}'), right 2 paragraphs about {name} in {location}\n"
+        f"4. About Us: two-column layout, LEFT side is a styled div ({d['about_left']}), RIGHT side 2 paragraphs about {name} in {location}\n"
         "5. Why Choose Us: 4 stat tiles on coloured background\n"
         "6. Testimonials: 3 review cards each with 5 gold stars, quote text, customer name\n"
         f"7. Contact form: full name, email, phone, message textarea, submit button color {p}\n"
