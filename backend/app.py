@@ -283,15 +283,15 @@ import re
 from html import escape as _e
 
 INDUSTRY = {
-    "plumber": {"label": "Plumbing & Heating", "hero": "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=1200&q=80", "team": "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&q=80", "work": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80", "pitch": "Gas-safe minded engineers with fast call-outs, transparent quotes, and workmanship you can trust across every job."},
-    "electrician": {"label": "Electrical Services", "hero": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=1200&q=80", "team": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=800&q=80", "work": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80", "pitch": "Qualified electricians for domestic and commercial installs, fault finding, rewires, and safety certificates."},
-    "restaurant": {"label": "Restaurant & Café", "hero": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80", "team": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80", "work": "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80", "pitch": "Seasonal menus, warm hospitality, and memorable dining in the heart of the community."},
-    "law": {"label": "Legal Services", "hero": "https://images.unsplash.com/photo-1589829545855-d10d557cf57f?w=1200&q=80", "team": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&q=80", "work": "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&q=80", "pitch": "Clear advice, disciplined case management, and outcomes-focused representation."},
-    "consulting": {"label": "Business Consulting", "hero": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&q=80", "team": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80", "work": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80", "pitch": "Strategy, operations, and growth programmes tailored to ambitious UK small businesses."},
-    "fitness": {"label": "Gym & Fitness", "hero": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80", "team": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80", "work": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80", "pitch": "Expert coaching, modern equipment, and programmes built for sustainable results."},
-    "realestate": {"label": "Real Estate", "hero": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80", "team": "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&q=80", "work": "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?w=800&q=80", "pitch": "Local market insight, honest valuations, and a smooth journey from viewing to completion."},
-    "agency": {"label": "Creative Agency", "hero": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80", "team": "https://images.unsplash.com/photo-1529333166437-7750a6dd4a70?w=800&q=80", "work": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80", "pitch": "Brand, web, and campaigns that help UK businesses stand out and convert more customers online."},
-    "other": {"label": "Professional Services", "hero": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1200&q=80", "team": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80", "work": "https://images.unsplash.com/photo-1556761175-b413da4baf72?w=800&q=80", "pitch": "Dependable expertise, transparent communication, and solutions designed around your goals."},
+    "plumber": {"label": "Plumbing & Heating", "hero": "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39", "team": "https://images.unsplash.com/photo-1581578731548-c64695cc6952", "work": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e", "pitch": "Gas-safe minded engineers with fast call-outs, transparent quotes, and workmanship you can trust across every job."},
+    "electrician": {"label": "Electrical Services", "hero": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e", "team": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e", "work": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64", "pitch": "Qualified electricians for domestic and commercial installs, fault finding, rewires, and safety certificates."},
+    "restaurant": {"label": "Restaurant & Café", "hero": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4", "team": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0", "work": "https://images.unsplash.com/photo-1559339352-11d035aa65de", "pitch": "Seasonal menus, warm hospitality, and memorable dining in the heart of the community."},
+    "law": {"label": "Legal Services", "hero": "https://images.unsplash.com/photo-1589829545855-d10d557cf57f", "team": "https://images.unsplash.com/photo-1560250097-0b93528c311a", "work": "https://images.unsplash.com/photo-1450101499163-c8848c66ca85", "pitch": "Clear advice, disciplined case management, and outcomes-focused representation."},
+    "consulting": {"label": "Business Consulting", "hero": "https://images.unsplash.com/photo-1552664730-d307ca884978", "team": "https://images.unsplash.com/photo-1522071820081-009f0129c71c", "work": "https://images.unsplash.com/photo-1460925895917-afdab827c52f", "pitch": "Strategy, operations, and growth programmes tailored to ambitious UK small businesses."},
+    "fitness": {"label": "Gym & Fitness", "hero": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48", "team": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b", "work": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438", "pitch": "Expert coaching, modern equipment, and programmes built for sustainable results."},
+    "realestate": {"label": "Real Estate", "hero": "https://images.unsplash.com/photo-1560518883-ce09059eeffa", "team": "https://images.unsplash.com/photo-1560472354-b33ff0c44a43", "work": "https://images.unsplash.com/photo-1560185127-6ed189bf02f4", "pitch": "Local market insight, honest valuations, and a smooth journey from viewing to completion."},
+    "agency": {"label": "Creative Agency", "hero": "https://images.unsplash.com/photo-1497366216548-37526070297c", "team": "https://images.unsplash.com/photo-1529333166437-7750a6dd4a70", "work": "https://images.unsplash.com/photo-1552664730-d307ca884978", "pitch": "Brand, web, and campaigns that help UK businesses stand out and convert more customers online."},
+    "other": {"label": "Professional Services", "hero": "https://images.unsplash.com/photo-1497366754035-f200968a6e72", "team": "https://images.unsplash.com/photo-1522071820081-009f0129c71c", "work": "https://images.unsplash.com/photo-1556761175-b413da4baf72", "pitch": "Dependable expertise, transparent communication, and solutions designed around your goals."},
 }
 
 SVC_BLURB = [
@@ -334,17 +334,207 @@ BLOG = [
 
 AWARDS = ["Fully insured", "DBS checked", "UK standards", "5★ rated", "Written quotes", "Local team"]
 
+# Industry-tuned copy (fallback generator uses these when form data is sparse)
+INDUSTRY_FEATURES = {
+    "agency": [
+        ("bi-palette", "Brand & design", "Logos, guidelines, and visuals that feel unmistakably yours."),
+        ("bi-window", "Web experiences", "Fast, mobile-ready sites built to convert visitors into enquiries."),
+        ("bi-megaphone", "Campaigns that convert", "Paid and organic strategies tailored to {location} audiences."),
+        ("bi-graph-up", "Measurable growth", "Clear reporting so you know what is working."),
+        ("bi-people", "Dedicated partner", "One team from strategy through launch — no hand-offs."),
+        ("bi-shield-check", "Trusted process", "Structured timelines, approvals, and transparent pricing."),
+    ],
+    "restaurant": [
+        ("bi-cup-hot", "Fresh ingredients", "Seasonal menus prepared with care for every service."),
+        ("bi-calendar-event", "Events & catering", "Private dining and celebrations across {location}."),
+        ("bi-truck", "Delivery friendly", "Reliable collection and delivery when you cannot visit."),
+        ("bi-star", "Memorable hospitality", "Warm service that keeps guests coming back."),
+        ("bi-clock", "Consistent hours", "Clear opening times and booking options online."),
+        ("bi-geo-alt", "Local favourite", "Proudly serving {location} and the surrounding area."),
+    ],
+    "plumber": [
+        ("bi-droplet", "Leak & burst pipes", "Fast diagnosis and lasting repairs for homes in {location}."),
+        ("bi-fire", "Boilers & heating", "Servicing, installs, and emergency heating support."),
+        ("bi-house", "Bathrooms & kitchens", "Tidy installs with clear quotes before we start."),
+        ("bi-shield-check", "Gas-safe mindset", "Safety-first approach on every visit."),
+        ("bi-clock", "Emergency slots", "Same-day call-outs when availability allows."),
+        ("bi-chat-dots", "Plain-English updates", "You always know cost, scope, and arrival time."),
+    ],
+    "electrician": [
+        ("bi-lightning", "Fault finding", "Safe testing and fixes for tripping circuits and outages."),
+        ("bi-plug", "Rewires & upgrades", "Modern wiring for extensions and renovations."),
+        ("bi-house-check", "EICR & compliance", "Certificates and reports for landlords and businesses."),
+        ("bi-brightness-high", "Lighting design", "Indoor and outdoor lighting that suits your space."),
+        ("bi-shield-check", "Fully insured", "Qualified electricians with documented work."),
+        ("bi-geo-alt", "Serving {location}", "Local team with fast response across the area."),
+    ],
+    "fitness": [
+        ("bi-heart-pulse", "Personal training", "Programmes built around your goals and schedule."),
+        ("bi-people", "Small group classes", "Motivating sessions with expert coaching."),
+        ("bi-calendar-check", "Flexible membership", "Options for beginners through to athletes."),
+        ("bi-cup-straw", "Nutrition guidance", "Practical habits that support your training."),
+        ("bi-star", "Welcoming community", "A friendly gym environment in {location}."),
+        ("bi-graph-up", "Track progress", "Regular check-ins so you see real results."),
+    ],
+    "law": [
+        ("bi-chat-square-text", "Clear advice", "Complex matters explained without jargon."),
+        ("bi-file-earmark-check", "Disciplined process", "Structured case management from day one."),
+        ("bi-shield-lock", "Confidential", "Your enquiry is private and without obligation."),
+        ("bi-briefcase", "Business & personal", "Support for companies and individuals in {location}."),
+        ("bi-clock", "Responsive", "Timely updates so you are never left wondering."),
+        ("bi-award", "Outcome focused", "Practical strategies aligned to your objectives."),
+    ],
+}
+
+SVC_BLURB_TEMPLATES = [
+    "{svc} — a specialist service from {name} for clients in {location}. We confirm scope in writing before work begins.",
+    "Our {svc} package is designed for busy households and businesses in {location} — flexible scheduling and clear updates.",
+    "{name} delivers professional {svc} with qualified staff, tidy workmanship, and documentation on request.",
+    "Choose {svc} with confidence: transparent quotes, no hidden extras, and friendly support from enquiry to completion.",
+    "Popular in {location}: {svc} includes consultation, plain-English advice, and follow-up after the job is signed off.",
+    "From first call to finish, {svc} is handled by our in-house team — we treat your property with respect.",
+]
+
+INDUSTRY_FAQ_EXTRA = {
+    "agency": [("Do you offer monthly retainers?", "Yes — many {location} clients use ongoing design, web, and marketing support on a simple monthly plan.")],
+    "restaurant": [("Can I book a table online?", "Yes — mention your date, time, and party size in the form and we will confirm availability.")],
+    "law": [("Is the first consultation confidential?", "Absolutely. Your enquiry is private and without obligation.")],
+    "plumber": [("Are you available for emergencies?", "We prioritise urgent leaks and loss of heating in {location} — call for same-day slots when available.")],
+    "electrician": [("Do you issue certificates?", "Yes — EICRs, minor works, and compliance paperwork are provided where required.")],
+    "fitness": [("Can I try a class first?", "Absolutely — ask about intro sessions and membership options tailored to your goals.")],
+}
+
+def _industry_key(btype):
+    """Match partial business types (e.g. 'plumbing services') to industry keys."""
+    bt = (btype or "other").lower().strip()
+    for key in INDUSTRY:
+        if key in bt:
+            return key
+    for key in INDUSTRY_FEATURES:
+        if key in bt:
+            return key
+    for key in INDUSTRY_FAQ_EXTRA:
+        if key in bt:
+            return key
+    return "other"
+
+
+def _build_faq_html(vi, loc_raw, name_raw, btype):
+    loc_e, name_e = _e(loc_raw), _e(name_raw)
+    faqs = [
+        (f"How quickly can you help in {loc_e}?", f"Most enquiries receive a reply within 2 hours. Emergency and same-day slots are often available — call us for live availability."),
+        ("Are quotes free and without obligation?", "Yes. We provide clear written estimates before any work begins so you can decide with confidence."),
+        (f"Which areas do you cover?", f"We serve {loc_e} and surrounding postcodes. Send your address and we will confirm coverage immediately."),
+        (f"What makes {name_e} different?", "Transparent pricing, qualified staff, tidy workmanship, and communication in plain English from start to finish."),
+        ("How do I pay?", "Bank transfer, card, and invoice options for trade clients. Payment terms are explained on every quote."),
+        ("Do you offer guarantees?", "Yes — workmanship guarantees are included on eligible services and documented in your quote."),
+    ]
+    key = _industry_key(btype)
+    for q_tpl, a_tpl in INDUSTRY_FAQ_EXTRA.get(key, []):
+        faqs.append((q_tpl, a_tpl.format(location=loc_e, name=name_e)))
+    html = ""
+    for i, (q, a) in enumerate(faqs[:8]):
+        html += (
+            f'<div class="accordion-item acc-item">'
+            f'<h2 class="accordion-header"><button class="accordion-button collapsed" type="button" '
+            f'data-bs-toggle="collapse" data-bs-target="#fq{vi}{i}">{q}</button></h2>'
+            f'<div id="fq{vi}{i}" class="accordion-collapse collapse" data-bs-parent="#faqAcc{vi}">'
+            f'<div class="accordion-body muted">{_e(a)}</div></div></div>'
+        )
+    return html
+
+DEFAULT_HERO_IMG = (
+    "https://images.unsplash.com/photo-1497366754035-f200968a6e72"
+    "?auto=format&fit=crop&w=1600&q=85"
+)
+IMG_ATTRS = 'referrerpolicy="no-referrer" crossorigin="anonymous" loading="eager" decoding="async"'
+
+
+def _unsplash(url_base):
+    """Reliable Unsplash URL with sizing params."""
+    base = url_base.split("?")[0]
+    return f"{base}?auto=format&fit=crop&w=1600&q=85"
+
+
+def _hero_bg_style(hero_img):
+    url = _unsplash(hero_img) if hero_img else DEFAULT_HERO_IMG
+    return (
+        f"background-image:url('{url}');"
+        "background-position:center;background-size:cover;background-repeat:no-repeat;"
+    )
+
+
+def _hero_img_tag(hero_img, alt, css_class="img-fluid", extra_style=""):
+    url = _unsplash(hero_img) if hero_img else DEFAULT_HERO_IMG
+    fb = _unsplash(DEFAULT_HERO_IMG)
+    return (
+        f'<img src="{url}" alt="{alt}" class="{css_class}" {IMG_ATTRS} '
+        f'style="{extra_style}" '
+        f"onerror=\"this.onerror=null;this.src='{fb}'\">"
+    )
+
+
+def _hero_overlay(primary, secondary, bg, vi):
+    """Tinted overlay — Landia light wash, Divi cinematic dark, brutal side gradient."""
+    if vi == 0:
+        return (
+            f"linear-gradient(180deg, {_hex_mix(bg, '#ffffff', 0.15)}ee 0%, "
+            f"{_hex_mix(primary, '#ffffff', 0.35)}99 50%, {_hex_mix(secondary, '#ffffff', 0.2)}bb 100%)"
+        )
+    if vi == 1:
+        return (
+            f"linear-gradient(180deg, {_hex_mix(primary, '#000000', 0.55)}99 0%, "
+            f"{_hex_mix(bg, '#000000', 0.35)}cc 45%, {_hex_mix(secondary, '#000000', 0.2)}88 100%)"
+        )
+    if vi == 2:
+        return (
+            f"linear-gradient(90deg, {_hex_mix(primary, '#000000', 0.5)}cc 0%, "
+            f"{_hex_mix(secondary, '#000000', 0.35)}88 40%, transparent 62%)"
+        )
+    return (
+        f"linear-gradient(135deg, {_hex_mix(primary, '#000000', 0.65)}cc 0%, "
+        f"{_hex_mix(secondary, '#000000', 0.5)}99 45%, {_hex_mix(bg, '#000000', 0.25)}88 100%)"
+    )
+
 
 def _parse_services(raw):
+    """Accept comma lists, new lines, bullets, or numbered lines from the form."""
     if isinstance(raw, list):
         items = [str(s).strip() for s in raw if str(s).strip()]
     else:
-        items = [s.strip() for s in str(raw or "").split(",") if s.strip()]
+        text = str(raw or "").replace("\r\n", "\n")
+        chunks = []
+        for line in text.split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            line = re.sub(r"^[\-\*\u2022\d]+[\.\)\]]\s*", "", line)
+            if "," in line and len(line) > 40:
+                chunks.extend(s.strip() for s in line.split(",") if s.strip())
+            else:
+                chunks.append(line)
+        if not chunks:
+            chunks = [s.strip() for s in text.replace("\n", ",").split(",") if s.strip()]
+        items = chunks
     if not items:
-        items = ["Free consultation", "Professional installation", "Maintenance & support"]
+        items = ["Free consultation", "Professional service", "Ongoing support"]
     while len(items) < 3:
         items.append(items[-1])
     return items[:8]
+
+
+def _svc_blurb(svc, index, location, btype, business_name):
+    tpl = SVC_BLURB_TEMPLATES[index % len(SVC_BLURB_TEMPLATES)]
+    return tpl.format(svc=_e(svc), name=_e(business_name), location=_e(location))
+
+
+def _features_for_industry(btype, location):
+    loc_e = _e(location)
+    key = _industry_key(btype)
+    rows = INDUSTRY_FEATURES.get(key)
+    if rows:
+        return [(icon, _e(title), _e(desc.format(location=loc_e))) for icon, title, desc in rows]
+    return [(icon, _e(title), _e(desc.format(location=loc_e))) for icon, title, desc in FEATURES[:6]]
 
 
 def _parse_colors(raw):
@@ -384,20 +574,20 @@ def _hex_lum(c):
 
 
 def _theme(vi, primary, secondary, surface):
-    """Each variation tints from the user's form colours — not fixed navy/purple."""
+    """Each variation tints from the user's form colours — vi=0 Landia light, vi=1 Divi dark, vi=2 brutal."""
     primary, secondary, surface = _hex_norm(primary), _hex_norm(secondary), _hex_norm(surface)
     if vi == 0:
+        bg = surface if _hex_lum(surface) > 0.55 else "#f8fafc"
+        card = "#ffffff"
+        text = "#0f172a" if _hex_lum(bg) > 0.58 else "#f1f5f9"
+        muted = _hex_mix(primary, "#64748b", 0.55)
+        alt = _hex_mix(surface, primary, 0.12)
+    elif vi == 1:
         bg = _hex_mix(primary, "#000000", 0.78)
         card = _hex_mix(primary, "#ffffff", 0.14)
         text = "#f8fafc"
         muted = _hex_mix(secondary, "#94a3b8", 0.45)
         alt = _hex_mix(primary, secondary, 0.22)
-    elif vi == 1:
-        bg = surface
-        card = _hex_mix(surface, "#ffffff", 0.9)
-        text = "#0f172a" if _hex_lum(bg) > 0.58 else "#f1f5f9"
-        muted = _hex_mix(primary, "#64748b", 0.55)
-        alt = _hex_mix(surface, primary, 0.14)
     else:
         bg = _hex_mix(secondary, primary, 0.62)
         card = _hex_mix(secondary, "#ffffff", 0.18)
@@ -413,10 +603,10 @@ SVC_ICONS = [
 ]
 
 
-def _build_services_html(vi, svcs, loc):
+def _build_services_html(vi, svcs, loc, btype, business_name):
     parts = []
     for i, svc in enumerate(svcs):
-        blurb = _e(SVC_BLURB[i % len(SVC_BLURB)].format(location=loc))
+        blurb = _svc_blurb(svc, i, loc, btype, business_name)
         icon = SVC_ICONS[i % len(SVC_ICONS)]
         num = f"{i + 1:02d}"
         if vi == 2:
@@ -425,34 +615,32 @@ def _build_services_html(vi, svcs, loc):
                 f'<div class="svc-band box box-sharp d-lg-flex align-items-center gap-4 {rev}">'
                 f'<div class="flex-shrink-0"><div class="icon-pill"><i class="bi {icon}"></i></div></div>'
                 f'<div class="flex-grow-1"><span class="label-tag">Service {num}</span>'
-                f'<h3 class="h3 fw-bold text-uppercase mb-2">{svc}</h3>'
+                f'<h3 class="h3 fw-bold text-uppercase mb-2">{_e(svc)}</h3>'
                 f'<p class="muted mb-0">{blurb}</p></div></div>'
             )
         elif vi == 1:
             parts.append(
-                f'<article class="svc-item"><span class="svc-num">{num}</span><div>'
-                f'<h3 class="h2-editorial mb-2">{svc}</h3>'
-                f'<p class="muted mb-0">{blurb}</p></div></article>'
+                f'<div class="col-md-6 col-lg-4"><div class="box box-divi h-100">'
+                f'<div class="icon-pill"><i class="bi {icon}"></i></div>'
+                f'<h3 class="h5 fw-semibold mb-2">{_e(svc)}</h3>'
+                f'<p class="muted mb-0 small">{blurb}</p></div></div>'
             )
         else:
             parts.append(
-                f'<div class="col-md-6 col-xl-4"><div class="box box-round h-100">'
+                f'<div class="col-md-6 col-xl-4"><div class="box box-landia h-100">'
                 f'<div class="icon-pill"><i class="bi {icon}"></i></div>'
-                f'<h3 class="h4 fw-bold mb-3">{svc}</h3>'
+                f'<h3 class="h4 fw-bold mb-3">{_e(svc)}</h3>'
                 f'<p class="muted mb-0">{blurb}</p></div></div>'
             )
     body = "".join(parts).replace("div", "div")
     if vi == 2:
         return f'<div class="v-services-stack">{body}</div>'
-    if vi == 1:
-        return f'<div class="svc-editorial">{body}</div>'
     return f'<div class="row g-4 grid-svc">{body}</div>'
 
 
-def _build_features_html(vi, loc):
+def _build_features_html(vi, location, btype):
     parts = []
-    for icon, title, desc in FEATURES[:6]:
-        d, tit = _e(desc.format(location=loc)), _e(title)
+    for icon, tit, d in _features_for_industry(btype, location):
         if vi == 2:
             parts.append(
                 f'<div class="feat-cell"><div class="icon-pill mb-3"><i class="bi {icon}"></i></div>'
@@ -460,13 +648,12 @@ def _build_features_html(vi, loc):
             )
         elif vi == 1:
             parts.append(
-                f'<div class="col-lg-6"><div class="box box-flat"><div class="d-flex gap-3">'
-                f'<div class="icon-pill flex-shrink-0"><i class="bi {icon}"></i></div>'
-                f'<div><h3 class="h5 fw-semibold">{tit}</h3><p class="muted mb-0">{d}</p></div></div></div></div>'
+                f'<div class="feat-cell"><div class="icon-pill mb-3"><i class="bi {icon}"></i></div>'
+                f'<h3 class="h5 fw-semibold mb-2">{tit}</h3><p class="muted mb-0">{d}</p></div>'
             )
         else:
             parts.append(
-                f'<div class="col-md-6 col-lg-4"><div class="box box-round h-100">'
+                f'<div class="col-md-6 col-lg-4"><div class="box box-landia h-100">'
                 f'<div class="icon-pill"><i class="bi {icon}"></i></div>'
                 f'<h3 class="h5 fw-bold">{tit}</h3><p class="muted mb-0">{d}</p></div></div>'
             )
@@ -474,7 +661,7 @@ def _build_features_html(vi, loc):
     if vi == 2:
         return f'<div class="feat-bento">{body}</div>'
     if vi == 1:
-        return f'<div class="row g-4 feat-grid-2">{body}</div>'
+        return f'<div class="feat-bento-divi">{body}</div>'
     return f'<div class="row g-4">{body}</div>'
 
 
@@ -493,7 +680,7 @@ def _build_testimonials_html(vi, loc):
             )
         elif vi == 1:
             parts.append(
-                f'<div class="col-md-6"><div class="box h-100">'
+                f'<div class="col-md-6"><div class="box box-divi h-100">'
                 f'<div class="text-warning mb-2">★★★★★</div><p class="mb-3">"{q}"</p>'
                 f'<div class="d-flex gap-2 align-items-center">'
                 f'<div class="av">{_e(person[0])}</div><div><strong>{_e(person)}</strong><br>'
@@ -501,7 +688,7 @@ def _build_testimonials_html(vi, loc):
             )
         else:
             parts.append(
-                f'<div class="col-md-6 col-lg-3"><div class="box h-100">'
+                f'<motion-div class="col-md-6 col-lg-3"><motion-div class="box box-landia h-100">'
                 f'<div class="text-warning mb-2">★★★★★</div><p class="mb-3">"{q}"</p>'
                 f'<div class="d-flex gap-2 align-items-center">'
                 f'<div class="av">{_e(person[0])}</div><div><strong class="small">{_e(person)}</strong><br>'
@@ -533,34 +720,34 @@ def _skin(vi):
     """Per-design typography, spacing, and CSS class names."""
     skins = {
         0: {
-            "layout": "skin-dark",
-            "fonts": "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap",
-            "font_h": "Plus Jakarta Sans",
-            "font_b": "Plus Jakarta Sans",
+            "layout": "skin-landia",
+            "fonts": "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap",
+            "font_h": "Nunito",
+            "font_b": "Nunito",
             "wrap": "container",
-            "hero_cls": "hero hero-dark",
-            "h1": "display-2 fw-bold mb-4 lh-sm",
-            "h2": "display-5 fw-bold",
-            "lead": "lead fs-4 mb-4",
-            "sec": "sec sec-pad-lg",
-            "box": "box box-round",
-            "nav": "nav-wrap nav-glass",
+            "hero_cls": "hero hero-landia",
+            "h1": "display-3 fw-bold mb-4 lh-sm",
+            "h2": "display-5 fw-bold mb-3",
+            "lead": "lead fs-5 mb-4",
+            "sec": "sec sec-landia",
+            "box": "box box-landia",
+            "nav": "nav-wrap nav-landia",
             "cta_btn": "btn-main btn-lg",
         },
         1: {
-            "layout": "skin-editorial",
-            "fonts": "https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Source+Sans+3:wght@400;600;700&display=swap",
-            "font_h": "DM Serif Display",
-            "font_b": "Source Sans 3",
-            "wrap": "container container-narrow",
-            "hero_cls": "hero hero-editorial",
-            "h1": "hero-serif display-1 mb-4",
-            "h2": "hero-serif h2-editorial mb-4",
-            "lead": "lead-editorial fs-5 mb-5",
-            "sec": "sec sec-editorial",
-            "box": "box box-flat",
-            "nav": "nav-wrap nav-minimal",
-            "cta_btn": "btn-main btn-main-soft btn-lg",
+            "layout": "skin-divi",
+            "fonts": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap",
+            "font_h": "Inter",
+            "font_b": "Inter",
+            "wrap": "container",
+            "hero_cls": "hero hero-divi",
+            "h1": "h1-divi",
+            "h2": "h2-divi mb-3",
+            "lead": "lead-divi",
+            "sec": "sec sec-divi",
+            "box": "box box-divi",
+            "nav": "nav-wrap nav-divi",
+            "cta_btn": "btn-main btn-main-pill btn-lg",
         },
         2: {
             "layout": "skin-brutal",
@@ -591,8 +778,8 @@ h1,h2,h3,.hero-serif,.h2-brutal,.hero-brutal-title{{font-family:'{font_h}',serif
 .accent{{color:var(--p)}}
 .muted{{color:var(--muted)}}
 .hero{{position:relative;display:flex;align-items:center;overflow:hidden}}
-.hero-img{{position:absolute;inset:0;background:center/cover no-repeat}}
-.hero-mask{{position:absolute;inset:0;background:{overlay}}}
+.hero-img{{position:absolute;inset:0;z-index:0;background-position:center;background-size:cover;background-repeat:no-repeat}}
+.hero-mask{{position:absolute;inset:0;z-index:1;background:{overlay}}}
 .hero-inner{{position:relative;z-index:2;width:100%}}
 .stat-big{{font-weight:800;color:var(--p);line-height:1}}
 .av{{background:linear-gradient(135deg,var(--p),var(--s));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}}
@@ -603,53 +790,73 @@ h1,h2,h3,.hero-serif,.h2-brutal,.hero-brutal-title{{font-family:'{font_h}',serif
 .footer-grid a:hover{{color:var(--p)}}
 .acc-item{{background:transparent!important;border-color:rgba(128,128,128,.15)!important}}
 .acc-item .accordion-button{{background:transparent!important;color:var(--text)!important;font-weight:600}}
+.form-control,.form-select{{background:var(--card);border:1px solid color-mix(in srgb,var(--p) 32%,transparent);color:var(--text)}}
+.form-control:focus{{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 22%,transparent)}}
+.form-control::placeholder{{color:var(--muted);opacity:.85}}
+.mobile-cta{{display:none}}
+@media(max-width:991.98px){{
+body{{padding-bottom:76px}}
+.mobile-cta{{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:1050;justify-content:center;align-items:center;padding:14px 20px;border-radius:0;font-size:1rem;letter-spacing:.02em;box-shadow:0 -8px 32px rgba(0,0,0,.2)}}
+}}
 """
-    dark = """
-.skin-dark .sec-pad-lg{padding:clamp(80px,10vw,120px) 0}
-.skin-dark .box-round{background:var(--card);border-radius:22px;padding:clamp(26px,3vw,40px);border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 32px rgba(0,0,0,.25);height:100%;transition:.25s}
-.skin-dark .box-round:hover{transform:translateY(-6px);box-shadow:0 24px 48px rgba(0,0,0,.35)}
-.skin-dark .hero-dark{min-height:min(94vh,920px)}
-.skin-dark .icon-pill{width:56px;height:56px;border-radius:16px;background:var(--p);margin-bottom:20px;font-size:1.35rem;display:flex;align-items:center;justify-content:center;color:#fff}
-.skin-dark .btn-main{border-radius:14px;padding:16px 36px}
-.skin-dark .nav-glass{backdrop-filter:blur(14px);background:color-mix(in srgb,var(--bg) 88%,transparent);border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;z-index:1000}
-.skin-dark .nav-glass .nav-link{color:var(--text);font-weight:600}
-.skin-dark .logo-pill{display:inline-block;padding:10px 20px;border-radius:12px;background:var(--card);margin:6px;font-size:.85rem;font-weight:600}
-.skin-dark .stat-big{font-size:clamp(2.2rem,4vw,3.2rem)}
-.skin-dark .av{width:52px;height:52px;border-radius:50%}
-.skin-dark .cta-strip{background:linear-gradient(135deg,var(--p),var(--s));color:#fff;border-radius:28px;padding:clamp(48px,7vw,80px)}
-.skin-dark .badge-top{background:color-mix(in srgb,var(--p) 25%,transparent);padding:10px 18px;border-radius:999px;font-size:.88rem}
-.skin-dark .blog-thumb{height:150px;border-radius:18px 18px 0 0;margin:-40px -40px 24px -40px;background-size:cover}
-.skin-dark .grid-svc .col-md-6.col-xl-4{margin-bottom:0}
+    landia = """
+.skin-landia{background:var(--bg);color:var(--text)}
+.skin-landia .sec,.skin-landia .sec-landia{padding:clamp(64px,8vw,100px) 0}
+.skin-landia .box-landia{background:var(--card);border-radius:16px;padding:clamp(24px,3vw,36px);border:1px solid color-mix(in srgb,var(--p) 12%,#e2e8f0);box-shadow:0 4px 24px rgba(15,23,42,.06);height:100%;transition:.25s}
+.skin-landia .box-landia:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(15,23,42,.1)}
+.skin-landia .hero-landia{min-height:min(88vh,860px);padding-top:100px;background:var(--bg)}
+.skin-landia .hero-landia .hero-mask{opacity:.35}
+.skin-landia .hero-landia .hero-preview{border-radius:20px;overflow:hidden;box-shadow:0 24px 60px rgba(15,23,42,.12);border:1px solid color-mix(in srgb,var(--p) 15%,#e2e8f0)}
+.skin-landia .icon-pill{width:52px;height:52px;border-radius:14px;background:color-mix(in srgb,var(--p) 12%,#fff);color:var(--p);margin-bottom:18px;font-size:1.25rem;display:flex;align-items:center;justify-content:center;border:1px solid color-mix(in srgb,var(--p) 25%,transparent)}
+.skin-landia .btn-main{border-radius:999px;padding:14px 32px;box-shadow:0 8px 24px color-mix(in srgb,var(--p) 35%,transparent)}
+.skin-landia .btn-ghost{border-radius:999px;padding:14px 28px}
+.skin-landia .nav-landia{background:#fff;box-shadow:0 2px 16px rgba(15,23,42,.06);position:sticky;top:0;z-index:1000}
+.skin-landia .nav-landia .nav-link{color:var(--text);font-weight:600;font-size:.95rem}
+.skin-landia .nav-landia .navbar-brand{color:var(--p)!important;font-weight:800}
+.skin-landia .logo-pill{display:inline-block;padding:10px 22px;border-radius:999px;background:var(--card);border:1px solid #e2e8f0;margin:6px;font-size:.85rem;font-weight:600;color:var(--muted)}
+.skin-landia .stat-big{font-size:clamp(2rem,4vw,2.8rem);color:var(--p)}
+.skin-landia .av{width:48px;height:48px;border-radius:12px}
+.skin-landia .cta-strip{background:linear-gradient(120deg,var(--p),var(--s));color:#fff;border-radius:20px;padding:clamp(48px,6vw,72px)}
+.skin-landia .badge-top{background:color-mix(in srgb,var(--p) 10%,#fff);color:var(--p);padding:8px 16px;border-radius:999px;font-size:.85rem;font-weight:700;border:1px solid color-mix(in srgb,var(--p) 20%,transparent)}
+.skin-landia .blog-thumb{height:140px;border-radius:12px 12px 0 0;margin:-36px -36px 20px -36px;background-size:cover}
+.skin-landia .grid-svc .col-md-6.col-xl-4{margin-bottom:0}
+.skin-landia .how-steps-h .box-landia{text-align:center}
 """
-    editorial = """
-.skin-editorial{background:var(--bg)}
-.skin-editorial .container-narrow{max-width:920px}
-.skin-editorial .sec-editorial{padding:clamp(56px,8vw,88px) 0;border-bottom:1px solid color-mix(in srgb,var(--p) 18%,transparent)}
-.skin-editorial .box-flat{background:transparent;border:none;border-radius:0;padding:28px 0;box-shadow:none;height:auto}
-.skin-editorial .box-flat:hover{transform:none;box-shadow:none}
-.skin-editorial .hero-editorial{min-height:72vh;text-align:center;padding:clamp(48px,8vw,80px) 0}
-.skin-editorial .hero-editorial .hero-img{opacity:.35}
-.skin-editorial .hero-serif{letter-spacing:-.02em;line-height:1.08}
-.skin-editorial .lead-editorial{max-width:36rem;margin-left:auto;margin-right:auto;line-height:1.75;color:var(--muted)}
-.skin-editorial .h2-editorial{font-size:clamp(2rem,4.5vw,2.75rem)}
-.skin-editorial .icon-pill{width:44px;height:44px;border-radius:50%;background:var(--p);font-size:1rem;display:inline-flex;align-items:center;justify-content:center;color:#fff;margin-bottom:12px}
-.skin-editorial .btn-main-soft{border-radius:999px;padding:14px 40px;letter-spacing:.03em}
-.skin-editorial .nav-minimal{background:var(--bg);border-bottom:2px solid var(--p);position:sticky;top:0;z-index:1000}
-.skin-editorial .nav-minimal .nav-link{font-size:.92rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text)}
-.skin-editorial .logo-line{display:flex;flex-wrap:wrap;justify-content:center;gap:1.5rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
-.skin-editorial .logo-line span:not(:last-child)::after{content:"·";margin-left:1.5rem;color:var(--p)}
-.skin-editorial .stats-inline{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2rem;text-align:center;padding:2rem 0}
-.skin-editorial .stats-inline .stat-big{font-size:clamp(2.5rem,6vw,4rem);font-family:'DM Serif Display',serif}
-.skin-editorial .svc-editorial article{display:flex;gap:2rem;padding:2rem 0;border-bottom:1px solid rgba(128,128,128,.15);align-items:flex-start}
-.skin-editorial .svc-num{font-family:'DM Serif Display',serif;font-size:clamp(2.5rem,5vw,3.5rem);color:var(--p);line-height:1;min-width:3rem}
-.skin-editorial .pricing-stack .price-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;padding:1.75rem 0;border-bottom:2px solid var(--p);gap:1rem}
-.skin-editorial .pricing-stack .price-row.featured{background:color-mix(in srgb,var(--p) 8%,transparent);padding:2rem;margin:0 -1rem;border-left:4px solid var(--p)}
-.skin-editorial .team-row{display:flex;flex-wrap:wrap;gap:2.5rem;justify-content:center}
-.skin-editorial .team-row .team-person{text-align:center;min-width:140px}
-.skin-editorial .team-row .av{width:72px;height:72px;border-radius:50%;margin:0 auto 12px;font-size:1.5rem}
-.skin-editorial .av{width:40px;height:40px;border-radius:50%}
-.skin-editorial .cta-strip{border-radius:0;border-top:4px solid var(--p);border-bottom:4px solid var(--p);background:var(--card);color:var(--text);padding:3rem}
-.skin-editorial .feat-grid-2 .col-lg-6{margin-bottom:1.5rem}
+    divi = """
+.skin-divi{background:var(--bg);color:var(--text)}
+.skin-divi .sec,.skin-divi .sec-divi{padding:clamp(72px,9vw,110px) 0}
+.skin-divi .box-divi{background:var(--card);border-radius:12px;padding:clamp(22px,2.5vw,32px);border:1px solid color-mix(in srgb,var(--p) 35%,transparent);height:100%;transition:.2s}
+.skin-divi .box-divi:hover{border-color:var(--p);box-shadow:0 0 0 1px var(--p),0 20px 50px rgba(0,0,0,.35)}
+.skin-divi .hero-divi{min-height:min(92vh,900px);padding-top:88px;text-align:center}
+.skin-divi .hero-divi .hero-inner{padding-bottom:2rem}
+.skin-divi .h1-divi{font-size:clamp(2.2rem,5.5vw,3.75rem);font-weight:700;line-height:1.12;letter-spacing:-.03em;max-width:18ch;margin-left:auto;margin-right:auto}
+.skin-divi .h1-divi .accent{display:block;background:linear-gradient(120deg,var(--p),var(--s));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.skin-divi .lead-divi{font-size:clamp(1.05rem,2vw,1.25rem);color:var(--muted);max-width:42rem;margin:1.25rem auto 0;line-height:1.65}
+.skin-divi .motion-frame{margin:2.5rem auto 0;max-width:920px;padding:clamp(12px,2vw,20px);border-radius:16px;background:linear-gradient(110deg,color-mix(in srgb,var(--p) 40%,#000),var(--s),#fff);line-height:0}
+.skin-divi .motion-frame img{border-radius:10px;width:100%;max-height:420px;object-fit:cover}
+.skin-divi .icon-pill{width:48px;height:48px;border-radius:10px;background:color-mix(in srgb,var(--p) 22%,transparent);color:var(--p);font-size:1.1rem;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;border:1px solid color-mix(in srgb,var(--p) 40%,transparent)}
+.skin-divi .btn-main-pill{border-radius:999px;padding:14px 36px;font-weight:600}
+.skin-divi .btn-ghost{border-radius:999px;border-color:color-mix(in srgb,var(--p) 55%,transparent);color:var(--text)!important;padding:14px 28px}
+.skin-divi .nav-divi{backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 92%,transparent);border-bottom:1px solid color-mix(in srgb,var(--p) 25%,transparent);position:sticky;top:0;z-index:1000}
+.skin-divi .nav-divi .nav-link{color:var(--muted);font-weight:500;font-size:.92rem}
+.skin-divi .nav-divi .nav-link:hover{color:var(--text)}
+.skin-divi .nav-divi .navbar-brand{font-weight:700;color:#fff!important}
+.skin-divi .logo-pill{display:inline-block;padding:8px 18px;border-radius:8px;background:color-mix(in srgb,var(--p) 12%,var(--card));margin:6px;font-size:.8rem;font-weight:600;color:var(--muted);border:1px solid color-mix(in srgb,var(--p) 22%,transparent)}
+.skin-divi .stat-big{font-size:clamp(2.2rem,5vw,3.2rem)}
+.skin-divi .av{width:44px;height:44px;border-radius:8px}
+.skin-divi .cta-strip{background:linear-gradient(120deg,var(--p),color-mix(in srgb,var(--s) 80%,#000));color:#fff;border-radius:16px;padding:clamp(48px,7vw,80px)}
+.skin-divi .badge-top{background:color-mix(in srgb,var(--p) 18%,var(--card));color:var(--text);padding:8px 14px;border-radius:999px;font-size:.8rem;border:1px solid color-mix(in srgb,var(--p) 35%,transparent)}
+.skin-divi .h2-divi{font-size:clamp(1.75rem,4vw,2.5rem);font-weight:600;letter-spacing:-.02em}
+.skin-divi .feat-bento-divi{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.skin-divi .feat-bento-divi .feat-cell{padding:22px;border-radius:12px;border:1px solid color-mix(in srgb,var(--p) 28%,transparent);min-height:130px;background:var(--card)}
+.skin-divi .pricing-divi{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.skin-divi .pricing-divi .price-card{border-radius:12px;border:1px solid color-mix(in srgb,var(--p) 30%,transparent);padding:26px;height:100%;background:var(--card)}
+.skin-divi .pricing-divi .price-card.featured{border-color:var(--p);background:linear-gradient(160deg,color-mix(in srgb,var(--p) 22%,var(--card)),var(--card));transform:translateY(-6px)}
+.skin-divi .sec-divi-band{background:linear-gradient(180deg,color-mix(in srgb,var(--p) 14%,var(--bg)),var(--bg))}
+.skin-divi .team-row-divi{display:flex;flex-wrap:wrap;gap:2rem;justify-content:center}
+.skin-divi .team-row-divi .team-person{text-align:center}
+.skin-divi .team-row-divi .av{width:64px;height:64px;border-radius:50%;margin:0 auto 10px}
+.skin-divi .blog-thumb{height:130px;border-radius:10px 10px 0 0;margin:-32px -32px 18px -32px;background-size:cover}
 """
     brutal = """
 .skin-brutal{letter-spacing:.01em}
@@ -688,9 +895,9 @@ h1,h2,h3,.hero-serif,.h2-brutal,.hero-brutal-title{{font-family:'{font_h}',serif
 """.replace("div", "div")
     brutal = brutal.replace("div", "div")
     if vi == 0:
-        return common + dark
+        return common + landia
     if vi == 1:
-        return common + editorial
+        return common + divi
     return common + brutal
 
 
@@ -727,7 +934,7 @@ def _build_pricing_html(vi):
     parts = []
     for tier, price, desc, feats, star in tiers:
         lis = "".join(f'<li><i class="bi bi-check2-circle me-2"></i>{_e(f)}</li>' for f in feats)
-        cls = "box box-round featured" if star else "box box-round"
+        cls = "box box-landia featured" if star else "box box-landia"
         parts.append(
             f'<div class="col-lg-4"><div class="{cls}">'
             f'<p class="fw-bold text-uppercase small accent">{_e(tier)}</p>'
@@ -750,7 +957,7 @@ def _build_stats_html(vi, section_alt):
             f'<div><div class="stat-big">{a}</div><p class="muted mb-0 small text-uppercase">{b}</p></div>'
             for a, b in items
         )
-        return f'<section class="sec sec-editorial pt-0"><div class="container container-narrow"><div class="stats-inline">{inner}</div></div></section>'.replace("div", "div")
+        return f'<section class="sec sec-divi-band pt-0"><div class="container container-narrow"><div class="stats-inline">{inner}</div></div></section>'
     if vi == 2:
         inner = "".join(
             f'<div><div class="stat-big">{a}</div><p class="muted mb-0 small text-uppercase">{b}</p></div>'
@@ -758,7 +965,7 @@ def _build_stats_html(vi, section_alt):
         )
         return f'<section class="sec sec-brutal sec-band pt-0"><div class="container-fluid px-3 px-lg-5"><div class="stats-brutal">{inner}</div></div></section>'
     cells = "".join(
-        f'<div class="col-6 col-md-3"><div class="box box-round"><div class="stat-big">{a}</div>'
+        f'<div class="col-6 col-md-3"><div class="box box-landia"><div class="stat-big">{a}</div>'
         f'<p class="muted mb-0">{b}</p></div></div>'
         for a, b in items
     )
@@ -773,7 +980,7 @@ def _build_team_html(vi):
                 f'<div class="team-person"><div class="av">{_e(person[0])}</div>'
                 f'<h3 class="h6 fw-bold mb-0">{_e(person)}</h3><p class="small muted">{_e(role)}</p></div>'
             )
-        return f'<div class="team-row">{"".join(parts)}</div>'.replace("div", "div")
+        return f'<motion-div class="team-row-divi">{"".join(parts)}</motion-div>'.replace("motion-div", "motion-div")
     if vi == 2:
         parts = []
         for i, (person, role) in enumerate(TEAM):
@@ -806,12 +1013,14 @@ def build_premium_html(data, variation_index):
     name_raw = data.get("businessName") or data.get("business_name") or "Your Business"
     name = _e(name_raw)
     btype = (data.get("businessType") or data.get("business_type") or "other").lower()
-    loc = _e(data.get("location") or "the UK")
+    loc_raw = str(data.get("location") or "the UK").strip()
+    loc = _e(loc_raw)
     style = (data.get("style") or "modern").lower()
-    ind = INDUSTRY.get(btype, INDUSTRY["other"])
+    ikey = _industry_key(btype)
+    ind = INDUSTRY.get(ikey, INDUSTRY["other"])
     label = _e(ind["label"])
     label_l = label.lower()
-    svcs = [_e(s) for s in _parse_services(data.get("services"))]
+    svcs_raw = _parse_services(data.get("services"))
     primary, secondary, surface = _parse_colors(data.get("colors"))
     primary, secondary, surface = _hex_norm(primary), _hex_norm(secondary), _hex_norm(surface)
     vi = int(variation_index) % 3
@@ -821,6 +1030,8 @@ def build_premium_html(data, variation_index):
     wrap, box_cls, sec_cls, h2c = skin["wrap"], skin["box"], skin["sec"], skin["h2"]
     pitch = _e(ind["pitch"])
     hero_img, team_img, work_img = ind["hero"], ind["team"], ind["work"]
+    work_img_url = _unsplash(work_img)
+    team_img_url = _unsplash(team_img)
     email_slug = re.sub(r"[^a-z0-9]", "", name_raw.lower()) or "hello"
 
     headlines = {
@@ -831,49 +1042,41 @@ def build_premium_html(data, variation_index):
     }
     hlist = headlines.get(style, headlines["modern"])
     headline = hlist[vi]
-    overlay = f"linear-gradient(135deg,{primary}dd 0%,{secondary}bb 50%,{bg}ee 100%)"
+    overlay = _hero_overlay(primary, secondary, bg, vi)
+    hero_bg = _hero_bg_style(hero_img)
+    hero_img_el = _hero_img_tag(hero_img, name, "img-fluid rounded-4 shadow-lg", "max-height:460px;width:100%;object-fit:cover")
+    hero_split_el = _hero_img_tag(hero_img, name, "hero-split-img", "width:100%;height:100%;min-height:320px;object-fit:cover")
+    hero_editorial_el = _hero_img_tag(hero_img, name, "img-fluid", "max-height:340px;width:100%;object-fit:cover")
     font_heading = skin["font_h"]
     font_body = skin["font_b"]
 
-    services_html = _build_services_html(vi, svcs, loc)
-    features_html = _build_features_html(vi, loc)
+    services_html = _build_services_html(vi, svcs_raw, loc_raw, btype, name_raw)
+    features_html = _build_features_html(vi, loc_raw, btype)
     testi_html = _build_testimonials_html(vi, loc)
-
     pricing_html = _build_pricing_html(vi)
-
-    faqs = [
-        (f"How quickly can you help in {loc}?", "Most enquiries receive a reply within 2 hours. Emergency and same-day slots are often available — call us for live availability."),
-        ("Are quotes free and without obligation?", "Yes. We provide clear written estimates before any work begins so you can decide with confidence."),
-        (f"Which areas do you cover?", f"We serve {loc} and surrounding postcodes. Send your address and we will confirm coverage immediately."),
-        (f"What makes {name} different?", "Transparent pricing, qualified staff, tidy workmanship, and communication in plain English from start to finish."),
-        ("How do I pay?", "Bank transfer, card, and invoice options for trade clients. Payment terms are explained on every quote."),
-        ("Do you offer guarantees?", "Yes — workmanship guarantees are included on eligible services and documented in your quote."),
-    ]
-    faq_html = ""
-    for i, (q, a) in enumerate(faqs):
-        faq_html += (
-            f'<div class="accordion-item acc-item">'
-            f'<h2 class="accordion-header"><button class="accordion-button collapsed" type="button" '
-            f'data-bs-toggle="collapse" data-bs-target="#fq{vi}{i}">{q}</button></h2>'
-            f'<div id="fq{vi}{i}" class="accordion-collapse collapse" data-bs-parent="#faqAcc{vi}">'
-            f'<div class="accordion-body muted">{_e(a)}</div></div></div>'
-        )
+    faq_html = _build_faq_html(vi, loc_raw, name_raw, btype)
+    pricing_body = (
+        f'<div class="row g-4 align-items-stretch">{pricing_html}</div>'
+        if vi == 0 else pricing_html
+    )
+    og_img = _unsplash(hero_img)
 
     blog_cards = ""
     for title_tpl, excerpt in BLOG:
         blog_cards += (
-            f'<div class="col-md-4"><div class="box h-100">'
-            f'<div class="blog-thumb" style="background-image:url({work_img})"></div>'
+            f'<div class="col-md-4"><div class="box {box_cls} h-100">'
+            f'<div class="blog-thumb" style="background-image:url(\'{work_img_url}\')"></div>'
             f'<div class="p-4"><h3 class="h5 fw-bold">{_e(title_tpl.format(label_l=label_l, location=loc, name=name))}</h3>'
             f'<p class="muted small">{_e(excerpt.format(label_l=label_l, name=name))}</p>'
             f'<a href="#" class="accent fw-semibold">Read more →</a></div></div></div>'
         )
 
     team_html = _build_team_html(vi)
+    team_team_inner = team_html if vi == 1 else f'<div class="row g-4">{team_html}</div>'
 
     logos_pills = "".join(f'<span class="logo-pill">{_e(a)}</span>' for a in AWARDS)
     logos = _build_logos_html(vi, logos_pills, AWARDS)
-    nav_extra = "rounded-pill px-4" if vi == 1 else ""
+    nav_extra = "rounded-pill px-4" if vi in (0, 1) else ""
 
 
     hero_class = skin["hero_cls"]
@@ -883,18 +1086,28 @@ def build_premium_html(data, variation_index):
 
     h1c, lc, cta = skin["h1"], skin["lead"], skin["cta_btn"]
     if vi == 1:
-        hero_body = f"""<div class="row justify-content-center text-center"><div class="col-lg-10">
+        _hl = headline
+        _accent, _rest = _hl, ""
+        if f" in {loc}" in _hl:
+            _i = _hl.index(f" in {loc}")
+            _accent, _rest = _hl[:_i], _hl[_i:]
+        elif " — " in _hl:
+            _parts = _hl.split(" — ", 1)
+            _accent, _rest = _parts[0], (" — " + _parts[1]) if len(_parts) > 1 else ""
+        _h1_html = f'<span class="accent">{_accent}</span>{_rest}' if _rest else f'<span class="accent">{_hl}</span>'
+        hero_body = f"""<div class="hero-divi-inner text-center">
 <span class="badge-top d-inline-block mb-3"><i class="bi bi-geo-alt me-1"></i> Serving {loc}</span>
-<h1 class="{h1c}">{headline}</h1>
+<h1 class="{h1c}">{_h1_html}</h1>
 <p class="{lc}">{pitch}</p>
 <div class="d-flex flex-wrap gap-3 mb-4 justify-content-center">
 <a href="#contact" class="{cta}">Book consultation</a>
 <a href="#services" class="btn-ghost btn-lg">Services</a></div>
-<p class="small muted">Trusted in {loc} · Clear quotes · 5★ rated</p>
-</div></div>"""
+<p class="small muted mb-3">Trusted in {loc} · Clear quotes · 5★ rated</p>
+<div class="motion-frame mt-2">{hero_img_el}</div>
+</div>"""
     elif vi == 2:
         hero_body = f"""<div class="row align-items-stretch g-0 min-vh-75">
-<div class="col-lg-6 p-0"><img src="{hero_img}" alt="{name}" class="hero-split-img"></div>
+<div class="col-lg-6 p-0">{hero_split_el}</div>
 <div class="col-lg-6 d-flex align-items-center ps-lg-5 py-5">
 <div><span class="label-tag">{loc}</span>
 <h1 class="{h1c}">{headline}</h1>
@@ -903,7 +1116,7 @@ def build_premium_html(data, variation_index):
 <a href="#contact" class="{cta}">Get quote</a>
 <a href="#services" class="btn-ghost">Services</a></div></div></div></div>"""
     else:
-        hero_body = f"""<div class="row align-items-center g-5">
+        hero_body = f"""<div class="hero-preview"><div class="row align-items-center g-5">
 <div class="col-lg-7">
 <span class="badge-top d-inline-block mb-3"><i class="bi bi-geo-alt me-1"></i> {loc}</span>
 <h1 class="{h1c}">{headline}</h1>
@@ -913,7 +1126,7 @@ def build_premium_html(data, variation_index):
 <a href="#services" class="btn-ghost btn-lg">Services</a></div>
 <p class="small muted">Trusted locally · Insured · 5★ reviews</p>
 </div>
-<div class="col-lg-5 d-none d-lg-block"><img src="{hero_img}" alt="{name}" class="img-fluid rounded-4 shadow-lg" style="max-height:460px;width:100%;object-fit:cover"></div></div>"""
+<div class="col-lg-5 d-none d-lg-block"><div class="motion-frame">{hero_img_el}</div></div></div>"""
 
     prob_text_col = "col-lg-6 order-lg-2" if vi == 2 else "col-lg-6"
     prob_stats_col = "col-lg-6 order-lg-1" if vi == 2 else "col-lg-6"
@@ -927,21 +1140,21 @@ def build_premium_html(data, variation_index):
 <div class="box d-flex gap-4 align-items-start"><div class="display-4 fw-bold accent">03</div><div><h3 class="h4 fw-bold">We deliver &amp; follow up</h3><p class="muted mb-0">Quality work and a check-in afterwards.</p></div></div></div>"""
     else:
         how_block = """<div class="row g-4 how-steps-h">
-<div class="col-md-4"><div class="box text-center h-100"><div class="display-3 fw-bold accent opacity-50 mb-2">01</div><h3 class="h4 fw-bold">Tell us what you need</h3><p class="muted mb-0">Call, email, or use the form below. We ask the right questions so our visit is productive.</p></div></div>
-<div class="col-md-4"><div class="box text-center h-100"><div class="display-3 fw-bold accent opacity-50 mb-2">02</div><h3 class="h4 fw-bold">Receive a clear plan</h3><p class="muted mb-0">Written options, timeline, and pricing — no jargon, no pressure.</p></div></div>
-<div class="col-md-4"><div class="box text-center h-100"><div class="display-3 fw-bold accent opacity-50 mb-2">03</div><h3 class="h4 fw-bold">We deliver &amp; follow up</h3><p class="muted mb-0">Quality work, tidy finish, and a check-in afterwards.</p></div></div></div>"""
+<div class="col-md-4"><div class="box {box_cls} text-center h-100"><div class="display-3 fw-bold accent opacity-50 mb-2">01</div><h3 class="h4 fw-bold">Tell us what you need</h3><p class="muted mb-0">Call, email, or use the form below. We ask the right questions so our visit is productive.</p></div></div>
+<div class="col-md-4"><div class="box {box_cls} text-center h-100"><div class="display-3 fw-bold accent opacity-50 mb-2">02</div><h3 class="h4 fw-bold">Receive a clear plan</h3><p class="muted mb-0">Written options, timeline, and pricing — no jargon, no pressure.</p></div></div>
+<div class="col-md-4"><div class="box {box_cls} text-center h-100"><div class="display-3 fw-bold accent opacity-50 mb-2">03</div><h3 class="h4 fw-bold">We deliver &amp; follow up</h3><p class="muted mb-0">Quality work, tidy finish, and a check-in afterwards.</p></div></div></div>"""
     how_block = how_block.replace("div", "div")
 
     if vi == 1:
         founder_block = f"""<div class="row justify-content-center text-center"><div class="col-lg-8">
-<img src="{team_img}" class="rounded-circle shadow mb-4" style="width:120px;height:120px;object-fit:cover" alt="Founder">
+{_hero_img_tag(team_img, "Founder", "rounded-circle shadow mb-4", "width:120px;height:120px;object-fit:cover;border-radius:50%")}
 <p class="text-uppercase fw-bold small accent mb-2">A message from our director</p>
-<h2 class="h3 fw-bold mb-3">We treat every home like our own</h2>
+<h2 class="h2-divi mb-3">We treat every home like our own</h2>
 <p class="muted fs-5 mb-0">"When I started {name}, the goal was simple: offer {label_l} in {loc} that I would happily book for my own family." — <strong>Director, {name}</strong></p>
 </div></div>"""
     else:
         founder_block = f"""<div class="row g-4 align-items-center">
-<div class="col-md-3 text-center"><img src="{team_img}" class="rounded-circle shadow" style="width:140px;height:140px;object-fit:cover" alt="Founder"></div>
+<div class="col-md-3 text-center">{_hero_img_tag(team_img, "Founder", "rounded-circle shadow", "width:140px;height:140px;object-fit:cover;border-radius:50%")}</div>
 <div class="col-md-9"><p class="text-uppercase fw-bold small accent mb-2">A message from our director</p>
 <h2 class="h3 fw-bold mb-3">We treat every home like our own</h2>
 <p class="muted fs-5 mb-0">"When I started {name}, the goal was simple: offer {label_l} in {loc} that I would happily book for my own family. Thank you for trusting us." — <strong>Director, {name}</strong></p>
@@ -949,7 +1162,7 @@ def build_premium_html(data, variation_index):
 
     if vi == 2:
         contact_block = f"""<div class="row g-5">
-<div class="col-lg-7 order-lg-1"><div class="box"><form class="row g-3">
+<div class="col-lg-7 order-lg-1"><motion-div class="box {box_cls}"><form class="row g-3">
 <div class="col-md-6"><label class="form-label fw-semibold">Full name</label><input class="form-control" placeholder="Your name"></div>
 <div class="col-md-6"><label class="form-label fw-semibold">Phone</label><input class="form-control" placeholder="07XXX XXXXXX"></div>
 <div class="col-12"><label class="form-label fw-semibold">Email</label><input type="email" class="form-control" placeholder="you@email.com"></div>
@@ -971,7 +1184,7 @@ def build_premium_html(data, variation_index):
 <p><i class="bi bi-envelope accent me-2"></i><strong>hello@{email_slug}.co.uk</strong></p>
 <p><i class="bi bi-clock accent me-2"></i> Mon–Sat 8am–6pm · Emergency line 24/7</p>
 </div>
-<div class="col-lg-7"><div class="box"><form class="row g-3">
+<div class="col-lg-7"><div class="box {box_cls}"><form class="row g-3">
 <div class="col-md-6"><label class="form-label fw-semibold">Full name</label><input class="form-control" placeholder="Your name"></div>
 <div class="col-md-6"><label class="form-label fw-semibold">Phone</label><input class="form-control" placeholder="07XXX XXXXXX"></div>
 <div class="col-12"><label class="form-label fw-semibold">Email</label><input type="email" class="form-control" placeholder="you@email.com"></div>
@@ -982,7 +1195,7 @@ def build_premium_html(data, variation_index):
 
     stats_html = _build_stats_html(vi, section_alt)
     sec = {
-        "hero": f"""<section class="{hero_class}" id="top"><div class="hero-img" style="background-image:url('{hero_img}')"></div><div class="hero-mask"></div><div class="container hero-inner">{hero_body}</div></section>""",
+        "hero": f"""<section class="{hero_class}" id="top"><div class="hero-img" style="{hero_bg}"></div><div class="hero-mask"></div><div class="{wrap} hero-inner">{hero_body}</div></section>""",
         "logos": f"""<section class="sec pt-0"><div class="container text-center"><p class="text-uppercase fw-bold small muted mb-3">Trusted by homeowners &amp; businesses</p><div>{logos}</div></div></section>""",
         "problem": f"""<section class="sec problem-grid" style="{section_alt}"><div class="container"><div class="row g-5 align-items-center">
 <div class="{prob_text_col}"><p class="text-uppercase fw-bold small accent mb-2">The challenge</p>
@@ -998,7 +1211,7 @@ def build_premium_html(data, variation_index):
 <div class="col-6"><div class="box"><div class="stat-big">24/7</div><p class="muted small mb-0">Emergency line</p></div></div>
 </div></div></div></section>""".replace("div", "div"),
         "solution": f"""<section class="sec"><div class="container"><div class="row g-5 align-items-center">
-<div class="{sol_img_col}"><img src="{work_img}" class="img-fluid rounded-4 shadow" alt="Our work"></div>
+<div class="{sol_img_col}">{_hero_img_tag(work_img, "Our work", "img-fluid rounded-4 shadow", "width:100%;object-fit:cover")}</div>
 <div class="{sol_txt_col}"><p class="text-uppercase fw-bold small accent mb-2">The solution</p>
 <h2 class="display-5 fw-bold mb-4">Meet the future of {label_l} in {loc}</h2>
 <p class="fs-5 muted mb-4">{name} combines qualified people and a customer-first process.</p>
@@ -1014,7 +1227,7 @@ def build_premium_html(data, variation_index):
 <div class="text-center mb-5 mx-auto" style="max-width:760px"><p class="text-uppercase fw-bold small accent mb-2">Our services</p>
 <h2 class="display-5 fw-bold mb-3">Comprehensive {label_l} in {loc}</h2>
 <p class="muted fs-5">Your chosen services — delivered by our in-house team in {loc}.</p></div>
-{services_html}</div></section>""".replace("div", "</div>").replace("</div>", "</div>", 1).replace("div", "div"),
+{services_html}</div></section>""",
         "how": f"""<section class="sec" id="how"><div class="container"><div class="text-center mb-5">
 <h2 class="display-5 fw-bold">How it works — 3 simple steps</h2><p class="muted">From enquiry to completion.</p></div>{how_block}</div></section>""",
         "stats": stats_html,
@@ -1036,11 +1249,11 @@ def build_premium_html(data, variation_index):
 <p class="small muted mt-3">Credentials you can verify before we start.</p></div></section>""".replace("div", "div"),
         "pricing": f"""<section class="sec" id="pricing"><div class="container"><div class="text-center mb-5">
 <h2 class="display-5 fw-bold">Simple plans for every stage</h2><p class="muted">Transparent pricing for {loc}.</p></div>
-<div class="row g-4 align-items-stretch">{pricing_html}</div></div></section>""",
+{pricing_body}</div></section>""",
         "faq": f"""<section class="sec" id="faq" style="{section_alt}"><div class="container" style="max-width:820px">
 <h2 class="display-5 fw-bold text-center mb-5">FAQ</h2><div class="accordion" id="faqAcc{vi}">{faq_html}</div></div></section>""",
         "team": f"""<section class="sec" id="team"><div class="container"><h2 class="display-5 fw-bold text-center mb-2">Meet the team</h2>
-<p class="text-center muted mb-5">The people behind {name}</p><div class="row g-4">{team_html}</div></div></section>""".replace("div", "div"),
+<p class="text-center muted mb-5">The people behind {name}</p>{team_team_inner}</motion-div></section>""",
         "blog": f"""<section class="sec" style="{section_alt}"><div class="container"><h2 class="display-5 fw-bold text-center mb-2">Latest insights</h2>
 <p class="text-center muted mb-5">Guides for {label_l} in {loc}</p><div class="row g-4">{blog_cards}</div></div></section>""",
         "map": f"""<section class="sec pt-0"><div class="container"><h2 class="h4 fw-bold text-center mb-4">Find us in {loc}</h2>
@@ -1056,7 +1269,18 @@ def build_premium_html(data, variation_index):
 <a href="#contact" class="btn btn-light btn-lg fw-bold px-5">Get started now</a></div></div></section>""".replace("div", "div"),
         "contact": f"""<section class="sec" id="contact" style="{section_alt}"><div class="container">{contact_block}</div></section>""",
     }
-    sec = {k: v.replace("div", "div") for k, v in sec.items()}
+    sec = {k: v.replace("motion-div", "motion-div") for k, v in sec.items()}
+    if vi in (0, 1):
+        for _k in sec:
+            sec[_k] = (
+                sec[_k]
+                .replace('class="box"', f'class="{box_cls}"')
+                .replace('class="display-5 fw-bold', f'class="{h2c}"')
+                .replace('class="sec ', f'class="{sec_cls} ')
+            )
+        if vi == 1:
+            for _k in sec:
+                sec[_k] = sec[_k].replace('class="display-6 fw-bold', f'class="{h2c}"')
     main_body = "".join(sec[k] for k in _PREMIUM_SECTION_ORDER[vi])
 
     return f"""<!DOCTYPE html>
@@ -1066,6 +1290,10 @@ def build_premium_html(data, variation_index):
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{name} | {label} — {loc}</title>
 <meta name="description" content="{name} — {pitch} Serving {loc}.">
+<meta property="og:title" content="{name} | {label} — {loc}">
+<meta property="og:description" content="{pitch}">
+<meta property="og:type" content="website">
+<meta property="og:image" content="{og_img}">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <link href="{skin['fonts']}" rel="stylesheet">
@@ -1088,6 +1316,7 @@ def build_premium_html(data, variation_index):
 </ul></div></div></nav>
 </header>
 {main_body}
+<a href="#contact" class="mobile-cta btn-main" aria-label="Request a free quote">Free quote</a>
 <footer class="sec pt-0 pb-5 border-top" style="border-color:rgba(128,128,128,.15)!important">
 <div class="container footer-grid">
 <div class="row g-4">
@@ -1187,6 +1416,7 @@ h1 span{background:linear-gradient(135deg,#6e8efb,#a777e3);-webkit-background-cl
 .sub{color:#64748b;font-size:1rem;margin-bottom:40px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
 label{display:block;font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:8px}
+.hint{font-size:0.8125rem;color:#6b7280;margin:-4px 0 8px;line-height:1.45}
 input,select,textarea{width:100%;padding:14px 18px;border:2px solid #e5e7eb;border-radius:14px;font-size:0.95rem;font-family:'Inter',sans-serif;color:#111;background:rgba(255,255,255,0.8);transition:all 0.3s;outline:none}
 input:focus,select:focus,textarea:focus{border-color:#6e8efb;box-shadow:0 0 0 4px rgba(110,142,251,0.15);transform:translateY(-1px)}
 textarea{resize:vertical;min-height:100px}
@@ -1246,7 +1476,8 @@ textarea{resize:vertical;min-height:100px}
     </div>
     <div style="margin-bottom:20px">
       <label>Services *</label>
-      <textarea id="sv" placeholder="e.g. Emergency repairs, Boiler installation, Drainage, Gas checks" required></textarea>
+      <p class="hint">Enter your services here in full so we can generate your website template.</p>
+      <textarea id="sv" placeholder="e.g. Brand strategy, Web design, Social media management" required></textarea>
     </div>
     <div class="row">
       <div><label>City / Location *</label><input id="loc" placeholder="e.g. Manchester, Lahore, Dubai" required></div>
