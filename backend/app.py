@@ -688,7 +688,7 @@ def _build_testimonials_html(vi, loc):
             )
         else:
             parts.append(
-                f'<motion-div class="col-md-6 col-lg-3"><motion-div class="box box-landia h-100">'
+                f'<div class="col-md-6 col-lg-3"><div class="box box-landia h-100">'
                 f'<div class="text-warning mb-2">★★★★★</div><p class="mb-3">"{q}"</p>'
                 f'<div class="d-flex gap-2 align-items-center">'
                 f'<div class="av">{_e(person[0])}</div><div><strong class="small">{_e(person)}</strong><br>'
@@ -908,17 +908,17 @@ def _build_pricing_html(vi):
         ("Enterprise", "Custom", "Commercial contracts.", ["Account manager", "Flexible billing", "Maintenance"], False),
     ]
     if vi == 1:
-        rows = []
+        cards = []
         for tier, price, desc, feats, star in tiers:
             lis = "".join(f"<li>{_e(f)}</li>" for f in feats)
-            fc = " price-row featured" if star else " price-row"
-            rows.append(
-                f'<div class="{fc.strip()}"><div><span class="fw-bold text-uppercase small">{_e(tier)}</span>'
-                f'<h3 class="hero-serif mb-0">{_e(price)}</h3></div><p class="muted mb-2">{_e(desc)}</p>'
-                f'<ul class="small muted mb-3">{lis}</ul>'
-                f'<a href="#contact" class="btn-main btn-main-soft">Select plan</a></div>'
+            fc = "price-card featured" if star else "price-card"
+            cards.append(
+                f'<div class="{fc}"><p class="fw-bold text-uppercase small accent mb-2">{_e(tier)}</p>'
+                f'<h3 class="h2-divi mb-2">{_e(price)}</h3><p class="muted mb-3">{_e(desc)}</p>'
+                f'<ul class="small muted mb-4 ps-3">{lis}</ul>'
+                f'<a href="#contact" class="btn-main btn-main-pill">Select plan</a></div>'
             )
-        return f'<div class="pricing-stack">{"".join(rows)}</div>'
+        return f'<div class="pricing-divi">{"".join(cards)}</div>'
     if vi == 2:
         cards = []
         for tier, price, desc, feats, star in tiers:
@@ -980,7 +980,7 @@ def _build_team_html(vi):
                 f'<div class="team-person"><div class="av">{_e(person[0])}</div>'
                 f'<h3 class="h6 fw-bold mb-0">{_e(person)}</h3><p class="small muted">{_e(role)}</p></div>'
             )
-        return f'<motion-div class="team-row-divi">{"".join(parts)}</motion-div>'.replace("motion-div", "motion-div")
+        return f'<div class="team-row-divi">{"".join(parts)}</div>'
     if vi == 2:
         parts = []
         for i, (person, role) in enumerate(TEAM):
@@ -1162,7 +1162,7 @@ def build_premium_html(data, variation_index):
 
     if vi == 2:
         contact_block = f"""<div class="row g-5">
-<div class="col-lg-7 order-lg-1"><motion-div class="box {box_cls}"><form class="row g-3">
+<div class="col-lg-7 order-lg-1"><div class="box {box_cls}"><form class="row g-3">
 <div class="col-md-6"><label class="form-label fw-semibold">Full name</label><input class="form-control" placeholder="Your name"></div>
 <div class="col-md-6"><label class="form-label fw-semibold">Phone</label><input class="form-control" placeholder="07XXX XXXXXX"></div>
 <div class="col-12"><label class="form-label fw-semibold">Email</label><input type="email" class="form-control" placeholder="you@email.com"></div>
@@ -1253,7 +1253,7 @@ def build_premium_html(data, variation_index):
         "faq": f"""<section class="sec" id="faq" style="{section_alt}"><div class="container" style="max-width:820px">
 <h2 class="display-5 fw-bold text-center mb-5">FAQ</h2><div class="accordion" id="faqAcc{vi}">{faq_html}</div></div></section>""",
         "team": f"""<section class="sec" id="team"><div class="container"><h2 class="display-5 fw-bold text-center mb-2">Meet the team</h2>
-<p class="text-center muted mb-5">The people behind {name}</p>{team_team_inner}</motion-div></section>""",
+<p class="text-center muted mb-5">The people behind {name}</p>{team_team_inner}</div></section>""",
         "blog": f"""<section class="sec" style="{section_alt}"><div class="container"><h2 class="display-5 fw-bold text-center mb-2">Latest insights</h2>
 <p class="text-center muted mb-5">Guides for {label_l} in {loc}</p><div class="row g-4">{blog_cards}</div></div></section>""",
         "map": f"""<section class="sec pt-0"><div class="container"><h2 class="h4 fw-bold text-center mb-4">Find us in {loc}</h2>
@@ -1269,7 +1269,6 @@ def build_premium_html(data, variation_index):
 <a href="#contact" class="btn btn-light btn-lg fw-bold px-5">Get started now</a></div></div></section>""".replace("div", "div"),
         "contact": f"""<section class="sec" id="contact" style="{section_alt}"><div class="container">{contact_block}</div></section>""",
     }
-    sec = {k: v.replace("motion-div", "motion-div") for k, v in sec.items()}
     if vi in (0, 1):
         for _k in sec:
             sec[_k] = (
