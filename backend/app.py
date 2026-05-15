@@ -757,6 +757,7 @@ def home():
 
 @app.route('/build-with-ai')
 def build_page():
+    """Standalone builder on API host only; marketing site uses static build-with-ai.html."""
     return html_r(FORM_HTML)
 
 def _health_payload():
