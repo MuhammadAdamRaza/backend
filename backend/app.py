@@ -16,7 +16,26 @@ from werkzeug.utils import secure_filename
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+# Wide CORS: Live Server, localhost, production HTML on other hosts, and null/file origins when allowed by browser.
+CORS(
+    app,
+    resources={r"/*": {"origins": "*"}},
+    supports_credentials=False,
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+    methods=["GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    max_age=86400,
+)
+
+
+@app.after_request
+def _force_cors_headers(response):
+    """Ensure every response (including errors) carries CORS headers for cross-origin fetch."""
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, HEAD, POST, PUT, DELETE, OPTIONS, PATCH"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept"
+    response.headers["Access-Control-Max-Age"] = "86400"
+    return response
+
 
 UPLOAD_FOLDER = 'uploads/templates'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -694,8 +713,10 @@ def list_models():
         return jsonify({"error": str(e)})
 
 # ── Register job ──────────────────────────────────────────────────────────────
-@app.route('/api/generate-site', methods=['POST'])
+@app.route('/api/generate-site', methods=['POST', 'OPTIONS'])
 def start_generation():
+    if request.method == 'OPTIONS':
+        return '', 204
     try:
         data = request.get_json()
         if not data or not data.get('businessName'):
@@ -719,8 +740,10 @@ def start_generation():
         return jsonify({"success": False, "message": str(e)}), 500
 
 # ── Generate ONE design (safe per Vercel 60s limit) ───────────────────────────
-@app.route('/api/generate-one/<slug>/<int:idx>')
+@app.route('/api/generate-one/<slug>/<int:idx>', methods=['GET', 'HEAD', 'OPTIONS'])
 def generate_one(slug, idx):
+    if request.method == 'OPTIONS':
+        return '', 204
     try:
         conn = get_db()
         cur  = conn.cursor(cursor_factory=RealDictCursor)
@@ -758,8 +781,10 @@ def generate_one(slug, idx):
         return jsonify({"success": False, "message": str(e)}), 500
 
 # ── Select design ─────────────────────────────────────────────────────────────
-@app.route('/api/select-design', methods=['POST'])
+@app.route('/api/select-design', methods=['POST', 'OPTIONS'])
 def select_design():
+    if request.method == 'OPTIONS':
+        return '', 204
     data  = request.get_json() or {}
     slug  = data.get('slug')
     index = data.get('designIndex')
@@ -836,8 +861,10 @@ def download(slug):
     except Exception as e:
         return html_r(f"<h1>Error: {e}</h1>", 500)
 
-@app.route('/api/submit-template', methods=['POST'])
+@app.route('/api/submit-template', methods=['POST', 'OPTIONS'])
 def submit_template():
+    if request.method == 'OPTIONS':
+        return '', 204
     try:
         # Check if the post request has the file part
         if 'file' not in request.files:
