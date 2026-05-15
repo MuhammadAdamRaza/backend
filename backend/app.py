@@ -526,6 +526,279 @@ _PREMIUM_SECTION_ORDER = {
 }
 
 
+def _skin(vi):
+    """Per-design typography, spacing, and CSS class names."""
+    skins = {
+        0: {
+            "layout": "skin-dark",
+            "fonts": "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap",
+            "font_h": "Plus Jakarta Sans",
+            "font_b": "Plus Jakarta Sans",
+            "wrap": "container",
+            "hero_cls": "hero hero-dark",
+            "h1": "display-2 fw-bold mb-4 lh-sm",
+            "h2": "display-5 fw-bold",
+            "lead": "lead fs-4 mb-4",
+            "sec": "sec sec-pad-lg",
+            "box": "box box-round",
+            "nav": "nav-wrap nav-glass",
+            "cta_btn": "btn-main btn-lg",
+        },
+        1: {
+            "layout": "skin-editorial",
+            "fonts": "https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Source+Sans+3:wght@400;600;700&display=swap",
+            "font_h": "DM Serif Display",
+            "font_b": "Source Sans 3",
+            "wrap": "container container-narrow",
+            "hero_cls": "hero hero-editorial",
+            "h1": "hero-serif display-1 mb-4",
+            "h2": "hero-serif h2-editorial mb-4",
+            "lead": "lead-editorial fs-5 mb-5",
+            "sec": "sec sec-editorial",
+            "box": "box box-flat",
+            "nav": "nav-wrap nav-minimal",
+            "cta_btn": "btn-main btn-main-soft btn-lg",
+        },
+        2: {
+            "layout": "skin-brutal",
+            "fonts": "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap",
+            "font_h": "Space Grotesk",
+            "font_b": "Space Grotesk",
+            "wrap": "container-fluid px-3 px-lg-5",
+            "hero_cls": "hero hero-brutal",
+            "h1": "hero-brutal-title mb-4",
+            "h2": "h2-brutal text-uppercase fw-bold mb-4",
+            "lead": "lead-brutal fs-5 mb-4",
+            "sec": "sec sec-brutal",
+            "box": "box box-sharp",
+            "nav": "nav-wrap nav-solid",
+            "cta_btn": "btn-main btn-main-block btn-lg",
+        },
+    }
+    return skins[int(vi) % 3]
+
+
+def _design_css(vi, primary, secondary, overlay, font_h, font_b):
+    s = _skin(vi)
+    common = f"""
+:root{{--p:{primary};--s:{secondary};--bg:var(--bg);--text:var(--text);--card:var(--card);--muted:var(--muted);--alt:var(--alt)}}
+*{{box-sizing:border-box}}
+body{{font-family:'{font_b}',system-ui,sans-serif;background:var(--bg);color:var(--text);margin:0}}
+h1,h2,h3,.hero-serif,.h2-brutal,.hero-brutal-title{{font-family:'{font_h}',serif}}
+.accent{{color:var(--p)}}
+.muted{{color:var(--muted)}}
+.hero{{position:relative;display:flex;align-items:center;overflow:hidden}}
+.hero-img{{position:absolute;inset:0;background:center/cover no-repeat}}
+.hero-mask{{position:absolute;inset:0;background:{overlay}}}
+.hero-inner{{position:relative;z-index:2;width:100%}}
+.stat-big{{font-weight:800;color:var(--p);line-height:1}}
+.av{{background:linear-gradient(135deg,var(--p),var(--s));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}}
+.btn-main{{background:linear-gradient(135deg,var(--p),var(--s));color:#fff!important;font-weight:700;text-decoration:none;display:inline-block;border:none;cursor:pointer}}
+.btn-ghost{{border:2px solid var(--p);color:var(--p)!important;font-weight:700;text-decoration:none;background:transparent}}
+.map-placeholder{{min-height:280px;background:var(--alt) center/cover url('https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&q=60')}}
+.footer-grid a{{color:var(--muted);text-decoration:none}}
+.footer-grid a:hover{{color:var(--p)}}
+.acc-item{{background:transparent!important;border-color:rgba(128,128,128,.15)!important}}
+.acc-item .accordion-button{{background:transparent!important;color:var(--text)!important;font-weight:600}}
+"""
+    dark = """
+.skin-dark .sec-pad-lg{padding:clamp(80px,10vw,120px) 0}
+.skin-dark .box-round{background:var(--card);border-radius:22px;padding:clamp(26px,3vw,40px);border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 32px rgba(0,0,0,.25);height:100%;transition:.25s}
+.skin-dark .box-round:hover{transform:translateY(-6px);box-shadow:0 24px 48px rgba(0,0,0,.35)}
+.skin-dark .hero-dark{min-height:min(94vh,920px)}
+.skin-dark .icon-pill{width:56px;height:56px;border-radius:16px;background:var(--p);margin-bottom:20px;font-size:1.35rem;display:flex;align-items:center;justify-content:center;color:#fff}
+.skin-dark .btn-main{border-radius:14px;padding:16px 36px}
+.skin-dark .nav-glass{backdrop-filter:blur(14px);background:color-mix(in srgb,var(--bg) 88%,transparent);border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;z-index:1000}
+.skin-dark .nav-glass .nav-link{color:var(--text);font-weight:600}
+.skin-dark .logo-pill{display:inline-block;padding:10px 20px;border-radius:12px;background:var(--card);margin:6px;font-size:.85rem;font-weight:600}
+.skin-dark .stat-big{font-size:clamp(2.2rem,4vw,3.2rem)}
+.skin-dark .av{width:52px;height:52px;border-radius:50%}
+.skin-dark .cta-strip{background:linear-gradient(135deg,var(--p),var(--s));color:#fff;border-radius:28px;padding:clamp(48px,7vw,80px)}
+.skin-dark .badge-top{background:color-mix(in srgb,var(--p) 25%,transparent);padding:10px 18px;border-radius:999px;font-size:.88rem}
+.skin-dark .blog-thumb{height:150px;border-radius:18px 18px 0 0;margin:-40px -40px 24px -40px;background-size:cover}
+.skin-dark .grid-svc .col-md-6.col-xl-4{margin-bottom:0}
+"""
+    editorial = """
+.skin-editorial{background:var(--bg)}
+.skin-editorial .container-narrow{max-width:920px}
+.skin-editorial .sec-editorial{padding:clamp(56px,8vw,88px) 0;border-bottom:1px solid color-mix(in srgb,var(--p) 18%,transparent)}
+.skin-editorial .box-flat{background:transparent;border:none;border-radius:0;padding:28px 0;box-shadow:none;height:auto}
+.skin-editorial .box-flat:hover{transform:none;box-shadow:none}
+.skin-editorial .hero-editorial{min-height:72vh;text-align:center;padding:clamp(48px,8vw,80px) 0}
+.skin-editorial .hero-editorial .hero-img{opacity:.35}
+.skin-editorial .hero-serif{letter-spacing:-.02em;line-height:1.08}
+.skin-editorial .lead-editorial{max-width:36rem;margin-left:auto;margin-right:auto;line-height:1.75;color:var(--muted)}
+.skin-editorial .h2-editorial{font-size:clamp(2rem,4.5vw,2.75rem)}
+.skin-editorial .icon-pill{width:44px;height:44px;border-radius:50%;background:var(--p);font-size:1rem;display:inline-flex;align-items:center;justify-content:center;color:#fff;margin-bottom:12px}
+.skin-editorial .btn-main-soft{border-radius:999px;padding:14px 40px;letter-spacing:.03em}
+.skin-editorial .nav-minimal{background:var(--bg);border-bottom:2px solid var(--p);position:sticky;top:0;z-index:1000}
+.skin-editorial .nav-minimal .nav-link{font-size:.92rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text)}
+.skin-editorial .logo-line{display:flex;flex-wrap:wrap;justify-content:center;gap:1.5rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.skin-editorial .logo-line span:not(:last-child)::after{content:"·";margin-left:1.5rem;color:var(--p)}
+.skin-editorial .stats-inline{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2rem;text-align:center;padding:2rem 0}
+.skin-editorial .stats-inline .stat-big{font-size:clamp(2.5rem,6vw,4rem);font-family:'DM Serif Display',serif}
+.skin-editorial .svc-editorial article{display:flex;gap:2rem;padding:2rem 0;border-bottom:1px solid rgba(128,128,128,.15);align-items:flex-start}
+.skin-editorial .svc-num{font-family:'DM Serif Display',serif;font-size:clamp(2.5rem,5vw,3.5rem);color:var(--p);line-height:1;min-width:3rem}
+.skin-editorial .pricing-stack .price-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;padding:1.75rem 0;border-bottom:2px solid var(--p);gap:1rem}
+.skin-editorial .pricing-stack .price-row.featured{background:color-mix(in srgb,var(--p) 8%,transparent);padding:2rem;margin:0 -1rem;border-left:4px solid var(--p)}
+.skin-editorial .team-row{display:flex;flex-wrap:wrap;gap:2.5rem;justify-content:center}
+.skin-editorial .team-row .team-person{text-align:center;min-width:140px}
+.skin-editorial .team-row .av{width:72px;height:72px;border-radius:50%;margin:0 auto 12px;font-size:1.5rem}
+.skin-editorial .av{width:40px;height:40px;border-radius:50%}
+.skin-editorial .cta-strip{border-radius:0;border-top:4px solid var(--p);border-bottom:4px solid var(--p);background:var(--card);color:var(--text);padding:3rem}
+.skin-editorial .feat-grid-2 .col-lg-6{margin-bottom:1.5rem}
+"""
+    brutal = """
+.skin-brutal{letter-spacing:.01em}
+.skin-brutal .sec-brutal{padding:clamp(48px,6vw,80px) 0}
+.skin-brutal .sec-brutal.sec-band{background:color-mix(in srgb,var(--p) 12%,var(--bg));border-top:4px solid var(--p);border-bottom:4px solid var(--p)}
+.skin-brutal .box-sharp{background:var(--card);border-radius:2px;padding:clamp(20px,2.5vw,32px);border:3px solid color-mix(in srgb,var(--p) 50%,transparent);height:100%}
+.skin-brutal .box-sharp:hover{border-color:var(--p)}
+.skin-brutal .hero-brutal{min-height:100vh}
+.skin-brutal .hero-brutal .hero-img{filter:grayscale(40%) contrast(1.1)}
+.skin-brutal .hero-brutal-title{font-size:clamp(2.4rem,6vw,4.2rem);text-transform:uppercase;line-height:1.05;letter-spacing:-.03em}
+.skin-brutal .lead-brutal{text-transform:none;max-width:32rem}
+.skin-brutal .h2-brutal{font-size:clamp(1.5rem,3vw,2rem);letter-spacing:.06em}
+.skin-brutal .label-tag{display:inline-block;text-transform:uppercase;font-size:.72rem;font-weight:700;letter-spacing:.15em;padding:6px 12px;border:2px solid var(--p);margin-bottom:1rem}
+.skin-brutal .icon-pill{width:64px;height:64px;border-radius:0;background:var(--p);font-size:1.5rem;display:flex;align-items:center;justify-content:center;color:#fff}
+.skin-brutal .btn-main-block{border-radius:0;padding:18px 40px;text-transform:uppercase;letter-spacing:.08em}
+.skin-brutal .nav-solid{background:linear-gradient(90deg,var(--p),var(--s));border:none;position:sticky;top:0;z-index:1000}
+.skin-brutal .nav-solid .navbar-brand,.skin-brutal .nav-solid .nav-link{color:#fff!important;font-weight:700;text-transform:uppercase;font-size:.8rem;letter-spacing:.06em}
+.skin-brutal .nav-solid .btn-main{background:#fff!important;color:var(--p)!important;border-radius:0}
+.skin-brutal .logo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.skin-brutal .logo-grid span{display:block;text-align:center;padding:14px;border:2px solid var(--p);font-weight:700;font-size:.75rem;text-transform:uppercase}
+.skin-brutal .stats-brutal{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:3px solid var(--p)}
+.skin-brutal .stats-brutal>div{padding:clamp(20px,3vw,36px);text-align:center;border-right:2px solid var(--p)}
+.skin-brutal .stats-brutal>motion.div:last-child{border-right:none}
+.skin-brutal .stat-big{font-size:clamp(2rem,5vw,3.5rem)}
+.skin-brutal .av{width:56px;height:56px;border-radius:0}
+.skin-brutal .svc-band{padding:clamp(32px,5vw,56px);margin-bottom:12px;border-left:8px solid var(--p)}
+.skin-brutal .svc-band:nth-child(even){background:color-mix(in srgb,var(--s) 15%,var(--card));flex-direction:row-reverse}
+.skin-brutal .pricing-brutal{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.skin-brutal .pricing-brutal .price-card{border:3px solid var(--p);padding:28px;height:100%}
+.skin-brutal .pricing-brutal .price-card.featured{transform:scale(1.05);background:color-mix(in srgb,var(--p) 18%,var(--card));z-index:2}
+.skin-brutal .steps-v .box{border-left:8px solid var(--p);border-radius:0}
+.skin-brutal .feat-bento{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.skin-brutal .feat-bento .feat-cell{padding:24px;border:2px solid var(--p);min-height:140px}
+.skin-brutal .cta-strip{border-radius:0;border:4px solid var(--p);background:var(--p);color:#fff;padding:3rem}
+.skin-brutal .hero-split-img{border-radius:0;max-height:none!important;height:min(70vh,520px);object-fit:cover;width:100%}
+""".replace("motion.div", "motion.div")
+    brutal = brutal.replace("motion.div", "div")
+    if vi == 0:
+        return common + dark
+    if vi == 1:
+        return common + editorial
+    return common + brutal
+
+
+def _build_pricing_html(vi):
+    tiers = [
+        ("Starter", "From £99", "Straightforward jobs.", ["Site visit", "Written estimate", "Warranty"], False),
+        ("Professional", "From £249", "Most popular package.", ["Priority booking", "Premium parts", "12-mo support"], True),
+        ("Enterprise", "Custom", "Commercial contracts.", ["Account manager", "Flexible billing", "Maintenance"], False),
+    ]
+    if vi == 1:
+        rows = []
+        for tier, price, desc, feats, star in tiers:
+            lis = "".join(f"<li>{_e(f)}</li>" for f in feats)
+            fc = " price-row featured" if star else " price-row"
+            rows.append(
+                f'<div class="{fc.strip()}"><motion.div><span class="fw-bold text-uppercase small">{_e(tier)}</span>'
+                f'<h3 class="hero-serif mb-0">{_e(price)}</h3></div><p class="muted mb-2">{_e(desc)}</p>'
+                f'<ul class="small muted mb-3">{lis}</ul>'
+                f'<a href="#contact" class="btn-main btn-main-soft">Select plan</a></div>'
+            )
+        return f'<div class="pricing-stack">{"".join(rows)}</motion.div>'.replace("motion.div", "div")
+    if vi == 2:
+        cards = []
+        for tier, price, desc, feats, star in tiers:
+            lis = "".join(f'<li><i class="bi bi-check-lg me-2"></i>{_e(f)}</li>' for f in feats)
+            fc = "price-card featured" if star else "price-card"
+            cards.append(
+                f'<div class="{fc}"><p class="label-tag mb-2">{_e(tier)}</p>'
+                f'<h3 class="display-5 fw-bold mb-2">{_e(price)}</h3><p class="muted small mb-3">{_e(desc)}</p>'
+                f'<ul class="list-unstyled small mb-4">{lis}</ul>'
+                f'<a href="#contact" class="btn-main btn-main-block w-100 text-center d-block">Quote</a></div>'
+            )
+        return f'<div class="pricing-brutal">{"".join(cards)}</div>'
+    parts = []
+    for tier, price, desc, feats, star in tiers:
+        lis = "".join(f'<li><i class="bi bi-check2-circle me-2"></i>{_e(f)}</li>' for f in feats)
+        cls = "box box-round featured" if star else "box box-round"
+        parts.append(
+            f'<div class="col-lg-4"><div class="{cls}">'
+            f'<p class="fw-bold text-uppercase small accent">{_e(tier)}</p>'
+            f'<h3 class="display-6 fw-bold">{_e(price)}</h3><p class="muted">{_e(desc)}</p>'
+            f'<ul class="list-unstyled mb-4">{lis}</ul>'
+            f'<a href="#contact" class="btn-main w-100 text-center d-block">Get a quote</a></div></div>'
+        )
+    return f'<div class="row g-4 grid-pricing">{"".join(parts)}</div>'
+
+
+def _build_stats_html(vi, section_alt):
+    items = [
+        ("15+", "Years experience"),
+        ("2,400+", "Projects done"),
+        ("98%", "Recommend us"),
+        ("4.9", "Review score"),
+    ]
+    if vi == 1:
+        inner = "".join(
+            f'<div><div class="stat-big">{a}</div><p class="muted mb-0 small text-uppercase">{b}</p></div>'
+            for a, b in items
+        )
+        return f'<section class="sec sec-editorial pt-0"><div class="container container-narrow"><motion.div class="stats-inline">{inner}</div></div></section>'.replace("motion.div", "motion.div")
+    if vi == 2:
+        inner = "".join(
+            f'<div><div class="stat-big">{a}</div><p class="muted mb-0 small text-uppercase">{b}</p></div>'
+            for a, b in items
+        )
+        return f'<section class="sec sec-brutal sec-band pt-0"><div class="container-fluid px-3 px-lg-5"><div class="stats-brutal">{inner}</div></div></section>'
+    cells = "".join(
+        f'<div class="col-6 col-md-3"><div class="box box-round"><div class="stat-big">{a}</motion.div>'
+        f'<p class="muted mb-0">{b}</p></div></div>'
+        for a, b in items
+    )
+    return f'<section class="sec sec-pad-lg pt-0" style="{section_alt}"><div class="container"><div class="row g-4 text-center">{cells}</div></div></section>'.replace("motion.div", "div")
+
+
+def _build_team_html(vi):
+    if vi == 1:
+        parts = []
+        for person, role in TEAM:
+            parts.append(
+                f'<div class="team-person"><div class="av">{_e(person[0])}</div>'
+                f'<h3 class="h6 fw-bold mb-0">{_e(person)}</h3><p class="small muted">{_e(role)}</p></div>'
+            )
+        return f'<motion.div class="team-row">{"".join(parts)}</motion.div>'.replace("motion.div", "div")
+    if vi == 2:
+        parts = []
+        for i, (person, role) in enumerate(TEAM):
+            parts.append(
+                f'<div class="col-6 col-lg-3"><div class="box box-sharp text-center">'
+                f'<div class="label-tag mx-auto mb-3">Team 0{i+1}</div>'
+                f'<div class="av mx-auto mb-2" style="width:64px;height:64px;font-size:1.25rem">{_e(person[0])}</div>'
+                f'<h3 class="fw-bold text-uppercase small mb-1">{_e(person)}</h3><p class="muted small mb-0">{_e(role)}</p></div></div>'
+            )
+        return f'<div class="row g-3">{"".join(parts)}</div>'
+    parts = []
+    for person, role in TEAM:
+        parts.append(
+            f'<motion.div class="col-6 col-md-3"><div class="box box-round text-center h-100">'
+            f'<div class="av mx-auto mb-3">{_e(person[0])}</div>'
+            f'<h3 class="h6 fw-bold mb-1">{_e(person)}</h3><p class="small muted mb-0">{_e(role)}</p></div></div>'
+        )
+    return f'<div class="row g-4">{"".join(parts)}</motion.div>'.replace("motion.div", "div")
+
+
+def _build_logos_html(vi, logos_pills, awards):
+    if vi == 1:
+        return '<div class="logo-line">' + "".join(f"<span>{_e(a)}</span>" for a in awards) + "</motion.div>"
+    if vi == 2:
+        return '<div class="logo-grid">' + "".join(f"<span>{_e(a)}</span>" for a in awards) + "</div>"
+    return f"<div>{logos_pills}</div>"
+
+
 def build_premium_html(data, variation_index):
     name_raw = data.get("businessName") or data.get("business_name") or "Your Business"
     name = _e(name_raw)
