@@ -82,7 +82,7 @@ if _SERVERLESS:
 else:
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads", "templates")
 try:
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 except OSError:
     pass
 
@@ -195,6 +195,29 @@ def init_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS affiliate_applications (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                email TEXT NOT NULL,
+                website TEXT,
+                audience TEXT,
+                promotion_plan TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS contact_submissions (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                email TEXT NOT NULL,
+                interest TEXT,
+                budget TEXT,
+                message TEXT,
+                source TEXT DEFAULT 'website',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
         conn.commit()
         cur.close()
         conn.close()
@@ -211,8 +234,8 @@ def _lazy_init_db():
     if _init_db_ran:
         return
     _init_db_ran = True
-    with app.app_context():
-        init_db()
+with app.app_context():
+    init_db()
 
 
 def _route_needs_migrations(path):
@@ -1807,7 +1830,7 @@ def view_variation(slug, idx):
         row = cur.fetchone()
         conn.close()
         if not row:
-            return html_r("<h1>Not found</h1>", 404)
+        return html_r("<h1>Not found</h1>", 404)
         return html_r(row[0])
     except Exception as e:
         return html_r(f"<h1>Error: {e}</h1>", 500)
@@ -1901,6 +1924,79 @@ def submit_template():
         if "permission denied" in str(e).lower():
             return jsonify({"success": False, "message": "Server storage permission error"}), 500
         return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
+
+
+@app.route('/api/submit-affiliate', methods=['POST', 'OPTIONS'])
+def submit_affiliate():
+    if request.method == 'OPTIONS':
+        return '', 204
+    try:
+        data = request.get_json(silent=True) or {}
+        name = (data.get('name') or request.form.get('name') or '').strip()
+        email = (data.get('email') or request.form.get('email') or '').strip()
+        website = (data.get('website') or request.form.get('website') or '').strip()
+        audience = (data.get('audience') or request.form.get('audience') or '').strip()
+        plan = (data.get('plan') or request.form.get('plan') or '').strip()
+
+        if not name or not email or not website or not audience or not plan:
+            return jsonify({"success": False, "message": "Please fill in all required fields."}), 400
+
+        _lazy_init_db()
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO affiliate_applications (name, email, website, audience, promotion_plan)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (name, email, website, audience, plan),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"success": True, "message": "Application received. We will email you within a few working days."})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
+
+
+@app.route('/api/submit-contact', methods=['POST', 'OPTIONS'])
+def submit_contact():
+    if request.method == 'OPTIONS':
+        return '', 204
+    try:
+        data = request.get_json(silent=True) or {}
+        name = (data.get('name') or request.form.get('name') or '').strip()
+        email = (data.get('email') or request.form.get('email') or '').strip()
+        interest = (data.get('interest') or request.form.get('interest') or '').strip()
+        budget = (data.get('budget') or request.form.get('budget') or '').strip()
+        message = (data.get('message') or request.form.get('message') or '').strip()
+        source = (data.get('source') or request.form.get('source') or 'website').strip()
+
+        if not name or not email or not message:
+            return jsonify({"success": False, "message": "Name, email, and message are required."}), 400
+
+        _lazy_init_db()
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO contact_submissions (name, email, interest, budget, message, source)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (name, email, interest, budget, message, source or 'website'),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({
+            "success": True,
+            "message": "Message received. We will get back to you within one to two working days.",
+        })
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
