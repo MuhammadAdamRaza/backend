@@ -201,10 +201,18 @@ def init_db():
                 name TEXT NOT NULL,
                 email TEXT NOT NULL,
                 website TEXT,
+                country TEXT,
+                monthly_traffic TEXT,
                 audience TEXT,
                 promotion_plan TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+        """)
+        cur.execute("""
+            ALTER TABLE affiliate_applications ADD COLUMN IF NOT EXISTS country TEXT;
+        """)
+        cur.execute("""
+            ALTER TABLE affiliate_applications ADD COLUMN IF NOT EXISTS monthly_traffic TEXT;
         """)
         cur.execute("""
             CREATE TABLE IF NOT EXISTS contact_submissions (
@@ -1935,10 +1943,12 @@ def submit_affiliate():
         name = (data.get('name') or request.form.get('name') or '').strip()
         email = (data.get('email') or request.form.get('email') or '').strip()
         website = (data.get('website') or request.form.get('website') or '').strip()
+        country = (data.get('country') or request.form.get('country') or '').strip()
+        traffic = (data.get('traffic') or request.form.get('traffic') or '').strip()
         audience = (data.get('audience') or request.form.get('audience') or '').strip()
         plan = (data.get('plan') or request.form.get('plan') or '').strip()
 
-        if not name or not email or not website or not audience or not plan:
+        if not name or not email or not website or not country or not traffic or not audience or not plan:
             return jsonify({"success": False, "message": "Please fill in all required fields."}), 400
 
         _lazy_init_db()
@@ -1946,10 +1956,10 @@ def submit_affiliate():
         cur = conn.cursor()
         cur.execute(
             """
-            INSERT INTO affiliate_applications (name, email, website, audience, promotion_plan)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO affiliate_applications (name, email, website, country, monthly_traffic, audience, promotion_plan)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
-            (name, email, website, audience, plan),
+            (name, email, website, country, traffic, audience, plan),
         )
         conn.commit()
         cur.close()
