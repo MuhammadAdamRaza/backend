@@ -226,6 +226,15 @@ def init_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS site_pages (
+                site_slug TEXT REFERENCES sites(slug) ON DELETE CASCADE,
+                filename TEXT,
+                html_content TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (site_slug, filename)
+            );
+        """)
         conn.commit()
         cur.close()
         conn.close()
@@ -1818,11 +1827,61 @@ def select_design():
         cur.execute("""INSERT INTO final_sites (site_slug,html_content)
             VALUES (%s,%s) ON CONFLICT (site_slug) DO UPDATE SET html_content=EXCLUDED.html_content""",
             (slug, row['html_content']))
+        
+        # Initialize site_pages with index.html as a starting point
+        cur.execute("""INSERT INTO site_pages (site_slug,filename,html_content)
+            VALUES (%s,'index.html',%s) ON CONFLICT (site_slug,filename) DO UPDATE SET html_content=EXCLUDED.html_content""",
+            (slug, row['html_content']))
+            
         cur.execute("UPDATE sites SET status='COMPLETED' WHERE slug=%s", (slug,))
         conn.commit()
         cur.close(); conn.close()
         base = request.host_url.rstrip('/')
         return jsonify({"success":True,"previewUrl":f"{base}/s/{slug}","downloadUrl":f"{base}/download/{slug}"})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"success": False, "message": str(e)}), 500
+
+# ── Save site ─────────────────────────────────────────────────────────────────
+@app.route('/api/save-site', methods=['POST', 'OPTIONS'])
+def save_site():
+    if request.method == 'OPTIONS':
+        return '', 204
+    data  = request.get_json() or {}
+    slug  = data.get('slug')
+    pages = data.get('pages') # dict of { filename: html }
+    if not slug or not pages:
+        return jsonify({"success": False, "message": "slug and pages are required"}), 400
+    try:
+        conn = get_db()
+        cur  = conn.cursor()
+        
+        # Save each page
+        for filename, html in pages.items():
+            cur.execute("""
+                INSERT INTO site_pages (site_slug, filename, html_content)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (site_slug, filename) DO UPDATE SET html_content=EXCLUDED.html_content
+            """, (slug, filename, html))
+            
+            # Keep index.html synchronized with final_sites for backwards compatibility
+            if filename == 'index.html':
+                cur.execute("""
+                    INSERT INTO final_sites (site_slug, html_content)
+                    VALUES (%s, %s)
+                    ON CONFLICT (site_slug) DO UPDATE SET html_content=EXCLUDED.html_content
+                """, (slug, html))
+                
+        cur.execute("UPDATE sites SET status='COMPLETED' WHERE slug=%s", (slug,))
+        conn.commit()
+        cur.close(); conn.close()
+        
+        base = request.host_url.rstrip('/')
+        return jsonify({
+            "success": True, 
+            "previewUrl": f"{base}/s/{slug}", 
+            "downloadUrl": f"{base}/download/{slug}"
+        })
     except Exception as e:
         traceback.print_exc()
         return jsonify({"success": False, "message": str(e)}), 500
@@ -1838,7 +1897,7 @@ def view_variation(slug, idx):
         row = cur.fetchone()
         conn.close()
         if not row:
-        return html_r("<h1>Not found</h1>", 404)
+            return html_r("<h1>Not found</h1>", 404)
         return html_r(row[0])
     except Exception as e:
         return html_r(f"<h1>Error: {e}</h1>", 500)
@@ -1857,19 +1916,56 @@ def show_site(slug):
     except Exception as e:
         return html_r(f"<h1>Error: {e}</h1>", 500)
 
+# ── Final site page ───────────────────────────────────────────────────────────
+@app.route('/s/<slug>/<path:filename>')
+def show_site_page(slug, filename):
+    try:
+        conn = get_db()
+        cur  = conn.cursor()
+        cur.execute("SELECT html_content FROM site_pages WHERE site_slug=%s AND filename=%s", (slug, filename))
+        row = cur.fetchone()
+        conn.close()
+        if row: return html_r(row[0])
+        
+        # Fallback to index.html from final_sites if filename is index.html
+        if filename == 'index.html':
+            conn = get_db()
+            cur  = conn.cursor()
+            cur.execute("SELECT html_content FROM final_sites WHERE site_slug=%s", (slug,))
+            row = cur.fetchone()
+            conn.close()
+            if row: return html_r(row[0])
+            
+        return html_r("<h1>Page not found</h1>", 404)
+    except Exception as e:
+        return html_r(f"<h1>Error: {e}</h1>", 500)
+
 # ── Download ZIP ──────────────────────────────────────────────────────────────
 @app.route('/download/<slug>')
 def download(slug):
     try:
         conn = get_db()
         cur  = conn.cursor()
-        cur.execute("SELECT html_content FROM final_sites WHERE site_slug=%s",(slug,))
-        row = cur.fetchone()
+        
+        # Try to get all pages from site_pages
+        cur.execute("SELECT filename, html_content FROM site_pages WHERE site_slug=%s", (slug,))
+        rows = cur.fetchall()
+        
+        # Fallback to final_sites if no pages found
+        if not rows:
+            cur.execute("SELECT html_content FROM final_sites WHERE site_slug=%s", (slug,))
+            row = cur.fetchone()
+            if row:
+                rows = [('index.html', row[0])]
+                
         conn.close()
-        if not row: return html_r("<h1>Not found</h1>", 404)
+        
+        if not rows: return html_r("<h1>Not found</h1>", 404)
+        
         buf = BytesIO()
-        with zipfile.ZipFile(buf,'w',zipfile.ZIP_DEFLATED) as zf:
-            zf.writestr("index.html", row[0].encode('utf-8'))
+        with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for filename, html in rows:
+                zf.writestr(filename, html.encode('utf-8'))
         buf.seek(0)
         return send_file(buf, mimetype='application/zip', as_attachment=True,
                          download_name=f"{slug}_website.zip")
