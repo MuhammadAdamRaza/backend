@@ -766,13 +766,13 @@ def _skin(vi):
             "font_b": "Nunito",
             "wrap": "container",
             "hero_cls": "hero hero-landia",
-            "h1": "display-3 fw-bold mb-4 lh-sm",
-            "h2": "display-5 fw-bold mb-3",
-            "lead": "lead fs-5 mb-4",
+            "h1": "display-3 fw-bold mb-4 lh-sm text-text",
+            "h2": "display-5 fw-bold mb-3 text-text",
+            "lead": "lead fs-5 mb-4 text-muted",
             "sec": "sec sec-landia",
             "box": "box box-landia",
             "nav": "nav-wrap nav-landia",
-            "cta_btn": "btn-main btn-lg",
+            "cta_btn": "btn btn-primary btn-lg rounded-pill shadow-sm px-5 py-3",
         },
         1: {
             "layout": "skin-divi",
@@ -781,273 +781,113 @@ def _skin(vi):
             "font_b": "Inter",
             "wrap": "container",
             "hero_cls": "hero hero-divi",
-            "h1": "h1-divi",
-            "h2": "h2-divi mb-3",
-            "lead": "lead-divi",
+            "h1": "display-1 fw-bold mb-4 lh-1 text-text tracking-tight",
+            "h2": "display-4 fw-bold mb-4 text-text",
+            "lead": "lead fs-4 mb-5 text-muted",
             "sec": "sec sec-divi",
-            "box": "box box-divi",
-            "nav": "nav-wrap nav-divi",
-            "cta_btn": "btn-main btn-main-pill btn-lg",
+            "box": "box box-divi glass-card",
+            "nav": "nav-wrap nav-divi glass-nav",
+            "cta_btn": "btn btn-light btn-lg rounded-pill shadow-lg px-5 py-3 fw-bold text-primary",
         },
         2: {
             "layout": "skin-brutal",
             "fonts": "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap",
             "font_h": "Space Grotesk",
             "font_b": "Space Grotesk",
-            "wrap": "container-fluid px-3 px-lg-5",
+            "wrap": "container-fluid px-4 px-lg-5",
             "hero_cls": "hero hero-brutal",
-            "h1": "hero-brutal-title mb-4",
-            "h2": "h2-brutal text-uppercase fw-bold mb-4",
-            "lead": "lead-brutal fs-5 mb-4",
+            "h1": "display-1 fw-black text-uppercase mb-4 lh-1 brutal-title text-text",
+            "h2": "display-3 fw-black text-uppercase mb-4 brutal-heading text-text",
+            "lead": "fs-4 mb-5 brutal-lead fw-bold text-text",
             "sec": "sec sec-brutal",
-            "box": "box box-sharp",
-            "nav": "nav-wrap nav-solid",
-            "cta_btn": "btn-main btn-main-block btn-lg",
+            "box": "box box-sharp brutal-border",
+            "nav": "nav-wrap nav-solid brutal-nav border-bottom border-text border-3",
+            "cta_btn": "btn btn-dark brutal-btn-dark btn-lg brutal-btn px-5 py-3 text-uppercase fw-bold rounded-0 border border-3 border-text",
         },
     }
     return skins[int(vi) % 3]
 
 
 def _design_css(vi, primary, secondary, overlay, font_h, font_b):
-    s = _skin(vi)
     common = f"""
 :root{{--p:{primary};--s:{secondary};--bg:var(--bg);--text:var(--text);--card:var(--card);--muted:var(--muted);--alt:var(--alt)}}
 *{{box-sizing:border-box}}
-body{{font-family:'{font_b}',system-ui,sans-serif;background:var(--bg);color:var(--text);margin:0}}
-h1,h2,h3,.hero-serif,.h2-brutal,.hero-brutal-title{{font-family:'{font_h}',serif}}
+body{{font-family:'{font_b}',system-ui,sans-serif;background:var(--bg);color:var(--text);margin:0;overflow-x:hidden;}}
+h1,h2,h3,h4,h5,h6{{font-family:'{font_h}',serif; color:var(--text);}}
 .accent{{color:var(--p)}}
-.muted{{color:var(--muted)}}
-.hero{{position:relative;display:flex;align-items:center;overflow:hidden}}
+.text-text{{color:var(--text)!important;}}
+.text-muted{{color:var(--muted)!important;}}
+.bg-bg{{background-color:var(--bg)!important;}}
+.bg-card{{background-color:var(--card)!important;}}
+.bg-alt{{background-color:var(--alt)!important;}}
+.hero{{position:relative;display:flex;align-items:center;overflow:hidden;width:100%}}
 .hero-img{{position:absolute;inset:0;z-index:0;background-position:center;background-size:cover;background-repeat:no-repeat}}
 .hero-mask{{position:absolute;inset:0;z-index:1;background:{overlay}}}
 .hero-inner{{position:relative;z-index:2;width:100%}}
-.stat-big{{font-weight:800;color:var(--p);line-height:1}}
-.av{{background:linear-gradient(135deg,var(--p),var(--s));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}}
-.btn-main{{background:linear-gradient(135deg,var(--p),var(--s));color:#fff!important;font-weight:700;text-decoration:none;display:inline-block;border:none;cursor:pointer}}
-.btn-ghost{{border:2px solid var(--p);color:var(--p)!important;font-weight:700;text-decoration:none;background:transparent}}
-.map-placeholder{{min-height:280px;background:var(--alt) center/cover url('https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&q=60')}}
-.footer-grid a{{color:var(--muted);text-decoration:none}}
+.btn-primary {{background-color: var(--p) !important; border-color: var(--p) !important; color:#fff!important;}}
+.btn-outline-primary {{border-color: var(--p) !important; color:var(--p)!important;}}
+.btn-outline-primary:hover {{background-color: var(--p) !important; color:#fff!important;}}
+.text-primary {{color: var(--p) !important;}}
+.bg-primary {{background-color: var(--p) !important;}}
+.footer-grid a{{color:var(--muted);text-decoration:none;transition:all 0.2s;}}
 .footer-grid a:hover{{color:var(--p)}}
-.acc-item{{background:transparent!important;border-color:rgba(128,128,128,.15)!important}}
-.acc-item .accordion-button{{background:transparent!important;color:var(--text)!important;font-weight:600}}
-.form-control,.form-select{{background:var(--card);border:1px solid color-mix(in srgb,var(--p) 32%,transparent);color:var(--text)}}
-.form-control:focus{{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 22%,transparent)}}
-.form-control::placeholder{{color:var(--muted);opacity:.85}}
-.mobile-cta{{display:none}}
-@media(max-width:991.98px){{
-body{{padding-bottom:76px}}
-.mobile-cta{{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:1050;justify-content:center;align-items:center;padding:14px 20px;border-radius:0;font-size:1rem;letter-spacing:.02em;box-shadow:0 -8px 32px rgba(0,0,0,.2)}}
-}}
+img {{max-width: 100%; height: auto;}}
+.accordion-button{{background-color:var(--card); color:var(--text);}}
+.accordion-button:not(.collapsed){{background-color:color-mix(in srgb, var(--p) 10%, var(--card)); color:var(--p);}}
+.form-control {{background-color:var(--card); border: 1px solid var(--alt); color:var(--text);}}
+.form-control:focus {{border-color:var(--p); box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--p) 25%, transparent); background-color:var(--card); color:var(--text);}}
 """
     landia = """
-.skin-landia{background:var(--bg);color:var(--text)}
-.skin-landia .sec,.skin-landia .sec-landia{padding:clamp(64px,8vw,100px) 0}
-.skin-landia .box-landia{background:var(--card);border-radius:16px;padding:clamp(24px,3vw,36px);border:1px solid color-mix(in srgb,var(--p) 12%,#e2e8f0);box-shadow:0 4px 24px rgba(15,23,42,.06);height:100%;transition:.25s}
-.skin-landia .box-landia:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(15,23,42,.1)}
-.skin-landia .hero-landia{min-height:min(88vh,860px);padding-top:100px;background:var(--bg)}
-.skin-landia .hero-landia .hero-mask{opacity:.35}
-.skin-landia .hero-landia .hero-preview{border-radius:20px;overflow:hidden;box-shadow:0 24px 60px rgba(15,23,42,.12);border:1px solid color-mix(in srgb,var(--p) 15%,#e2e8f0)}
-.skin-landia .icon-pill{width:52px;height:52px;border-radius:14px;background:color-mix(in srgb,var(--p) 12%,#fff);color:var(--p);margin-bottom:18px;font-size:1.25rem;display:flex;align-items:center;justify-content:center;border:1px solid color-mix(in srgb,var(--p) 25%,transparent)}
-.skin-landia .btn-main{border-radius:999px;padding:14px 32px;box-shadow:0 8px 24px color-mix(in srgb,var(--p) 35%,transparent)}
-.skin-landia .btn-ghost{border-radius:999px;padding:14px 28px}
-.skin-landia .nav-landia{background:#fff;box-shadow:0 2px 16px rgba(15,23,42,.06);position:sticky;top:0;z-index:1000}
-.skin-landia .nav-landia .nav-link{color:var(--text);font-weight:600;font-size:.95rem}
-.skin-landia .nav-landia .navbar-brand{color:var(--p)!important;font-weight:800}
-.skin-landia .logo-pill{display:inline-block;padding:10px 22px;border-radius:999px;background:var(--card);border:1px solid #e2e8f0;margin:6px;font-size:.85rem;font-weight:600;color:var(--muted)}
-.skin-landia .stat-big{font-size:clamp(2rem,4vw,2.8rem);color:var(--p)}
-.skin-landia .av{width:48px;height:48px;border-radius:12px}
-.skin-landia .cta-strip{background:linear-gradient(120deg,var(--p),var(--s));color:#fff;border-radius:20px;padding:clamp(48px,6vw,72px)}
-.skin-landia .badge-top{background:color-mix(in srgb,var(--p) 10%,#fff);color:var(--p);padding:8px 16px;border-radius:999px;font-size:.85rem;font-weight:700;border:1px solid color-mix(in srgb,var(--p) 20%,transparent)}
-.skin-landia .blog-thumb{height:140px;border-radius:12px 12px 0 0;margin:-36px -36px 20px -36px;background-size:cover}
-.skin-landia .grid-svc .col-md-6.col-xl-4{margin-bottom:0}
-.skin-landia .how-steps-h .box-landia{text-align:center}
+.skin-landia .sec {padding: 6rem 0;}
+.skin-landia .box-landia {background: var(--card); border-radius: 1rem; padding: 2.5rem; border: 1px solid var(--alt); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: transform 0.3s ease, box-shadow 0.3s ease; height: 100%;}
+.skin-landia .box-landia:hover {transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);}
+.skin-landia .hero-landia {min-height: 80vh; background: var(--alt);}
+.skin-landia .nav-landia {background: var(--bg); box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 1030;}
+.skin-landia .nav-landia .nav-link {color: var(--muted); font-weight: 600;}
+.skin-landia .nav-landia .nav-link:hover {color: var(--p);}
+.skin-landia .img-float {animation: float 6s ease-in-out infinite; border-radius: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);}
+@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-20px); } 100% { transform: translateY(0px); } }
+.skin-landia .section-title {position: relative; padding-bottom: 1rem; margin-bottom: 3rem;}
+.skin-landia .section-title::after {content: ''; position: absolute; left: 0; bottom: 0; width: 60px; height: 4px; background: var(--p); border-radius: 2px;}
+.skin-landia .text-center .section-title::after {left: 50%; transform: translateX(-50%);}
+.skin-landia .team-img {width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 4px solid var(--card); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);}
 """
     divi = """
-.skin-divi{background:var(--bg);color:var(--text)}
-.skin-divi .sec,.skin-divi .sec-divi{padding:clamp(72px,9vw,110px) 0}
-.skin-divi .box-divi{background:var(--card);border-radius:12px;padding:clamp(22px,2.5vw,32px);border:1px solid color-mix(in srgb,var(--p) 35%,transparent);height:100%;transition:.2s}
-.skin-divi .box-divi:hover{border-color:var(--p);box-shadow:0 0 0 1px var(--p),0 20px 50px rgba(0,0,0,.35)}
-.skin-divi .hero-divi{min-height:min(92vh,900px);padding-top:88px;text-align:center}
-.skin-divi .hero-divi .hero-inner{padding-bottom:2rem}
-.skin-divi .h1-divi{font-size:clamp(2.2rem,5.5vw,3.75rem);font-weight:700;line-height:1.12;letter-spacing:-.03em;max-width:18ch;margin-left:auto;margin-right:auto}
-.skin-divi .h1-divi .accent{display:block;background:linear-gradient(120deg,var(--p),var(--s));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.skin-divi .lead-divi{font-size:clamp(1.05rem,2vw,1.25rem);color:var(--muted);max-width:42rem;margin:1.25rem auto 0;line-height:1.65}
-.skin-divi .motion-frame{margin:2.5rem auto 0;max-width:920px;padding:clamp(12px,2vw,20px);border-radius:16px;background:linear-gradient(110deg,color-mix(in srgb,var(--p) 40%,#000),var(--s),#fff);line-height:0}
-.skin-divi .motion-frame img{border-radius:10px;width:100%;max-height:420px;object-fit:cover}
-.skin-divi .icon-pill{width:48px;height:48px;border-radius:10px;background:color-mix(in srgb,var(--p) 22%,transparent);color:var(--p);font-size:1.1rem;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;border:1px solid color-mix(in srgb,var(--p) 40%,transparent)}
-.skin-divi .btn-main-pill{border-radius:999px;padding:14px 36px;font-weight:600}
-.skin-divi .btn-ghost{border-radius:999px;border-color:color-mix(in srgb,var(--p) 55%,transparent);color:var(--text)!important;padding:14px 28px}
-.skin-divi .nav-divi{backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 92%,transparent);border-bottom:1px solid color-mix(in srgb,var(--p) 25%,transparent);position:sticky;top:0;z-index:1000}
-.skin-divi .nav-divi .nav-link{color:var(--muted);font-weight:500;font-size:.92rem}
-.skin-divi .nav-divi .nav-link:hover{color:var(--text)}
-.skin-divi .nav-divi .navbar-brand{font-weight:700;color:#fff!important}
-.skin-divi .logo-pill{display:inline-block;padding:8px 18px;border-radius:8px;background:color-mix(in srgb,var(--p) 12%,var(--card));margin:6px;font-size:.8rem;font-weight:600;color:var(--muted);border:1px solid color-mix(in srgb,var(--p) 22%,transparent)}
-.skin-divi .stat-big{font-size:clamp(2.2rem,5vw,3.2rem)}
-.skin-divi .av{width:44px;height:44px;border-radius:8px}
-.skin-divi .cta-strip{background:linear-gradient(120deg,var(--p),color-mix(in srgb,var(--s) 80%,#000));color:#fff;border-radius:16px;padding:clamp(48px,7vw,80px)}
-.skin-divi .badge-top{background:color-mix(in srgb,var(--p) 18%,var(--card));color:var(--text);padding:8px 14px;border-radius:999px;font-size:.8rem;border:1px solid color-mix(in srgb,var(--p) 35%,transparent)}
-.skin-divi .h2-divi{font-size:clamp(1.75rem,4vw,2.5rem);font-weight:600;letter-spacing:-.02em}
-.skin-divi .feat-bento-divi{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-.skin-divi .feat-bento-divi .feat-cell{padding:22px;border-radius:12px;border:1px solid color-mix(in srgb,var(--p) 28%,transparent);min-height:130px;background:var(--card)}
-.skin-divi .pricing-divi{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.skin-divi .pricing-divi .price-card{border-radius:12px;border:1px solid color-mix(in srgb,var(--p) 30%,transparent);padding:26px;height:100%;background:var(--card)}
-.skin-divi .pricing-divi .price-card.featured{border-color:var(--p);background:linear-gradient(160deg,color-mix(in srgb,var(--p) 22%,var(--card)),var(--card));transform:translateY(-6px)}
-.skin-divi .sec-divi-band{background:linear-gradient(180deg,color-mix(in srgb,var(--p) 14%,var(--bg)),var(--bg))}
-.skin-divi .team-row-divi{display:flex;flex-wrap:wrap;gap:2rem;justify-content:center}
-.skin-divi .team-row-divi .team-person{text-align:center}
-.skin-divi .team-row-divi .av{width:64px;height:64px;border-radius:50%;margin:0 auto 10px}
-.skin-divi .blog-thumb{height:130px;border-radius:10px 10px 0 0;margin:-32px -32px 18px -32px;background-size:cover}
+.skin-divi .sec {padding: 8rem 0;}
+.skin-divi .glass-card {background: color-mix(in srgb, var(--card) 60%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid color-mix(in srgb, var(--text) 5%, transparent); border-radius: 1.5rem; padding: 3rem; transition: all 0.3s ease; height: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1);}
+.skin-divi .glass-card:hover {background: color-mix(in srgb, var(--card) 80%, transparent); transform: translateY(-5px); border-color: color-mix(in srgb, var(--p) 20%, transparent);}
+.skin-divi .hero-divi {min-height: 100vh; background: radial-gradient(circle at top right, color-mix(in srgb, var(--p) 15%, transparent), var(--bg) 60%);}
+.skin-divi .hero-divi::before {content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+') repeat; opacity: 0.1; z-index:0;}
+.skin-divi .glass-nav {background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid color-mix(in srgb, var(--text) 5%, transparent); position: sticky; top: 0; z-index: 1030;}
+.skin-divi .glass-nav .nav-link {color: var(--muted); font-weight: 500;}
+.skin-divi .glass-nav .nav-link:hover {color: var(--text);}
+.skin-divi .glow-img {border-radius: 2rem; box-shadow: 0 0 60px color-mix(in srgb, var(--p) 25%, transparent); border: 1px solid color-mix(in srgb, var(--text) 5%, transparent);}
+.skin-divi .text-gradient {background: linear-gradient(135deg, var(--text) 0%, color-mix(in srgb, var(--text) 70%, transparent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
+.skin-divi .team-img {width: 140px; height: 140px; object-fit: cover; border-radius: 1.5rem; margin-bottom: -40px; position: relative; z-index: 1; border: 4px solid var(--bg);}
+.skin-divi .pricing-featured {transform: scale(1.05); background: radial-gradient(circle at top right, color-mix(in srgb, var(--p) 10%, var(--card)), var(--card)); border-color: var(--p);}
 """
     brutal = """
-.skin-brutal{letter-spacing:.01em}
-.skin-brutal .sec-brutal{padding:clamp(48px,6vw,80px) 0}
-.skin-brutal .sec-brutal.sec-band{background:color-mix(in srgb,var(--p) 12%,var(--bg));border-top:4px solid var(--p);border-bottom:4px solid var(--p)}
-.skin-brutal .box-sharp{background:var(--card);border-radius:2px;padding:clamp(20px,2.5vw,32px);border:3px solid color-mix(in srgb,var(--p) 50%,transparent);height:100%}
-.skin-brutal .box-sharp:hover{border-color:var(--p)}
-.skin-brutal .hero-brutal{min-height:100vh}
-.skin-brutal .hero-brutal .hero-img{filter:grayscale(40%) contrast(1.1)}
-.skin-brutal .hero-brutal-title{font-size:clamp(2.4rem,6vw,4.2rem);text-transform:uppercase;line-height:1.05;letter-spacing:-.03em}
-.skin-brutal .lead-brutal{text-transform:none;max-width:32rem}
-.skin-brutal .h2-brutal{font-size:clamp(1.5rem,3vw,2rem);letter-spacing:.06em}
-.skin-brutal .label-tag{display:inline-block;text-transform:uppercase;font-size:.72rem;font-weight:700;letter-spacing:.15em;padding:6px 12px;border:2px solid var(--p);margin-bottom:1rem}
-.skin-brutal .icon-pill{width:64px;height:64px;border-radius:0;background:var(--p);font-size:1.5rem;display:flex;align-items:center;justify-content:center;color:#fff}
-.skin-brutal .btn-main-block{border-radius:0;padding:18px 40px;text-transform:uppercase;letter-spacing:.08em}
-.skin-brutal .nav-solid{background:linear-gradient(90deg,var(--p),var(--s));border:none;position:sticky;top:0;z-index:1000}
-.skin-brutal .nav-solid .navbar-brand,.skin-brutal .nav-solid .nav-link{color:#fff!important;font-weight:700;text-transform:uppercase;font-size:.8rem;letter-spacing:.06em}
-.skin-brutal .nav-solid .btn-main{background:#fff!important;color:var(--p)!important;border-radius:0}
-.skin-brutal .logo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
-.skin-brutal .logo-grid span{display:block;text-align:center;padding:14px;border:2px solid var(--p);font-weight:700;font-size:.75rem;text-transform:uppercase}
-.skin-brutal .stats-brutal{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:3px solid var(--p)}
-.skin-brutal .stats-brutal>div{padding:clamp(20px,3vw,36px);text-align:center;border-right:2px solid var(--p)}
-.skin-brutal .stats-brutal>div:last-child{border-right:none}
-.skin-brutal .stat-big{font-size:clamp(2rem,5vw,3.5rem)}
-.skin-brutal .av{width:56px;height:56px;border-radius:0}
-.skin-brutal .svc-band{padding:clamp(32px,5vw,56px);margin-bottom:12px;border-left:8px solid var(--p)}
-.skin-brutal .svc-band:nth-child(even){background:color-mix(in srgb,var(--s) 15%,var(--card));flex-direction:row-reverse}
-.skin-brutal .pricing-brutal{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.skin-brutal .pricing-brutal .price-card{border:3px solid var(--p);padding:28px;height:100%}
-.skin-brutal .pricing-brutal .price-card.featured{transform:scale(1.05);background:color-mix(in srgb,var(--p) 18%,var(--card));z-index:2}
-.skin-brutal .steps-v .box{border-left:8px solid var(--p);border-radius:0}
-.skin-brutal .feat-bento{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-.skin-brutal .feat-bento .feat-cell{padding:24px;border:2px solid var(--p);min-height:140px}
-.skin-brutal .cta-strip{border-radius:0;border:4px solid var(--p);background:var(--p);color:#fff;padding:3rem}
-.skin-brutal .hero-split-img{border-radius:0;max-height:none!important;height:min(70vh,520px);object-fit:cover;width:100%}
-""".replace("div", "div")
-    brutal = brutal.replace("div", "div")
-    if vi == 0:
-        return common + landia
-    if vi == 1:
-        return common + divi
+.skin-brutal {letter-spacing: -0.02em;}
+.skin-brutal .sec {padding: 7rem 0; border-bottom: 3px solid var(--text);}
+.skin-brutal .box-sharp {background: var(--card); padding: 2.5rem; border: 3px solid var(--text); box-shadow: 8px 8px 0px 0px var(--text); transition: all 0.2s ease; height: 100%;}
+.skin-brutal .box-sharp:hover {transform: translate(-4px, -4px); box-shadow: 12px 12px 0px 0px var(--p);}
+.skin-brutal .hero-brutal {min-height: 90vh; background: var(--alt); border-bottom: 4px solid var(--text);}
+.skin-brutal .brutal-nav {background: var(--bg);}
+.skin-brutal .brutal-nav .nav-link {color: var(--text); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;}
+.skin-brutal .brutal-nav .nav-link:hover {background: var(--text); color: var(--bg);}
+.skin-brutal .brutal-btn {box-shadow: 6px 6px 0px 0px var(--p); transition: all 0.2s ease;}
+.skin-brutal .brutal-btn:hover {transform: translate(2px, 2px); box-shadow: 4px 4px 0px 0px var(--p);}
+.skin-brutal .brutal-btn-dark {background: var(--text)!important; color: var(--bg)!important; border-color: var(--text)!important; box-shadow: 6px 6px 0px 0px var(--p);}
+.skin-brutal .brutal-img {border: 4px solid var(--text); box-shadow: 12px 12px 0px 0px var(--text);}
+.skin-brutal .fw-black {font-weight: 900;}
+.skin-brutal .marquee {white-space: nowrap; overflow: hidden; box-sizing: border-box; background: var(--text); color: var(--bg); padding: 1rem 0; border-top: 3px solid var(--text); border-bottom: 3px solid var(--text);}
+.skin-brutal .marquee span {display: inline-block; padding-left: 100%; text-transform: uppercase; font-weight: 900; font-size: 1.5rem; animation: marquee 15s linear infinite;}
+@keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
+.skin-brutal .team-img {width: 100%; aspect-ratio: 1; object-fit: cover; border: 3px solid var(--text); border-bottom: none;}
+"""
+    if vi == 0: return common + landia
+    if vi == 1: return common + divi
     return common + brutal
-
-
-def _build_pricing_html(vi):
-    tiers = [
-        ("Starter", "From £99", "Straightforward jobs.", ["Site visit", "Written estimate", "Warranty"], False),
-        ("Professional", "From £249", "Most popular package.", ["Priority booking", "Premium parts", "12-mo support"], True),
-        ("Enterprise", "Custom", "Commercial contracts.", ["Account manager", "Flexible billing", "Maintenance"], False),
-    ]
-    if vi == 1:
-        cards = []
-        for tier, price, desc, feats, star in tiers:
-            lis = "".join(f"<li>{_e(f)}</li>" for f in feats)
-            fc = "price-card featured" if star else "price-card"
-            cards.append(
-                f'<div class="{fc}"><p class="fw-bold text-uppercase small accent mb-2">{_e(tier)}</p>'
-                f'<h3 class="h2-divi mb-2">{_e(price)}</h3><p class="muted mb-3">{_e(desc)}</p>'
-                f'<ul class="small muted mb-4 ps-3">{lis}</ul>'
-                f'<a href="#contact" class="btn-main btn-main-pill">Select plan</a></div>'
-            )
-        return f'<div class="pricing-divi">{"".join(cards)}</div>'
-    if vi == 2:
-        cards = []
-        for tier, price, desc, feats, star in tiers:
-            lis = "".join(f'<li><i class="bi bi-check-lg me-2"></i>{_e(f)}</li>' for f in feats)
-            fc = "price-card featured" if star else "price-card"
-            cards.append(
-                f'<div class="{fc}"><p class="label-tag mb-2">{_e(tier)}</p>'
-                f'<h3 class="display-5 fw-bold mb-2">{_e(price)}</h3><p class="muted small mb-3">{_e(desc)}</p>'
-                f'<ul class="list-unstyled small mb-4">{lis}</ul>'
-                f'<a href="#contact" class="btn-main btn-main-block w-100 text-center d-block">Quote</a></div>'
-            )
-        return f'<div class="pricing-brutal">{"".join(cards)}</div>'
-    parts = []
-    for tier, price, desc, feats, star in tiers:
-        lis = "".join(f'<li><i class="bi bi-check2-circle me-2"></i>{_e(f)}</li>' for f in feats)
-        cls = "box box-landia featured" if star else "box box-landia"
-        parts.append(
-            f'<div class="col-lg-4"><div class="{cls}">'
-            f'<p class="fw-bold text-uppercase small accent">{_e(tier)}</p>'
-            f'<h3 class="display-6 fw-bold">{_e(price)}</h3><p class="muted">{_e(desc)}</p>'
-            f'<ul class="list-unstyled mb-4">{lis}</ul>'
-            f'<a href="#contact" class="btn-main w-100 text-center d-block">Get a quote</a></div></div>'
-        )
-    return f'<div class="row g-4 grid-pricing">{"".join(parts)}</div>'
-
-
-def _build_stats_html(vi, section_alt):
-    items = [
-        ("15+", "Years experience"),
-        ("2,400+", "Projects done"),
-        ("98%", "Recommend us"),
-        ("4.9", "Review score"),
-    ]
-    if vi == 1:
-        inner = "".join(
-            f'<div><div class="stat-big">{a}</div><p class="muted mb-0 small text-uppercase">{b}</p></div>'
-            for a, b in items
-        )
-        return f'<section class="sec sec-divi-band pt-0"><div class="container container-narrow"><div class="stats-inline">{inner}</div></div></section>'
-    if vi == 2:
-        inner = "".join(
-            f'<div><div class="stat-big">{a}</div><p class="muted mb-0 small text-uppercase">{b}</p></div>'
-            for a, b in items
-        )
-        return f'<section class="sec sec-brutal sec-band pt-0"><div class="container-fluid px-3 px-lg-5"><div class="stats-brutal">{inner}</div></div></section>'
-    cells = "".join(
-        f'<div class="col-6 col-md-3"><div class="box box-landia"><div class="stat-big">{a}</div>'
-        f'<p class="muted mb-0">{b}</p></div></div>'
-        for a, b in items
-    )
-    return f'<section class="sec sec-pad-lg pt-0" style="{section_alt}"><div class="container"><div class="row g-4 text-center">{cells}</div></div></section>'.replace("div", "div")
-
-
-def _build_team_html(vi):
-    if vi == 1:
-        parts = []
-        for person, role in TEAM:
-            parts.append(
-                f'<div class="team-person"><div class="av">{_e(person[0])}</div>'
-                f'<h3 class="h6 fw-bold mb-0">{_e(person)}</h3><p class="small muted">{_e(role)}</p></div>'
-            )
-        return f'<div class="team-row-divi">{"".join(parts)}</div>'
-    if vi == 2:
-        parts = []
-        for i, (person, role) in enumerate(TEAM):
-            parts.append(
-                f'<div class="col-6 col-lg-3"><div class="box box-sharp text-center">'
-                f'<div class="label-tag mx-auto mb-3">Team 0{i+1}</div>'
-                f'<div class="av mx-auto mb-2" style="width:64px;height:64px;font-size:1.25rem">{_e(person[0])}</div>'
-                f'<h3 class="fw-bold text-uppercase small mb-1">{_e(person)}</h3><p class="muted small mb-0">{_e(role)}</p></div></div>'
-            )
-        return f'<div class="row g-3">{"".join(parts)}</div>'
-    parts = []
-    for person, role in TEAM:
-        parts.append(
-            f'<div class="col-6 col-md-3"><div class="box box-round text-center h-100">'
-            f'<div class="av mx-auto mb-3">{_e(person[0])}</div>'
-            f'<h3 class="h6 fw-bold mb-1">{_e(person)}</h3><p class="small muted mb-0">{_e(role)}</p></div></div>'
-        )
-    return f'<div class="row g-4">{"".join(parts)}</div>'.replace("div", "div")
-
-
-def _build_logos_html(vi, logos_pills, awards):
-    if vi == 1:
-        return '<div class="logo-line">' + "".join(f"<span>{_e(a)}</span>" for a in awards) + "</div>"
-    if vi == 2:
-        return '<div class="logo-grid">' + "".join(f"<span>{_e(a)}</span>" for a in awards) + "</div>"
-    return f"<div>{logos_pills}</div>"
-
 
 def build_premium_html(data, variation_index):
     name_raw = data.get("businessName") or data.get("business_name") or "Your Business"
@@ -1067,312 +907,634 @@ def build_premium_html(data, variation_index):
     t = _theme(vi, primary, secondary, surface)
     bg, text, card, muted, alt = t["bg"], t["text"], t["card"], t["muted"], t["alt"]
     skin = _skin(vi)
-    wrap, box_cls, sec_cls, h2c = skin["wrap"], skin["box"], skin["sec"], skin["h2"]
+    wrap, box_cls, sec_cls, h2c, h1c, lc, cta = skin["wrap"], skin["box"], skin["sec"], skin["h2"], skin["h1"], skin["lead"], skin["cta_btn"]
     pitch = _e(ind["pitch"])
-    hero_img, team_img, work_img = ind["hero"], ind["team"], ind["work"]
-    work_img_url = _unsplash(work_img)
-    team_img_url = _unsplash(team_img)
+    hero_img = _unsplash(ind["hero"])
+    work_img = _unsplash(ind["work"])
+    team_img = _unsplash(ind["team"])
     email_slug = re.sub(r"[^a-z0-9]", "", name_raw.lower()) or "hello"
 
-    headlines = {
-        "modern": [f"The smarter way to book {label_l} in {loc}", f"{name} — modern {label_l} for {loc}", f"Meet the future of {label_l} in {loc}"],
-        "professional": [f"Trusted {label_l} specialists serving {loc}", f"{name} — professional {label_l} you can rely on", f"Expert {label_l} for homes and businesses in {loc}"],
-        "creative": [f"Bold {label_l} that stands out in {loc}", f"{name} reimagines {label_l} in {loc}", f"Creative solutions for {label_l} in {loc}"],
-        "minimal": [f"Simple, honest {label_l} in {loc}", f"{name} — clear {label_l}, done right", f"Focused {label_l} for {loc}"],
-    }
-    hlist = headlines.get(style, headlines["modern"])
-    headline = hlist[vi]
     overlay = _hero_overlay(primary, secondary, bg, vi)
     hero_bg = _hero_bg_style(hero_img)
-    hero_img_el = _hero_img_tag(hero_img, name, "img-fluid rounded-4 shadow-lg", "max-height:460px;width:100%;object-fit:cover")
-    hero_split_el = _hero_img_tag(hero_img, name, "hero-split-img", "width:100%;height:100%;min-height:320px;object-fit:cover")
-    hero_editorial_el = _hero_img_tag(hero_img, name, "img-fluid", "max-height:340px;width:100%;object-fit:cover")
-    font_heading = skin["font_h"]
-    font_body = skin["font_b"]
 
-    services_html = _build_services_html(vi, svcs_raw, loc_raw, btype, name_raw)
-    features_html = _build_features_html(vi, loc_raw, btype)
-    testi_html = _build_testimonials_html(vi, loc)
-    pricing_html = _build_pricing_html(vi)
-    faq_html = _build_faq_html(vi, loc_raw, name_raw, btype)
-    pricing_body = (
-        f'<div class="row g-4 align-items-stretch">{pricing_html}</div>'
-        if vi == 0 else pricing_html
-    )
-    og_img = _unsplash(hero_img)
-
-    blog_cards = ""
-    for title_tpl, excerpt in BLOG:
-        blog_cards += (
-            f'<div class="col-md-4"><div class="box {box_cls} h-100">'
-            f'<div class="blog-thumb" style="background-image:url(\'{work_img_url}\')"></div>'
-            f'<div class="p-4"><h3 class="h5 fw-bold">{_e(title_tpl.format(label_l=label_l, location=loc, name=name))}</h3>'
-            f'<p class="muted small">{_e(excerpt.format(label_l=label_l, name=name))}</p>'
-            f'<a href="#" class="accent fw-semibold">Read more →</a></div></div></div>'
-        )
-
-    team_html = _build_team_html(vi)
-    team_team_inner = team_html if vi == 1 else f'<div class="row g-4">{team_html}</div>'
-
-    logos_pills = "".join(f'<span class="logo-pill">{_e(a)}</span>' for a in AWARDS)
-    logos = _build_logos_html(vi, logos_pills, AWARDS)
-    nav_extra = "rounded-pill px-4" if vi in (0, 1) else ""
-
-
-    hero_class = skin["hero_cls"]
-    section_alt = f"background:{alt};"
-    feat_hdr = "text-center mb-5 mx-auto" if vi != 2 else "mb-5"
-    feat_hdr_style = ' style="max-width:720px"' if vi != 2 else ""
-
-    h1c, lc, cta = skin["h1"], skin["lead"], skin["cta_btn"]
-    if vi == 1:
-        _hl = headline
-        _accent, _rest = _hl, ""
-        if f" in {loc}" in _hl:
-            _i = _hl.index(f" in {loc}")
-            _accent, _rest = _hl[:_i], _hl[_i:]
-        elif " — " in _hl:
-            _parts = _hl.split(" — ", 1)
-            _accent, _rest = _parts[0], (" — " + _parts[1]) if len(_parts) > 1 else ""
-        _h1_html = f'<span class="accent">{_accent}</span>{_rest}' if _rest else f'<span class="accent">{_hl}</span>'
-        hero_body = f"""<div class="hero-divi-inner text-center">
-<span class="badge-top d-inline-block mb-3"><i class="bi bi-geo-alt me-1"></i> Serving {loc}</span>
-<h1 class="{h1c}">{_h1_html}</h1>
-<p class="{lc}">{pitch}</p>
-<div class="d-flex flex-wrap gap-3 mb-4 justify-content-center">
-<a href="#contact" class="{cta}">Book consultation</a>
-<a href="#services" class="btn-ghost btn-lg">Services</a></div>
-<p class="small muted mb-3">Trusted in {loc} · Clear quotes · 5★ rated</p>
-<div class="motion-frame mt-2">{hero_img_el}</div>
-</div>"""
-    elif vi == 2:
-        hero_body = f"""<div class="row align-items-stretch g-0 min-vh-75">
-<div class="col-lg-6 p-0">{hero_split_el}</div>
-<div class="col-lg-6 d-flex align-items-center ps-lg-5 py-5">
-<div><span class="label-tag">{loc}</span>
-<h1 class="{h1c}">{headline}</h1>
-<p class="{lc}">{pitch}</p>
-<div class="d-flex flex-wrap gap-3">
-<a href="#contact" class="{cta}">Get quote</a>
-<a href="#services" class="btn-ghost">Services</a></div></div></div></div>"""
-    else:
-        hero_body = f"""<div class="hero-preview"><div class="row align-items-center g-5">
-<div class="col-lg-7">
-<span class="badge-top d-inline-block mb-3"><i class="bi bi-geo-alt me-1"></i> {loc}</span>
-<h1 class="{h1c}">{headline}</h1>
-<p class="{lc}" style="max-width:38rem">{pitch}</p>
-<div class="d-flex flex-wrap gap-3 mb-4">
-<a href="#contact" class="{cta}">Book consultation</a>
-<a href="#services" class="btn-ghost btn-lg">Services</a></div>
-<p class="small muted">Trusted locally · Insured · 5★ reviews</p>
-</div>
-<div class="col-lg-5 d-none d-lg-block"><div class="motion-frame">{hero_img_el}</div></div></div>"""
-
-    prob_text_col = "col-lg-6 order-lg-2" if vi == 2 else "col-lg-6"
-    prob_stats_col = "col-lg-6 order-lg-1" if vi == 2 else "col-lg-6"
-    sol_img_col = "col-lg-6" if vi == 2 else "col-lg-6 order-lg-2"
-    sol_txt_col = "col-lg-6 order-lg-2" if vi == 2 else "col-lg-6 order-lg-1"
-
-    if vi == 2:
-        how_block = f"""<div class="steps-v d-flex flex-column gap-3">
-<div class="box d-flex gap-4 align-items-start"><div class="display-4 fw-bold accent">01</div><div><h3 class="h4 fw-bold">Tell us what you need</h3><p class="muted mb-0">Call, email, or use the form below.</p></div></div>
-<div class="box d-flex gap-4 align-items-start"><div class="display-4 fw-bold accent">02</div><div><h3 class="h4 fw-bold">Receive a clear plan</h3><p class="muted mb-0">Written options, timeline, and pricing.</p></div></div>
-<div class="box d-flex gap-4 align-items-start"><div class="display-4 fw-bold accent">03</div><div><h3 class="h4 fw-bold">We deliver &amp; follow up</h3><p class="muted mb-0">Quality work and a check-in afterwards.</p></div></div></div>"""
-    else:
-        how_block = """<div class="row g-4 how-steps-h">
-<div class="col-md-4"><div class="box {box_cls} text-center h-100"><div class="display-3 fw-bold accent opacity-50 mb-2">01</div><h3 class="h4 fw-bold">Tell us what you need</h3><p class="muted mb-0">Call, email, or use the form below. We ask the right questions so our visit is productive.</p></div></div>
-<div class="col-md-4"><div class="box {box_cls} text-center h-100"><div class="display-3 fw-bold accent opacity-50 mb-2">02</div><h3 class="h4 fw-bold">Receive a clear plan</h3><p class="muted mb-0">Written options, timeline, and pricing — no jargon, no pressure.</p></div></div>
-<div class="col-md-4"><div class="box {box_cls} text-center h-100"><div class="display-3 fw-bold accent opacity-50 mb-2">03</div><h3 class="h4 fw-bold">We deliver &amp; follow up</h3><p class="muted mb-0">Quality work, tidy finish, and a check-in afterwards.</p></div></div></div>"""
-    how_block = how_block.replace("div", "div")
-
-    if vi == 1:
-        founder_block = f"""<div class="row justify-content-center text-center"><div class="col-lg-8">
-{_hero_img_tag(team_img, "Founder", "rounded-circle shadow mb-4", "width:120px;height:120px;object-fit:cover;border-radius:50%")}
-<p class="text-uppercase fw-bold small accent mb-2">A message from our director</p>
-<h2 class="h2-divi mb-3">We treat every home like our own</h2>
-<p class="muted fs-5 mb-0">"When I started {name}, the goal was simple: offer {label_l} in {loc} that I would happily book for my own family." — <strong>Director, {name}</strong></p>
-</div></div>"""
-    else:
-        founder_block = f"""<div class="row g-4 align-items-center">
-<div class="col-md-3 text-center">{_hero_img_tag(team_img, "Founder", "rounded-circle shadow", "width:140px;height:140px;object-fit:cover;border-radius:50%")}</div>
-<div class="col-md-9"><p class="text-uppercase fw-bold small accent mb-2">A message from our director</p>
-<h2 class="h3 fw-bold mb-3">We treat every home like our own</h2>
-<p class="muted fs-5 mb-0">"When I started {name}, the goal was simple: offer {label_l} in {loc} that I would happily book for my own family. Thank you for trusting us." — <strong>Director, {name}</strong></p>
-</div></div>"""
-
-    if vi == 2:
-        contact_block = f"""<div class="row g-5">
-<div class="col-lg-7 order-lg-1"><div class="box {box_cls}"><form class="row g-3">
-<div class="col-md-6"><label class="form-label fw-semibold">Full name</label><input class="form-control" placeholder="Your name"></div>
-<div class="col-md-6"><label class="form-label fw-semibold">Phone</label><input class="form-control" placeholder="07XXX XXXXXX"></div>
-<div class="col-12"><label class="form-label fw-semibold">Email</label><input type="email" class="form-control" placeholder="you@email.com"></div>
-<div class="col-12"><label class="form-label fw-semibold">How can we help?</label><textarea class="form-control" rows="5" placeholder="Describe your project…"></textarea></div>
-<div class="col-12"><button type="button" class="btn-main w-100 py-3">Send enquiry</button></div>
-</form></div></div>
-<div class="col-lg-5 order-lg-2">
-<h2 class="display-6 fw-bold mb-4">Contact {name}</h2>
-<p class="muted fs-5 mb-4">Tell us about your {label_l} needs in {loc}.</p>
-<p><i class="bi bi-telephone accent me-2"></i><strong>0800 123 4567</strong></p>
-<p><i class="bi bi-envelope accent me-2"></i><strong>hello@{email_slug}.co.uk</strong></p>
-<p><i class="bi bi-clock accent me-2"></i> Mon–Sat 8am–6pm</p></div></div>"""
-    else:
-        contact_block = f"""<div class="row g-5">
-<div class="col-lg-5">
-<h2 class="display-6 fw-bold mb-4">Contact {name}</h2>
-<p class="muted fs-5 mb-4">Tell us about your {label_l} needs — we will reply with availability and next steps.</p>
-<p><i class="bi bi-telephone accent me-2"></i><strong>0800 123 4567</strong></p>
-<p><i class="bi bi-envelope accent me-2"></i><strong>hello@{email_slug}.co.uk</strong></p>
-<p><i class="bi bi-clock accent me-2"></i> Mon–Sat 8am–6pm · Emergency line 24/7</p>
-</div>
-<div class="col-lg-7"><div class="box {box_cls}"><form class="row g-3">
-<div class="col-md-6"><label class="form-label fw-semibold">Full name</label><input class="form-control" placeholder="Your name"></div>
-<div class="col-md-6"><label class="form-label fw-semibold">Phone</label><input class="form-control" placeholder="07XXX XXXXXX"></div>
-<div class="col-12"><label class="form-label fw-semibold">Email</label><input type="email" class="form-control" placeholder="you@email.com"></div>
-<div class="col-12"><label class="form-label fw-semibold">How can we help?</label><textarea class="form-control" rows="5" placeholder="Describe your {label_l} project in {loc}…"></textarea></div>
-<div class="col-12"><button type="button" class="btn-main w-100 py-3">Send enquiry</button></div>
-</form></div></div></div>"""
-    contact_block = contact_block.replace("div", "div")
-
-    stats_html = _build_stats_html(vi, section_alt)
-    sec = {
-        "hero": f"""<section class="{hero_class}" id="top"><div class="hero-img" style="{hero_bg}"></div><div class="hero-mask"></div><div class="{wrap} hero-inner">{hero_body}</div></section>""",
-        "logos": f"""<section class="sec pt-0"><div class="container text-center"><p class="text-uppercase fw-bold small muted mb-3">Trusted by homeowners &amp; businesses</p><div>{logos}</div></div></section>""",
-        "problem": f"""<section class="sec problem-grid" style="{section_alt}"><div class="container"><div class="row g-5 align-items-center">
-<div class="{prob_text_col}"><p class="text-uppercase fw-bold small accent mb-2">The challenge</p>
-<h2 class="display-5 fw-bold mb-4">The cost of choosing the wrong {label_l} provider</h2>
-<p class="fs-5 muted">Too many people in {loc} face delayed call-outs, vague quotes, and messy workmanship.</p>
-<ul class="list-unstyled fs-5"><li class="mb-3"><i class="bi bi-x-circle me-2 text-danger"></i> Hidden fees on the day</li>
-<li class="mb-3"><i class="bi bi-x-circle me-2 text-danger"></i> Poor communication</li>
-<li class="mb-3"><i class="bi bi-x-circle me-2 text-danger"></i> Work that needs redoing</li></ul></div>
-<div class="{prob_stats_col}"><div class="row g-3 text-center">
-<div class="col-6"><div class="box"><div class="stat-big">38%</div><p class="muted small mb-0">Bad experiences</p></div></div>
-<div class="col-6"><div class="box"><div class="stat-big">£240</div><p class="muted small mb-0">Cost of fixes</p></div></div>
-<div class="col-6"><div class="box"><div class="stat-big">3 days</div><p class="muted small mb-0">Typical wait</p></div></div>
-<div class="col-6"><div class="box"><div class="stat-big">24/7</div><p class="muted small mb-0">Emergency line</p></div></div>
-</div></div></div></section>""".replace("div", "div"),
-        "solution": f"""<section class="sec"><div class="container"><div class="row g-5 align-items-center">
-<div class="{sol_img_col}">{_hero_img_tag(work_img, "Our work", "img-fluid rounded-4 shadow", "width:100%;object-fit:cover")}</div>
-<div class="{sol_txt_col}"><p class="text-uppercase fw-bold small accent mb-2">The solution</p>
-<h2 class="display-5 fw-bold mb-4">Meet the future of {label_l} in {loc}</h2>
-<p class="fs-5 muted mb-4">{name} combines qualified people and a customer-first process.</p>
-<p class="muted">You always know who is coming, what it costs, and when it will be done.</p></div></div></div></section>""",
-        "mission": f"""<section class="sec" style="{section_alt}"><div class="container"><div class="row justify-content-center text-center"><div class="col-lg-8">
-<p class="text-uppercase fw-bold small accent mb-2">Why we build</p><h2 class="display-5 fw-bold mb-4">Our mission</h2>
-<p class="fs-5 muted">We believe every client in {loc} deserves honest, fairly priced {label_l}. That is why {name} exists.</p>
-</div></div></div></section>""",
-        "features": f"""<section class="sec" id="features"><div class="container"><div class="{feat_hdr}"{feat_hdr_style}>
-<p class="text-uppercase fw-bold small accent mb-2">Capabilities</p><h2 class="display-5 fw-bold mb-3">Everything you need</h2>
-<p class="muted">Six reasons clients choose {name} in {loc}.</p></div>{features_html}</div></section>""",
-        "services": f"""<section class="sec" id="services" style="{section_alt}"><div class="container">
-<div class="text-center mb-5 mx-auto" style="max-width:760px"><p class="text-uppercase fw-bold small accent mb-2">Our services</p>
-<h2 class="display-5 fw-bold mb-3">Comprehensive {label_l} in {loc}</h2>
-<p class="muted fs-5">Your chosen services — delivered by our in-house team in {loc}.</p></div>
-{services_html}</div></section>""",
-        "how": f"""<section class="sec" id="how"><div class="container"><div class="text-center mb-5">
-<h2 class="display-5 fw-bold">How it works — 3 simple steps</h2><p class="muted">From enquiry to completion.</p></div>{how_block}</div></section>""",
-        "stats": stats_html,
-        "case": f"""<section class="sec"><div class="container"><div class="row g-5 align-items-center">
-<div class="col-lg-6"><p class="text-uppercase fw-bold small accent mb-2">Results</p><h2 class="display-5 fw-bold mb-4">Real data. Real growth.</h2>
-<p class="muted fs-5">A client in {loc} reduced repeat call-outs by 40% with our maintenance programme.</p></div>
-<div class="col-lg-6"><div class="row g-3">
-<div class="col-6"><div class="box text-center"><div class="stat-big">40%</div><p class="muted small">Fewer emergencies</p></div></div>
-<div class="col-6"><div class="box text-center"><div class="stat-big">£1.2k</div><p class="muted small">Saved yearly</p></div></div>
-<div class="col-6"><div class="box text-center"><div class="stat-big">2 wks</div><p class="muted small">Faster delivery</p></div></div>
-<div class="col-6"><div class="box text-center"><div class="stat-big">100%</div><p class="muted small">On time</p></div></div>
-</div></div></div></section>""".replace("div", "div"),
-        "reviews": f"""<section class="sec" id="reviews" style="{section_alt}"><div class="container">
-<p class="text-uppercase fw-bold small accent text-center mb-2">Social proof</p>
-<h2 class="display-5 fw-bold text-center mb-5">What our customers say</h2>{testi_html}</div></section>""",
-        "founder": f"""<section class="sec"><div class="container">{founder_block}</div></section>""",
-        "awards": f"""<section class="sec pt-0" style="{section_alt}"><div class="container text-center">
-<h2 class="h4 fw-bold mb-4">Industry validated excellence</h2><div>{logos}</div>
-<p class="small muted mt-3">Credentials you can verify before we start.</p></div></section>""".replace("div", "div"),
-        "pricing": f"""<section class="sec" id="pricing"><div class="container"><div class="text-center mb-5">
-<h2 class="display-5 fw-bold">Simple plans for every stage</h2><p class="muted">Transparent pricing for {loc}.</p></div>
-{pricing_body}</div></section>""",
-        "faq": f"""<section class="sec" id="faq" style="{section_alt}"><div class="container" style="max-width:820px">
-<h2 class="display-5 fw-bold text-center mb-5">FAQ</h2><div class="accordion" id="faqAcc{vi}">{faq_html}</div></div></section>""",
-        "team": f"""<section class="sec" id="team"><div class="container"><h2 class="display-5 fw-bold text-center mb-2">Meet the team</h2>
-<p class="text-center muted mb-5">The people behind {name}</p>{team_team_inner}</div></section>""",
-        "blog": f"""<section class="sec" style="{section_alt}"><div class="container"><h2 class="display-5 fw-bold text-center mb-2">Latest insights</h2>
-<p class="text-center muted mb-5">Guides for {label_l} in {loc}</p><div class="row g-4">{blog_cards}</div></div></section>""",
-        "map": f"""<section class="sec pt-0"><div class="container"><h2 class="h4 fw-bold text-center mb-4">Find us in {loc}</h2>
-<div class="map-placeholder d-flex align-items-center justify-content-center"><p class="muted mb-0 px-4 text-center"><i class="bi bi-geo-alt fs-1 d-block mb-2 accent"></i>Serving {loc} and nearby areas.</p></div></div></section>""",
-        "newsletter": f"""<section class="sec" style="{section_alt}"><div class="container"><div class="row justify-content-center"><div class="col-lg-8 text-center">
-<h2 class="h3 fw-bold mb-3">Stay ahead of the curve</h2><p class="muted mb-4">Tips for {loc} — unsubscribe anytime.</p>
-<div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
-<input type="email" class="form-control form-control-lg" style="max-width:320px" placeholder="Your email">
-<button type="button" class="btn-main">Subscribe</button></div></div></div></div></section>""",
-        "cta": f"""<section class="sec"><div class="container"><div class="cta-strip text-center">
-<h2 class="display-6 fw-bold mb-3">Ready to get started?</h2>
-<p class="lead mb-4 opacity-90">Request your free quote — we respond within hours.</p>
-<a href="#contact" class="btn btn-light btn-lg fw-bold px-5">Get started now</a></div></div></section>""".replace("div", "div"),
-        "contact": f"""<section class="sec" id="contact" style="{section_alt}"><div class="container">{contact_block}</div></section>""",
-    }
-    if vi in (0, 1):
-        for _k in sec:
-            sec[_k] = (
-                sec[_k]
-                .replace('class="box"', f'class="{box_cls}"')
-                .replace('class="display-5 fw-bold', f'class="{h2c}"')
-                .replace('class="sec ', f'class="{sec_cls} ')
-            )
-        if vi == 1:
-            for _k in sec:
-                sec[_k] = sec[_k].replace('class="display-6 fw-bold', f'class="{h2c}"')
-    main_body = "".join(sec[k] for k in _PREMIUM_SECTION_ORDER[vi])
-
-    return f"""<!DOCTYPE html>
+    # Base HTML Structure (Head & Nav)
+    html_head = f"""<!DOCTYPE html>
 <html lang="en-GB" class="theme-{vi} {skin['layout']}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{name} | {label} — {loc}</title>
 <meta name="description" content="{name} — {pitch} Serving {loc}.">
-<meta property="og:title" content="{name} | {label} — {loc}">
-<meta property="og:description" content="{pitch}">
-<meta property="og:type" content="website">
-<meta property="og:image" content="{og_img}">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <link href="{skin['fonts']}" rel="stylesheet">
 <style>{_design_css(vi, primary, secondary, overlay, skin['font_h'], skin['font_b'])}</style>
 </head>
-<body>
+<body class="bg-bg">
 <header class="{skin['nav']}">
 <nav class="navbar navbar-expand-lg py-3">
 <div class="container">
-<a class="navbar-brand fw-bold fs-4" href="#" style="color:var(--text)">{name}</a>
-<button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#mainNav"><span class="navbar-toggler-icon"></span></button>
-<div class="collapse navbar-collapse" id="mainNav">
-<ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+<a class="navbar-brand fw-bold fs-4 text-text" href="#">{name}</a>
+<button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+    <i class="bi bi-list fs-1 text-text"></i>
+</button>
+<div class="collapse navbar-collapse bg-bg p-3 p-lg-0 rounded-3 shadow-sm shadow-lg-none mt-2 mt-lg-0" id="mainNav">
+<ul class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
+<li class="nav-item"><a class="nav-link" href="#problem">Why Us</a></li>
 <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
-<li class="nav-item"><a class="nav-link" href="#how">How it works</a></li>
-<li class="nav-item"><a class="nav-link" href="#reviews">Reviews</a></li>
 <li class="nav-item"><a class="nav-link" href="#pricing">Pricing</a></li>
+<li class="nav-item"><a class="nav-link" href="#team">Team</a></li>
 <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
-<li class="nav-item"><a class="btn-main ms-lg-2 {nav_extra}" href="#contact">Free quote</a></li>
+<li class="nav-item mt-2 mt-lg-0"><a class="{cta.replace('btn-lg', 'btn-sm py-2 px-4')} w-100 w-lg-auto text-center" href="#contact">Contact Us</a></li>
 </ul></div></div></nav>
 </header>
-{main_body}
-<a href="#contact" class="mobile-cta btn-main" aria-label="Request a free quote">Free quote</a>
-<footer class="sec pt-0 pb-5 border-top" style="border-color:rgba(128,128,128,.15)!important">
-<div class="container footer-grid">
-<div class="row g-4">
-<div class="col-md-4"><h3 class="fw-bold">{name}</h3><p class="muted">{pitch}</p></div>
-<div class="col-md-2"><h6 class="fw-bold">Navigate</h6><ul class="list-unstyled">
-<li class="mb-2"><a href="#services">Services</a></li><li class="mb-2"><a href="#how">How it works</a></li>
-<li class="mb-2"><a href="#pricing">Pricing</a></li><li><a href="#contact">Contact</a></li></ul></div>
-<div class="col-md-3"><h6 class="fw-bold">Legal</h6><ul class="list-unstyled muted">
-<li class="mb-2">Privacy policy</li><li class="mb-2">Terms of service</li><li>Cookies</li></ul></div>
-<div class="col-md-3"><h6 class="fw-bold">Service area</h6><p class="muted">Serving {loc} and nearby UK communities.</p></div></div>
-<p class="text-center small muted mt-5 mb-0">&copy; 2026 {name}. Design {vi + 1} of 3 — your brand colours applied.</p>
-</div></footer>
+"""
+    # -------------------------------------------------------------------------
+    # LAYOUT 0: Modern Startup (12 Sections)
+    # -------------------------------------------------------------------------
+    if vi == 0:
+        svcs_html = "".join([f'<div class="col-md-6 col-lg-4"><div class="{box_cls}"><i class="bi bi-check-circle-fill text-primary fs-2 mb-3"></i><h3 class="h5 fw-bold text-text">{_e(s["title"])}</h3><p class="text-muted mb-0">{_e(s["desc"])}</p></div></div>' for s in svcs_raw[:6]])
+        body_html = f"""
+<section class="hero hero-landia" id="hero">
+    <div class="container h-100">
+        <div class="row h-100 align-items-center g-5 py-5">
+            <div class="col-lg-6 order-2 order-lg-1">
+                <span class="badge bg-primary text-white rounded-pill px-3 py-2 mb-4 fw-semibold shadow-sm">Top Rated {label_l} in {loc}</span>
+                <h1 class="{h1c}">{name} — {label}</h1>
+                <p class="{lc}">{pitch}</p>
+                <div class="d-flex flex-column flex-sm-row gap-3 mt-4">
+                    <a href="#contact" class="{cta}">Get a Free Quote</a>
+                    <a href="#services" class="btn btn-outline-primary btn-lg rounded-pill px-5 py-3 fw-bold bg-bg">Explore Services</a>
+                </div>
+                <div class="d-flex align-items-center gap-4 mt-5">
+                    <img src="{team_img}" class="rounded-circle border border-2 border-white shadow-sm" width="48" height="48" style="object-fit:cover" alt="User">
+                    <div><p class="mb-0 fw-bold text-text">4.9/5 Average Rating</p><p class="small text-muted mb-0">From 500+ happy clients in {loc}</p></div>
+                </div>
+            </div>
+            <div class="col-lg-6 order-1 order-lg-2">
+                <img src="{hero_img}" class="img-fluid img-float" alt="{name} hero">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 3. Problem/Challenge -->
+<section class="sec bg-bg" id="problem">
+    <div class="container text-center">
+        <h2 class="section-title {h2c} mx-auto">The Challenge with {label_l}</h2>
+        <p class="lead text-muted mb-5 max-w-2xl mx-auto">Too many providers in {loc} overpromise and underdeliver. Hidden fees, missed deadlines, and poor communication cause unnecessary stress.</p>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="{box_cls} border-0 bg-alt shadow-none text-start">
+                    <ul class="list-unstyled mb-0 fs-5">
+                        <li class="mb-3"><i class="bi bi-x-circle text-danger me-2"></i> Unpredictable pricing that balloons mid-project.</li>
+                        <li class="mb-3"><i class="bi bi-x-circle text-danger me-2"></i> Contractors who show up late or not at all.</li>
+                        <li><i class="bi bi-x-circle text-danger me-2"></i> Poor quality workmanship that requires fixing later.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 4. Solution/Mission -->
+<section class="sec bg-primary text-white" id="solution">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <img src="{work_img}" class="img-fluid rounded-4 shadow-lg" alt="Solution">
+            </div>
+            <div class="col-lg-6">
+                <h2 class="display-5 fw-bold mb-4 text-white">Our Mission</h2>
+                <p class="fs-4 mb-4 text-white-50">We started {name} to bring transparency, reliability, and excellence back to {label_l} in {loc}.</p>
+                <p class="mb-0 text-white-50">We provide clear written quotes, stick to our timelines, and guarantee our work. Your peace of mind is our top priority.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 5. Features -->
+<section class="sec bg-alt" id="features">
+    <div class="container text-center">
+        <h2 class="section-title {h2c} mx-auto">Why choose {name}?</h2>
+        <p class="lead text-muted mb-5">We bring expertise, reliability, and precision to every project.</p>
+        <div class="row g-4">
+            <div class="col-md-4"><div class="{box_cls}"><i class="bi bi-shield-check text-primary display-4 mb-3 d-block"></i><h4 class="h5 fw-bold text-text">Fully Certified</h4><p class="text-muted mb-0">Our team holds all required industry certifications.</p></div></div>
+            <div class="col-md-4"><div class="{box_cls}"><i class="bi bi-clock-history text-primary display-4 mb-3 d-block"></i><h4 class="h5 fw-bold text-text">On-Time Delivery</h4><p class="text-muted mb-0">We respect your schedule and always deliver on time.</p></div></div>
+            <div class="col-md-4"><div class="{box_cls}"><i class="bi bi-star text-primary display-4 mb-3 d-block"></i><h4 class="h5 fw-bold text-text">Quality Guaranteed</h4><p class="text-muted mb-0">We don't leave until you are 100% satisfied.</p></div></div>
+        </div>
+    </div>
+</section>
+
+<!-- 6. Services -->
+<section class="sec bg-bg" id="services">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title {h2c} mx-auto">Our Services in {loc}</h2>
+            <p class="lead text-muted">Comprehensive {label_l} solutions tailored for you.</p>
+        </div>
+        <div class="row g-4">{svcs_html}</div>
+    </div>
+</section>
+
+<!-- 7. Stats -->
+<section class="sec bg-alt py-5 border-top border-bottom" id="stats">
+    <div class="container py-4">
+        <div class="row g-4 text-center">
+            <div class="col-6 col-md-3"><h3 class="display-4 fw-bold text-primary mb-1">15+</h3><p class="text-muted fw-bold text-uppercase mb-0">Years Exp</p></div>
+            <div class="col-6 col-md-3"><h3 class="display-4 fw-bold text-primary mb-1">2.4k</h3><p class="text-muted fw-bold text-uppercase mb-0">Projects</p></div>
+            <div class="col-6 col-md-3"><h3 class="display-4 fw-bold text-primary mb-1">98%</h3><p class="text-muted fw-bold text-uppercase mb-0">Recommend</p></div>
+            <div class="col-6 col-md-3"><h3 class="display-4 fw-bold text-primary mb-1">24/7</h3><p class="text-muted fw-bold text-uppercase mb-0">Support</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- 8. Testimonials -->
+<section class="sec bg-bg" id="reviews">
+    <div class="container text-center">
+        <h2 class="section-title {h2c} mx-auto">Client Stories</h2>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="{box_cls} text-center">
+                    <div class="text-warning fs-3 mb-3"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+                    <p class="fs-4 text-text fst-italic mb-4">"Absolutely brilliant service. The team from {name} arrived on time, were extremely polite, and the final result exceeded our expectations. Highly recommended to anyone in {loc}!"</p>
+                    <h5 class="fw-bold text-text mb-0">Sarah Jenkins</h5>
+                    <p class="text-muted small">Homeowner in {loc}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 9. Pricing -->
+<section class="sec bg-alt" id="pricing">
+    <div class="container text-center">
+        <h2 class="section-title {h2c} mx-auto">Transparent Pricing</h2>
+        <p class="lead text-muted mb-5">No hidden fees, just straightforward options.</p>
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-4"><div class="{box_cls}"><h4 class="fw-bold text-text">Standard Assessment</h4><h3 class="display-5 fw-bold text-primary my-3">£99</h3><p class="text-muted mb-4">Full inspection and written quote.</p><a href="#contact" class="btn btn-outline-primary w-100 rounded-pill py-2">Book Now</a></div></div>
+            <div class="col-md-4"><div class="{box_cls} border-primary shadow"><div class="badge bg-primary rounded-pill mb-3">Most Popular</div><h4 class="fw-bold text-text">Full Service</h4><h3 class="display-5 fw-bold text-primary my-3">£249</h3><p class="text-muted mb-4">Comprehensive delivery of {label_l}.</p><a href="#contact" class="btn btn-primary w-100 rounded-pill py-2 text-white">Book Now</a></div></div>
+        </div>
+    </div>
+</section>
+
+<!-- 10. Team -->
+<section class="sec bg-bg" id="team">
+    <div class="container text-center">
+        <h2 class="section-title {h2c} mx-auto">Meet the Experts</h2>
+        <div class="row g-4 justify-content-center mt-4">
+            <div class="col-6 col-md-3"><img src="{team_img}" class="team-img mb-3"><h5 class="fw-bold text-text mb-1">David S.</h5><p class="text-muted small">Lead Specialist</p></div>
+            <div class="col-6 col-md-3"><img src="{hero_img}" class="team-img mb-3"><h5 class="fw-bold text-text mb-1">Emma T.</h5><p class="text-muted small">Operations Manager</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- 11. FAQ -->
+<section class="sec bg-alt" id="faq">
+    <div class="container">
+        <div class="text-center mb-5"><h2 class="section-title {h2c} mx-auto">Frequently Asked Questions</h2></div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="accordion" id="faqAccordion">
+                  <div class="accordion-item border-0 mb-3 rounded-3 overflow-hidden shadow-sm"><h2 class="accordion-header"><button class="accordion-button fw-bold py-4" type="button" data-bs-toggle="collapse" data-bs-target="#q1">Do you operate outside of {loc}?</button></h2><div id="q1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion"><div class="accordion-body bg-card text-muted">We primarily serve {loc} and immediate surrounding areas to ensure rapid response times.</div></div></div>
+                  <div class="accordion-item border-0 mb-3 rounded-3 overflow-hidden shadow-sm"><h2 class="accordion-header"><button class="accordion-button collapsed fw-bold py-4" type="button" data-bs-toggle="collapse" data-bs-target="#q2">Are your quotes free?</button></h2><div id="q2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion"><div class="accordion-body bg-card text-muted">Yes, we provide free, no-obligation written estimates before any work begins.</div></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 12. Gallery -->
+<section class="sec bg-bg" id="gallery">
+    <div class="container text-center">
+        <h2 class="section-title {h2c} mx-auto">Our Recent Work</h2>
+        <div class="row g-4 mt-2">
+            <div class="col-md-4"><img src="{work_img}" class="img-fluid rounded-4 shadow-sm" alt="Gallery"></div>
+            <div class="col-md-4"><img src="{hero_img}" class="img-fluid rounded-4 shadow-sm" alt="Gallery"></div>
+            <div class="col-md-4"><img src="{team_img}" class="img-fluid rounded-4 shadow-sm" alt="Gallery"></div>
+        </div>
+    </div>
+</section>
+
+<!-- 13. CTA -->
+<section class="sec bg-primary text-white text-center" id="cta">
+    <div class="container">
+        <h2 class="display-4 fw-bold mb-4 text-white">Ready to transform your {label_l}?</h2>
+        <p class="lead text-white-50 mb-5 max-w-2xl mx-auto">Join hundreds of satisfied customers in {loc}.</p>
+        <a href="#contact" class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-bold text-primary shadow">Contact Us Today</a>
+    </div>
+</section>
+"""
+
+    # -------------------------------------------------------------------------
+    # LAYOUT 1: Glassmorphism (12 Sections)
+    # -------------------------------------------------------------------------
+    elif vi == 1:
+        svcs_html = "".join([f'<div class="col-md-6 col-lg-4"><div class="{box_cls} text-center"><div class="d-inline-block p-3 rounded-circle bg-primary bg-opacity-10 mb-4"><i class="bi bi-lightning-charge text-primary fs-3"></i></div><h3 class="h4 fw-bold text-text mb-3">{_e(s["title"])}</h3><p class="text-muted mb-0">{_e(s["desc"])}</p></div></div>' for s in svcs_raw[:6]])
+        body_html = f"""
+<section class="hero hero-divi" id="hero">
+    <div class="container h-100 position-relative z-2">
+        <div class="row h-100 align-items-center justify-content-center text-center">
+            <div class="col-lg-10 pt-5 mt-5">
+                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 py-2 rounded-pill mb-4">Premium {label_l} in {loc}</span>
+                <h1 class="{h1c}"><span class="text-gradient">{name}</span><br>{label}</h1>
+                <p class="{lc} mx-auto mt-4" style="max-width: 600px;">{pitch}</p>
+                <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center mt-5">
+                    <a href="#contact" class="{cta}">Book Consultation</a>
+                    <a href="#services" class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-bold text-text bg-card border-secondary">View Services</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 3. Problem/Solution Combined -->
+<section class="sec bg-bg" id="about">
+    <div class="container">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-6">
+                <div class="position-relative">
+                    <img src="{hero_img}" class="img-fluid glow-img w-100" style="height:500px; object-fit:cover;" alt="{name}">
+                    <div class="position-absolute bottom-0 end-0 p-4 bg-primary text-white rounded-start-4 shadow-lg mb-4">
+                        <h4 class="fw-bold mb-0 text-white">#1 Rated</h4>
+                        <p class="mb-0 text-white-50">in {loc}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 ps-lg-5">
+                <p class="text-primary fw-bold tracking-widest text-uppercase mb-2">The Difference</p>
+                <h2 class="{h2c}">Setting a new standard for {label_l}.</h2>
+                <p class="text-muted fs-5 mb-5">Tired of unpredictable contractors and hidden fees? We built {name} to offer a transparent, high-end experience from start to finish.</p>
+                <div class="d-flex align-items-start mb-4">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-3 me-4"><i class="bi bi-shield-check text-primary fs-4"></i></div>
+                    <div><h4 class="h5 fw-bold text-text">Premium Quality</h4><p class="text-muted mb-0">We use only the highest grade materials and proven techniques.</p></div>
+                </div>
+                <div class="d-flex align-items-start">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-3 me-4"><i class="bi bi-people text-primary fs-4"></i></div>
+                    <div><h4 class="h5 fw-bold text-text">Expert Team</h4><p class="text-muted mb-0">Our specialists have decades of combined experience in {loc}.</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 5. Features Grid -->
+<section class="sec bg-alt" id="features">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="{h2c}">Everything you need.</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4"><div class="{box_cls}"><h3 class="h1 fw-bold text-primary opacity-50 mb-3">01</h3><h4 class="h5 fw-bold text-text">Consultation</h4><p class="text-muted">In-depth discussion of your needs.</p></div></div>
+            <div class="col-md-4"><div class="{box_cls}"><h3 class="h1 fw-bold text-primary opacity-50 mb-3">02</h3><h4 class="h5 fw-bold text-text">Execution</h4><p class="text-muted">Flawless delivery by experts.</p></div></div>
+            <div class="col-md-4"><div class="{box_cls}"><h3 class="h1 fw-bold text-primary opacity-50 mb-3">03</h3><h4 class="h5 fw-bold text-text">Support</h4><p class="text-muted">Ongoing maintenance and care.</p></div></div>
+        </div>
+    </div>
+</section>
+
+<!-- 6. Services -->
+<section class="sec bg-bg" id="services">
+    <div class="container">
+        <div class="row justify-content-center text-center mb-5">
+            <div class="col-lg-8">
+                <h2 class="{h2c}">Specialised Services</h2>
+                <p class="lead text-muted">Discover how {name} can help transform your ideas into reality.</p>
+            </div>
+        </div>
+        <div class="row g-4">{svcs_html}</div>
+    </div>
+</section>
+
+<!-- 7. Stats -->
+<section class="sec bg-primary" id="stats">
+    <div class="container text-center">
+        <div class="row g-4 justify-content-center">
+            <div class="col-sm-6 col-md-3"><h3 class="display-4 fw-bold text-white mb-2">2k+</h3><p class="text-white-50 text-uppercase tracking-wider mb-0 small fw-bold">Happy Clients</p></div>
+            <div class="col-sm-6 col-md-3"><h3 class="display-4 fw-bold text-white mb-2">15</h3><p class="text-white-50 text-uppercase tracking-wider mb-0 small fw-bold">Years Active</p></div>
+            <div class="col-sm-6 col-md-3"><h3 class="display-4 fw-bold text-white mb-2">100%</h3><p class="text-white-50 text-uppercase tracking-wider mb-0 small fw-bold">Satisfaction</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- 8. Testimonials -->
+<section class="sec bg-alt" id="reviews">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h2 class="{h2c} mb-5">What Clients Say</h2>
+                <div class="glass-card text-center p-5">
+                    <i class="bi bi-quote display-1 text-primary opacity-25"></i>
+                    <p class="fs-4 text-text mb-4">"The attention to detail and professionalism shown by the team was outstanding. Best {label_l} service in {loc} without a doubt."</p>
+                    <h6 class="fw-bold text-text text-uppercase tracking-widest m-0">Michael Chen</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 9. Pricing -->
+<section class="sec bg-bg" id="pricing">
+    <div class="container text-center">
+        <h2 class="{h2c} mb-5">Clear Pricing</h2>
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-4"><div class="{box_cls} d-flex flex-column"><h4 class="text-text fw-bold">Essential</h4><h2 class="display-4 fw-bold text-primary my-4">£149</h2><p class="text-muted flex-grow-1">Perfect for small residential jobs.</p><a href="#contact" class="btn btn-outline-primary rounded-pill py-3 w-100 mt-4">Choose Plan</a></div></div>
+            <div class="col-md-4"><div class="{box_cls} pricing-featured d-flex flex-column"><h4 class="text-text fw-bold">Premium</h4><h2 class="display-4 fw-bold text-primary my-4">£299</h2><p class="text-muted flex-grow-1">Full service commercial grade delivery.</p><a href="#contact" class="btn btn-primary text-white rounded-pill py-3 w-100 mt-4">Choose Plan</a></div></div>
+        </div>
+    </div>
+</section>
+
+<!-- 10. Team -->
+<section class="sec bg-alt" id="team">
+    <div class="container text-center">
+        <h2 class="{h2c} mb-5">The Minds Behind {name}</h2>
+        <div class="row g-5 justify-content-center mt-4">
+            <div class="col-sm-6 col-md-4">
+                <div class="{box_cls} text-center pt-0">
+                    <img src="{team_img}" class="team-img mb-5 shadow">
+                    <h5 class="fw-bold text-text mb-1">Sarah K.</h5>
+                    <p class="text-primary small text-uppercase tracking-widest fw-bold">Founder</p>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4">
+                <div class="{box_cls} text-center pt-0">
+                    <img src="{hero_img}" class="team-img mb-5 shadow">
+                    <h5 class="fw-bold text-text mb-1">James L.</h5>
+                    <p class="text-primary small text-uppercase tracking-widest fw-bold">Director</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 11. FAQ -->
+<section class="sec bg-bg" id="faq">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h2 class="{h2c} text-center mb-5">Questions?</h2>
+                <div class="accordion" id="faqDivi">
+                    <div class="accordion-item bg-transparent border-bottom border-secondary mb-3"><h2 class="accordion-header"><button class="accordion-button bg-transparent text-text fw-bold fs-5 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#q1">Is there a warranty?</button></h2><div id="q1" class="accordion-collapse collapse show" data-bs-parent="#faqDivi"><div class="accordion-body text-muted border-top border-secondary pt-3">Yes, all our {label_l} work comes with a standard 12-month guarantee.</div></div></div>
+                    <div class="accordion-item bg-transparent border-bottom border-secondary mb-3"><h2 class="accordion-header"><button class="accordion-button collapsed bg-transparent text-text fw-bold fs-5 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#q2">How fast can you start?</button></h2><div id="q2" class="accordion-collapse collapse" data-bs-parent="#faqDivi"><div class="accordion-body text-muted border-top border-secondary pt-3">We typically begin projects within 48 hours of quote approval.</div></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 12. Gallery -->
+<section class="sec bg-alt" id="gallery">
+    <div class="container-fluid px-4">
+        <h2 class="{h2c} text-center mb-5">Our Work</h2>
+        <div class="row g-4">
+            <div class="col-md-6"><img src="{work_img}" class="img-fluid rounded-4 w-100 object-fit-cover shadow" style="height: 400px" alt="Gallery"></div>
+            <div class="col-md-6"><img src="{hero_img}" class="img-fluid rounded-4 w-100 object-fit-cover shadow" style="height: 400px" alt="Gallery"></div>
+        </div>
+    </div>
+</section>
+
+<!-- 13. CTA -->
+<section class="sec bg-bg" id="cta">
+    <div class="container">
+        <div class="glass-card text-center p-5 rounded-5 border-primary">
+            <h2 class="display-5 fw-bold text-text mb-4">Experience the best {label_l}.</h2>
+            <a href="#contact" class="btn btn-primary btn-lg rounded-pill px-5 py-3 fw-bold text-white shadow-lg">Start Your Project</a>
+        </div>
+    </div>
+</section>
+"""
+
+    # -------------------------------------------------------------------------
+    # LAYOUT 2: Bento Brutal (12 Sections)
+    # -------------------------------------------------------------------------
+    else:
+        svcs_html = "".join([f'<div class="col-md-6"><div class="{box_cls}"><div class="d-flex align-items-center mb-3"><div class="bg-text text-bg rounded-circle d-flex align-items-center justify-content-center me-3 border border-2 border-text" style="width:48px;height:48px;"><i class="bi bi-star-fill"></i></div><h3 class="h4 fw-black text-uppercase mb-0 text-text">{_e(s["title"])}</h3></div><p class="mb-0 fw-medium text-text">{_e(s["desc"])}</p></div></div>' for s in svcs_raw[:4]])
+        body_html = f"""
+<section class="hero hero-brutal" id="hero">
+    <div class="container-fluid px-0 h-100">
+        <div class="row g-0 h-100">
+            <div class="col-lg-7 d-flex flex-column justify-content-center p-4 p-lg-5">
+                <div class="pe-lg-5 pt-5 mt-4">
+                    <div class="d-inline-block border border-3 border-text px-3 py-1 fw-bold text-uppercase mb-4 bg-bg text-text shadow-sm">Based in {loc}</div>
+                    <h1 class="{h1c}">{name}</h1>
+                    <h2 class="display-5 fw-black text-uppercase mb-4 text-primary brutal-heading">{label}</h2>
+                    <p class="{lc}">{pitch}</p>
+                    <div class="d-flex flex-column flex-sm-row gap-3 mt-5">
+                        <a href="#contact" class="{cta}">Get a Quote</a>
+                        <a href="#services" class="btn btn-outline-dark btn-lg brutal-btn px-5 py-3 text-uppercase fw-bold rounded-0 border border-3 border-text bg-bg text-text">Services</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block">
+                <img src="{hero_img}" class="img-fluid brutal-img h-100 w-100 object-fit-cover m-4" style="max-height: 85vh" alt="Hero">
+            </div>
+        </div>
+    </div>
+</section>
+<div class="marquee">
+    <span>{label} in {loc} &bull; {name} &bull; 100% Satisfaction Guaranteed &bull; Quality Workmanship &bull; {label} in {loc} &bull; {name} &bull; 100% Satisfaction Guaranteed</span>
+</div>
+
+<!-- 3. Problem -->
+<section class="sec bg-bg" id="problem">
+    <div class="container">
+        <div class="row mb-5"><div class="col-12"><h2 class="{h2c}">The Problem.</h2></div></div>
+        <div class="row">
+            <div class="col-12">
+                <div class="{box_cls} bg-primary text-white p-4 p-md-5">
+                    <h3 class="display-6 fw-black text-uppercase mb-4 text-white">Don't settle for mediocre {label_l}.</h3>
+                    <p class="fs-4 fw-bold mb-0 text-white">Late arrivals, messy sites, and blown budgets are the industry standard in {loc}. We refuse to operate that way.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 4. Solution/Mission -->
+<section class="sec bg-alt" id="solution">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6"><img src="{work_img}" class="img-fluid brutal-img w-100" alt="Work"></div>
+            <div class="col-lg-6">
+                <h2 class="{h2c}">Our Mission.</h2>
+                <p class="fs-4 fw-bold text-text mb-4">To deliver ruthless efficiency and unmatched quality in every project.</p>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-text text-bg border border-text p-2 fs-6 rounded-0">Honest Quotes</span>
+                    <span class="badge bg-text text-bg border border-text p-2 fs-6 rounded-0">On Time</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 5. Features -->
+<section class="sec bg-bg border-top border-bottom border-text border-3" id="features">
+    <div class="container">
+        <div class="row mb-5"><div class="col-12"><h2 class="{h2c}">Our Edge.</h2></div></div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4"><div class="{box_cls} bg-primary text-white"><h3 class="h2 fw-black text-uppercase mb-3 text-white">01. Speed</h3><p class="fs-5 fw-bold mb-0 text-white">Faster delivery without cutting corners.</p></div></div>
+            <div class="col-md-6 col-lg-4"><div class="{box_cls} bg-bg"><h3 class="h2 fw-black text-uppercase mb-3 text-text">02. Power</h3><p class="fs-5 fw-bold mb-0 text-text">Robust solutions designed to last.</p></div></div>
+            <div class="col-md-12 col-lg-4"><div class="{box_cls} bg-text text-bg"><h3 class="h2 fw-black text-uppercase mb-3 text-bg">03. Trust</h3><p class="fs-5 fw-bold mb-0 text-bg">Transparent pricing. No hidden fees.</p></div></div>
+        </div>
+    </div>
+</section>
+
+<!-- 6. Services -->
+<section class="sec bg-alt" id="services">
+    <div class="container">
+        <div class="row mb-5 text-center"><div class="col-12"><h2 class="{h2c} d-inline-block bg-primary text-white px-4 py-2">What We Do</h2></div></div>
+        <div class="row g-4">{svcs_html}</div>
+    </div>
+</section>
+
+<!-- 7. Stats -->
+<section class="sec bg-bg border-bottom border-text border-3 p-0" id="stats">
+    <div class="container-fluid px-0">
+        <div class="row g-0 text-center">
+            <div class="col-6 col-md-3 border-end border-bottom border-text border-3 p-5"><h3 class="display-3 fw-black text-primary mb-0">15</h3><p class="fw-bold text-uppercase mb-0 text-text">Years</p></div>
+            <div class="col-6 col-md-3 border-end border-bottom border-text border-3 p-5"><h3 class="display-3 fw-black text-primary mb-0">2K</h3><p class="fw-bold text-uppercase mb-0 text-text">Clients</p></div>
+            <div class="col-6 col-md-3 border-end border-bottom border-text border-3 p-5"><h3 class="display-3 fw-black text-primary mb-0">24</h3><p class="fw-bold text-uppercase mb-0 text-text">Hour Support</p></div>
+            <div class="col-6 col-md-3 border-bottom border-text border-3 p-5"><h3 class="display-3 fw-black text-primary mb-0">100</h3><p class="fw-bold text-uppercase mb-0 text-text">Percent</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- 8. Testimonials -->
+<section class="sec bg-alt" id="reviews">
+    <div class="container">
+        <div class="row mb-5"><div class="col-12"><h2 class="{h2c}">Word on the Street.</h2></div></div>
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="{box_cls} bg-bg">
+                    <p class="display-6 fw-bold text-text mb-4">"Absolutely brutal efficiency. They came, they conquered the project, and the final bill was exactly what was quoted."</p>
+                    <p class="fw-black text-uppercase text-primary mb-0 fs-5">— Tom Richards, {loc}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 9. Pricing -->
+<section class="sec bg-bg border-top border-bottom border-text border-3" id="pricing">
+    <div class="container">
+        <div class="row mb-5"><div class="col-12"><h2 class="{h2c}">Pricing. No BS.</h2></div></div>
+        <div class="row g-4">
+            <div class="col-md-6"><div class="{box_cls} bg-alt"><h3 class="display-4 fw-black text-text mb-0">£199</h3><p class="fw-bold text-uppercase text-primary mb-4">Starter Fix</p><p class="text-text fw-bold">Get the basics sorted out instantly.</p><a href="#contact" class="btn btn-outline-dark brutal-btn w-100 rounded-0 border-3 border-text text-uppercase fw-bold py-3 mt-3 text-text">Buy Now</a></div></div>
+            <div class="col-md-6"><div class="{box_cls} bg-text text-bg"><h3 class="display-4 fw-black text-bg mb-0">£499</h3><p class="fw-bold text-uppercase text-primary mb-4">Pro Overhaul</p><p class="text-bg fw-bold">Complete top-to-bottom service.</p><a href="#contact" class="btn btn-primary brutal-btn w-100 rounded-0 border-3 border-text text-uppercase fw-bold text-white py-3 mt-3">Buy Now</a></div></div>
+        </div>
+    </div>
+</section>
+
+<!-- 10. Team -->
+<section class="sec bg-alt" id="team">
+    <div class="container">
+        <div class="row mb-5"><div class="col-12"><h2 class="{h2c}">The Crew.</h2></div></div>
+        <div class="row g-4">
+            <div class="col-6 col-md-3"><div class="bg-bg border border-3 border-text"><img src="{team_img}" class="team-img"><div class="p-3 text-center"><h4 class="fw-black text-uppercase mb-0 text-text">Jake</h4></div></div></div>
+            <div class="col-6 col-md-3"><div class="bg-bg border border-3 border-text"><img src="{hero_img}" class="team-img"><div class="p-3 text-center"><h4 class="fw-black text-uppercase mb-0 text-text">Mia</h4></div></div></div>
+        </div>
+    </div>
+</section>
+
+<!-- 11. FAQ -->
+<section class="sec bg-bg border-top border-bottom border-text border-3" id="faq">
+    <div class="container">
+        <div class="row mb-5"><div class="col-12"><h2 class="{h2c}">FAQ.</h2></div></div>
+        <div class="row">
+            <div class="col-12">
+                <div class="{box_cls} mb-3"><h4 class="fw-black text-uppercase text-text">Is there a warranty?</h4><p class="fw-bold text-text mb-0">Yes. 12 months rock solid.</p></div>
+                <div class="{box_cls}"><h4 class="fw-black text-uppercase text-text">Do you travel?</h4><p class="fw-bold text-text mb-0">Only within 50 miles of {loc}.</p></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 12. Gallery -->
+<section class="sec bg-primary" id="gallery">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <h2 class="display-3 fw-black text-uppercase text-white mb-4">The Proof.</h2>
+                <p class="fs-4 fw-bold text-white">We let our results speak for themselves.</p>
+            </div>
+            <div class="col-lg-6">
+                <img src="{work_img}" class="img-fluid brutal-img bg-white" alt="Work">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 13. CTA -->
+<section class="sec bg-text p-5 border-top border-bottom border-text border-3" id="cta">
+    <div class="container text-center">
+        <h2 class="display-3 fw-black text-uppercase text-bg mb-4">Time to act.</h2>
+        <a href="#contact" class="btn btn-primary btn-lg brutal-btn px-5 py-4 text-uppercase fw-black rounded-0 border border-3 border-text text-white">Contact Us</a>
+    </div>
+</section>
+"""
+
+    # Common Footer & Contact Form
+    footer_cls = "bg-card text-text py-5 border-top border-alt" if vi == 0 else ("bg-card text-text py-5 border-top border-alt" if vi == 1 else "bg-bg border-top border-text border-4 py-5")
+    
+    html_foot = f"""
+<!-- 14. Contact Form -->
+<section class="sec bg-bg" id="contact">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center mb-5">
+                <h2 class="{"display-4 fw-bold text-text" if vi!=2 else "display-3 fw-black text-uppercase text-text"} mb-3">Get In Touch</h2>
+                <p class="lead text-muted">Fill out the form below and our team will get back to you within 24 hours.</p>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="{box_cls}">
+                    <form class="row g-4">
+                        <div class="col-md-6"><label class="form-label fw-bold text-text">Name</label><input type="text" class="form-control form-control-lg" placeholder="John Doe"></div>
+                        <div class="col-md-6"><label class="form-label fw-bold text-text">Email</label><input type="email" class="form-control form-control-lg" placeholder="john@example.com"></div>
+                        <div class="col-12"><label class="form-label fw-bold text-text">Message</label><textarea class="form-control form-control-lg" rows="5" placeholder="How can we help?"></textarea></div>
+                        <div class="col-12"><button type="button" class="w-100 {cta.replace('btn-lg','py-3')}">Send Message</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 15. Footer -->
+<footer class="{footer_cls}">
+    <div class="container">
+        <div class="row g-4 mb-4">
+            <div class="col-lg-4">
+                <h3 class="fw-bold mb-3 text-text">{name}</h3>
+                <p class="text-muted">{pitch}</p>
+            </div>
+            <div class="col-lg-4">
+                <h5 class="fw-bold mb-3 text-text">Contact</h5>
+                <p class="text-muted mb-1"><i class="bi bi-envelope me-2 text-primary"></i>hello@{email_slug}.com</p>
+                <p class="text-muted mb-1"><i class="bi bi-telephone me-2 text-primary"></i>0800 123 4567</p>
+                <p class="text-muted"><i class="bi bi-geo-alt me-2 text-primary"></i>{loc}</p>
+            </div>
+            <div class="col-lg-4">
+                <h5 class="fw-bold mb-3 text-text">Follow Us</h5>
+                <div class="d-flex gap-3">
+                    <a href="#" class="text-muted fs-4"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="text-muted fs-4"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="text-muted fs-4"><i class="bi bi-twitter-x"></i></a>
+                </div>
+            </div>
+        </div>
+        <hr class="border-alt mb-4">
+        <div class="text-center text-muted small">
+            &copy; 2026 {name}. All rights reserved. Design Variation {vi+1} of 3.
+        </div>
+    </div>
+</footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body></html>"""
-
-
-
+</body>
+</html>
+"""
+    
+    return html_head + body_html + html_foot
 def generate_html(data, variation_index):
     """Premium static templates only — reliable, no Gemini/API errors."""
     print(f"  [{variation_index}] Building premium template...")
