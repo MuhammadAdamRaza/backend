@@ -1999,7 +1999,7 @@ def select_design():
         conn.commit()
         cur.close(); conn.close()
         base = request.host_url.rstrip('/')
-        return jsonify({"success":True,"previewUrl":f"{base}/s/{slug}","downloadUrl":f"{base}/download/{slug}"})
+        return jsonify({"success":True,"previewUrl":f"{base}/s/{slug}","downloadUrl":f"{base}/download/{slug}","html_content":row['html_content']})
     except Exception as e:
         traceback.print_exc()
         return jsonify({"success": False, "message": str(e)}), 500
